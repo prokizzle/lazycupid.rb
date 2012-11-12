@@ -16,6 +16,8 @@ class AutoVisitor
     @password = pass
     @max = m
     @speed = speed
+    
+    
 
   end
 
@@ -30,6 +32,21 @@ class AutoVisitor
       @storeCounts.append
       # puts row
     end
+  end
+
+  def lastVisited(match_name)
+    CSV.foreach(@username.to_s + ".csv", :headers => true, :skip_blanks => false) do |row|
+      text = row[0]
+      if text == match_name
+        @date = row[2].to_s
+      
+      else
+      
+        @date = "N/a"
+      end
+    end
+    
+    puts @date
   end
 
   def loadData
@@ -65,10 +82,11 @@ class AutoVisitor
   end
 
   def login(user, pass)
+    begin
     @username = user
     @password = pass
     @saveResults = OutputScrape.new
-    @saveResults.file = username.to_s + ".csv"
+    @saveResults.file = @username + ".csv"
     @log = Hash.new
     @agent = Mechanize.new
     page = @agent.get("http://www.okcupid.com/login")
@@ -79,6 +97,24 @@ class AutoVisitor
     form['password']=@password
     page = form.submit
     puts "Logged in as: " + username.to_s
+    # Regex to see if logged in
+    rescue Exception => e
+      puts e.backtrace
+      puts "Invalid password. Please try again"
+      print "Username: "
+      @username = gets.chomp
+      print "Password: "
+      @password = gets.chomp
+    end
+  end
+
+  def ignoreUser(user)
+    if user
+      @ignoreList = OutputScrape.new
+      @ignoreList.file = @username + "_ignore.csv"
+      @ignoreList.data = [user]
+      @ignoreList.append
+    end
   end
 
   def smartRoll(number)
@@ -94,31 +130,41 @@ class AutoVisitor
         end
       end
 
-
+      puts "Loading link queue..."
+      # h = visit_queue.length
+      c =0
       visit_queue.each do |user|
+
         # puts "Visting: " + user
         # roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
         link_queue += ["http://www.okcupid.com/profile/#{user}/"]
+        c += 1
         # @names[user] += 1
         # sleep 10
+        # h = h- 1
+        # puts h
+        # if ((((visit_queue.length - h)/visit_queue.length)%2)==0)
+        #   print "."
+        # end
       end
+      puts c
       j = 0
       has_matches = true
       30.times do
         while has_matches == true
-        begin
-          roll = @agent.get(link_queue[j])
-          user = link_queue[j].match(/profile\/(.*)\//)[1]
-          puts "User: " + user
-          @names[user] += 1
-          j += 1
-          sleep 10
+          begin
+            roll = @agent.get(link_queue[j])
+            user = link_queue[j].match(/profile\/(.*)\//)[1]
+            puts "User: " + user
+            @names[user] += 1
+            j += 1
+            sleep 10
 
-        rescue
-          puts "There are no more matches that fit this criteria"
-          has_matches = false
+          rescue
+            puts "There are no more matches that fit this criteria"
+            has_matches = false
+          end
         end
-      end
       end
 
     rescue SystemExit, Interrupt
@@ -140,48 +186,6 @@ class AutoVisitor
     end
   end
 
-  def setProfile
-    if ARGV[0]
-      profile=ARGV[0]
-    else
-      profile="bb86"
-    end
-    if ARGV[1]
-      @max = ARGV[1].to_i
-    else
-      @max = 5
-    end
-    if ARGV[3]
-      @speed = ARGV[3].to_i
-    else
-      @speed = 10
-    end
-    if ARGV[5]
-      @visible = false
-    else
-      @visible = true
-    end
-
-    if (profile == "ying")
-      login('danceyrselfcln','123457')
-      @username = 'danceyrselfcln'
-      @password = '123457'
-    elsif (profile == 'bsw') then
-
-      @username = '***REMOVED***'
-      @password = 'Pr0k1zzl3'
-      login(@username,@password)
-    elsif profile=='bb86' then
-      @username = 'bostonboy86'
-      @password = 'eGrwpkqn9MpJjVjYpY2zELuwMCGq'
-      login(@username,@password)
-    elsif profile == 'james'
-      @username = 'bunellcakess'
-      @password = '***REMOVED***'
-      login(@username,@password)
-    end
-  end
-  # profile = 'bb86'
   puts "LazyCupid CLI 0.1"
   # puts "","","",""
   #print "Enter password:"

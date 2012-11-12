@@ -40,10 +40,11 @@ def SmartVisitor < AutoVisitor
 
     i=1
     # until (i==times.to_i)
-    30.times do
+    1.times do
       roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
       @names[user] += 1
-      sleep 30000
+      sleep 3
     end
   end
+
 end

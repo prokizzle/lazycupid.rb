@@ -15,7 +15,7 @@ class OutputScrape
   end
 
   def clear
-    empty = Array.new(0)
+    empty = Array.new
     CSV.open(@file, 'wb') do |csv|
       csv << empty
     end

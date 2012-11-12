@@ -7,11 +7,13 @@
   @m = ARGV[2].to_i
   @s = ARGV[3].to_i
   puts "Initializing..."
-  lazyCupid.login(@u,@p)
+  lazyCupid.login(@u, @p)
   # lazyCupid.importCSV(@u)
   lazyCupid.loadData
   # lazyCupid.run(@m, @s)
-  lazyCupid.smartRoll(6)
+  # lazyCupid.lastVisited()
+  lazyCupid.smartRoll(1)
+  # lazyCupid.stalk()
   lazyCupid.saveData(@names)
 
   # singleVisits

@@ -4,6 +4,10 @@ require 'set'
 require_relative 'OutputScrape.rb'
 
 class ImportData
+	# attr_accessor :username
+	attr_accessor :loadData
+	attr_accessor :saveData
+
 
   def initialize(username)
     @names = Hash.new {|h, k| h[k] = 0 }
@@ -16,7 +20,7 @@ class ImportData
 
   def loadData
 
-
+  	puts "Loading from log file..."
     # begin
     #   #load count file data
     #   CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
@@ -34,8 +38,8 @@ class ImportData
     # end
   end
 
-  def saveData(names)
-
+  def saveData
+  	puts "Storing to data file..."
 
     @names.each do |a, b|
       row = [a, b]
@@ -43,6 +47,7 @@ class ImportData
       @storeCounts.append
       # puts row
     end
+    puts "Finished."
   end
 
   def sortData
@@ -50,9 +55,5 @@ class ImportData
 
     end
   end
+end
 
-
-  puts "Importing..."
-  loadData
-  saveData(@names)
-  puts "Finished."

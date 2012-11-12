@@ -5,6 +5,7 @@ def SmartVisitor < AutoVisitor
 
   def initialize(username)
     @username = username
+    @bot = AutoVisitor.new()
   end
 
   def smartRoll

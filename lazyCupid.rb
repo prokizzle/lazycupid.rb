@@ -11,7 +11,7 @@
   # lazyCupid.importCSV(@u)
   lazyCupid.loadData
   # lazyCupid.run(@m, @s)
-  lazyCupid.smartRoll(1)
+  lazyCupid.smartRoll(6)
   lazyCupid.saveData(@names)
 
   # singleVisits

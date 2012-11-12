@@ -11,13 +11,13 @@ class AutoVisitor
   attr_accessor :profile
   attr_accessor :username
 
-def intitialize(user,pass,m,speed)
-  @username = user
-  @password = pass
-  @max = m 
-  @speed = speed
-   
-end
+  def intitialize(user,pass,m,speed)
+    @username = user
+    @password = pass
+    @max = m
+    @speed = speed
+
+  end
 
   def saveData(names)
 
@@ -83,7 +83,7 @@ end
 
   def smartRoll(number)
     begin
-      puts "Smart Roll."
+      puts "Smart Roll: " + number.to_s
       link_queue = Array.new(0)
       visit_queue = Array.new(0)
       CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
@@ -103,13 +103,22 @@ end
         # sleep 10
       end
       j = 0
+      has_matches = true
       30.times do
-        roll = @agent.get(link_queue[j])
-        user = link_queue[j].match(/profile\/(.*)\//)[1]
-        puts "User: " + user
-        @names[user] += 1
-        j += 1
-        sleep 10
+        while has_matches == true
+        begin
+          roll = @agent.get(link_queue[j])
+          user = link_queue[j].match(/profile\/(.*)\//)[1]
+          puts "User: " + user
+          @names[user] += 1
+          j += 1
+          sleep 10
+
+        rescue
+          puts "There are no more matches that fit this criteria"
+          has_matches = false
+        end
+      end
       end
 
     rescue SystemExit, Interrupt
@@ -237,5 +246,3 @@ end
       end
     end
   end
-
-

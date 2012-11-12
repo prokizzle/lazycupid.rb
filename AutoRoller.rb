@@ -11,6 +11,13 @@ class AutoVisitor
   attr_accessor :profile
   attr_accessor :username
 
+def intitialize(user,pass,m,speed)
+  @username = user
+  @password = pass
+  @max = m 
+  @speed = speed
+   
+end
 
   def saveData(names)
 
@@ -60,7 +67,18 @@ class AutoVisitor
   def login(user, pass)
     @username = user
     @password = pass
-
+    @saveResults = OutputScrape.new
+    @saveResults.file = username.to_s + ".csv"
+    @log = Hash.new
+    @agent = Mechanize.new
+    page = @agent.get("http://www.okcupid.com/login")
+    # link = page.link_with(:text=>"CUSTOMER LOGIN")
+    # page = link.click
+    form = page.forms.first
+    form['username']=@username
+    form['password']=@password
+    page = form.submit
+    puts "Logged in as: " + username.to_s
   end
 
   def smartRoll(number)
@@ -168,20 +186,9 @@ class AutoVisitor
     @max = m
     @speed = s
 
-
-    @saveResults = OutputScrape.new
-    @saveResults.file = username.to_s + ".csv"
-    @log = Hash.new
-    @agent = Mechanize.new
-    page = @agent.get("http://www.okcupid.com/login")
-    # link = page.link_with(:text=>"CUSTOMER LOGIN")
-    # page = link.click
-    form = page.forms.first
-    form['username']=@username
-    form['password']=@password
-    page = form.submit
-    puts "Logged in as: " + username.to_s
     i=1
+
+
 
     puts "---------"
     # puts "","","",""
@@ -220,21 +227,4 @@ class AutoVisitor
     end
   end
 
-  lazyCupid = AutoVisitor.new
 
-  @u = ARGV[0]
-  @p = ARGV[1]
-  @m = ARGV[2].to_i
-  @s = ARGV[3].to_i
-  puts "Initializing..."
-  lazyCupid.login(@u,@p)
-  # lazyCupid.importCSV(@u)
-  lazyCupid.loadData
-  lazyCupid.run(@m, @s)
-  lazyCupid.smartRoll(1)
-  lazyCupid.saveData(@names)
-
-  # singleVisits
-  puts ""
-  puts "Done."
-  puts "---"

@@ -1,9 +1,13 @@
 require_relative 'AutoRoller.rb'
 require_relative 'OutputScrape.rb'
 
-def SmartVisitor < AutoRoller
+def SmartVisitor < AutoVisitor
 
-def smartRoll(number)
+  def initialize(username)
+    @username = username
+  end
+
+  def smartRoll
     begin
       puts "Smart Roll."
       link_queue = Array.new(0)

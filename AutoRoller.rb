@@ -96,11 +96,22 @@ end
 
 
       visit_queue.each do |user|
-        puts "Visting: " + user
-        roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
+        # puts "Visting: " + user
+        # roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
+        link_queue += ["http://www.okcupid.com/profile/#{user}/"]
+        # @names[user] += 1
+        # sleep 10
+      end
+      j = 0
+      30.times do
+        roll = @agent.get(link_queue[j])
+        user = link_queue[j].match(/profile\/(.*)\//)[1]
+        puts "User: " + user
         @names[user] += 1
+        j += 1
         sleep 10
       end
+
     rescue SystemExit, Interrupt
       puts "","User quit. Saving data..."
       saveData(@names)
@@ -113,7 +124,7 @@ end
 
     i=1
     # until (i==times.to_i)
-    30.times do
+    5.times do
       roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
       @names[user] += 1
       sleep 30000

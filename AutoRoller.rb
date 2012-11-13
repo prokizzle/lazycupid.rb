@@ -132,6 +132,10 @@ def checkIgnore? (user)
   (@ignore[user] == true)
 end
 
+def getCounts(match)
+  return @names[match]
+end
+
 
 
 

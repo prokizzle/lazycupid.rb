@@ -1,14 +1,13 @@
 require 'rubygems'
 require 'mechanize'
 require 'csv'
-require 'sqlite3'
-require 'set'
+# require 'sqlite3'
+# require 'set'
 require_relative 'OutputScrape.rb'
 
 class AutoVisitor
 
   attr_accessor :names
-  attr_accessor :profile
   attr_accessor :username
 
   def intitialize(user,pass,m,speed)
@@ -113,7 +112,7 @@ class AutoVisitor
       @ignore = Hash.new(0)
       end
       @ignoreList = OutputScrape.new
-      @ignoreList.clear
+      # @ignoreList.clear
       @ignoreList.file = @username + "_ignore.csv"
       @ignoreList.data = [match]
       @ignoreList.append
@@ -210,7 +209,7 @@ end
     end
   end
 
-  puts "LazyCupid CLI 0.1"
+  # puts "LazyCupid CLI 0.1"
   # puts "","","",""
   #print "Enter password:"
   #@password = gets.chomp

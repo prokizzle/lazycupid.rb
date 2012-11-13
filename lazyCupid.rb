@@ -9,10 +9,12 @@
   puts "Initializing..."
   lazyCupid.login(@u, @p)
   # lazyCupid.importCSV(@u)
+  # lazyCupid.ignoreUser "kimmybeth"
+  lazyCupid.loadIgnoreList
   lazyCupid.loadData
   # lazyCupid.run(@m, @s)
   # lazyCupid.lastVisited()
-  lazyCupid.smartRoll(1)
+  lazyCupid.smartRoll(3)
   # lazyCupid.stalk()
   lazyCupid.saveData(@names)
 

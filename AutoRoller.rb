@@ -16,8 +16,8 @@ class AutoVisitor
     @password = pass
     @max = m
     @speed = speed
-    
-    
+    @ignore = Hash.new(0)
+    loadIgnoreList
 
   end
 
@@ -108,14 +108,33 @@ class AutoVisitor
     end
   end
 
-  def ignoreUser(user)
-    if user
+  def ignoreUser(match)
+      if !(defined? @ignore)
+      @ignore = Hash.new(0)
+      end
       @ignoreList = OutputScrape.new
+      @ignoreList.clear
       @ignoreList.file = @username + "_ignore.csv"
-      @ignoreList.data = [user]
+      @ignoreList.data = [match]
       @ignoreList.append
+      @ignore[match] = true
     end
-  end
+  
+
+  def loadIgnoreList
+    @ignore = Hash.new(0)
+     CSV.foreach(@username + "_ignore.csv", :headers => true, :skip_blanks => false) do |row|
+        text = row[0]
+        @ignore[text] = true
+      end
+    end
+
+def checkIgnore? (user)
+  (@ignore[user] == true)
+end
+
+
+
 
   def smartRoll(number)
     begin
@@ -137,7 +156,9 @@ class AutoVisitor
 
         # puts "Visting: " + user
         # roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
-        link_queue += ["http://www.okcupid.com/profile/#{user}/"]
+        if !(checkIgnore? user)
+          link_queue += ["http://www.okcupid.com/profile/#{user}/"]
+        end
         c += 1
         # @names[user] += 1
         # sleep 10
@@ -153,13 +174,16 @@ class AutoVisitor
       30.times do
         while has_matches == true
           begin
-            roll = @agent.get(link_queue[j])
+            if !(defined? @ignore[user])
             user = link_queue[j].match(/profile\/(.*)\//)[1]
+
+            roll = @agent.get(link_queue[j])
+            
             puts "User: " + user
             @names[user] += 1
             j += 1
             sleep 10
-
+          end
           rescue
             puts "There are no more matches that fit this criteria"
             has_matches = false

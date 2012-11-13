@@ -9,16 +9,13 @@
   puts "Initializing..."
   lazyCupid.login(@u, @p)
   # lazyCupid.importCSV(@u)
-  # lazyCupid.ignoreUser "kimmybeth"
+  lazyCupid.ignoreUser "james"
   lazyCupid.loadIgnoreList
   lazyCupid.loadData
-  # lazyCupid.run(@m, @s)
+  lazyCupid.run(@m, @s)
   # lazyCupid.lastVisited()
-  lazyCupid.smartRoll(3)
+  lazyCupid.smartRoll(2)
   # lazyCupid.stalk()
-  lazyCupid.saveData(@names)
+  # lazyCupid.saveData(@names)
 
   # singleVisits
-  puts ""
-  puts "Done."
-  puts "---"

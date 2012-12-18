@@ -1,11 +1,12 @@
 require 'rubygems'
 require 'mechanize'
 require 'csv'
+require 'sequel'
 # require 'sqlite3'
 # require 'set'
 require_relative 'OutputScrape.rb'
 
-class AutoVisitor
+class AutoRoller
 
   attr_accessor :names
   attr_accessor :username
@@ -27,22 +28,25 @@ class AutoVisitor
 
   def formatter(a, b, c, d)
     clear
-    puts "    LazyCupid Ruby","========================="
-    puts "    AutoRoller @ #{d} MPH","----------------------"
-    puts "    For: #{@username}",""
-    puts "     Visiting: #{a}"
-    puts "     Match:    #{b}%"
-    puts "     Visits:   #{c}"
+    puts "",""
+    puts "        LazyCupid Ruby","     ========================="
+    puts "        AutoRoller @ #{d} MPH","       ----------------------"
+    puts "         For: #{@username}",""
+    puts "          Visiting: #{a}"
+    puts "          Match:    #{b}%"
+    puts "          Visits:   #{c}"
   end
 
 
   def saveData(names)
     print "Saving..."
-    @storeCounts = OutputScrape.new
-    @storeCounts.file = @username + "_count.csv"
+
     @storeCounts.clear
     @names.each do |a, b|
       row = [a, b]
+      # puts "--------------"
+      # print a.to_s + ", ".to_s
+      # print b
       @storeCounts.data = row
       @storeCounts.append
       # puts row
@@ -65,25 +69,28 @@ class AutoVisitor
     puts @date
   end
 
-  def loadData
-
-    @names = Hash.new {|h, k| h[k] = 0 }
+  def newUser
     begin
-      #load count file data
       CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
-        text = row[0]
-        count = row[1].to_i
-        @names[text] = count
+        puts ""
       end
     rescue
-      #if count file not found, build one from log files
-      CSV.foreach(@username.to_s + ".csv", :headers => true, :skip_blanks => false) do |row|
-        text = row[0]
-        @names[text] += 1
-        # puts puts text + ": " + names[text].to_s
-      end
+      puts "Setting up new user"
+      @saveResults.clear
+      @storeCounts.clear
     end
   end
+
+  def loadData
+    @names = Hash.new {|h, k| h[k] = 0 }
+        puts "Loading data file"
+        CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
+          text = row[0]
+          count = row[1].to_i
+          @names[text] = count
+        end
+  end
+
 
   def importCSV(user)
     print "Importing..."
@@ -94,7 +101,7 @@ class AutoVisitor
       text = row[0]
       if defined? @names[text]
         c += 1
-        @names[text] = (@names[text].to_i + 1).to_s
+        @names[text] = (@names[text].to_i + 1)
 
       end
       # puts puts text + ": " + names[text].to_s
@@ -103,26 +110,39 @@ class AutoVisitor
     saveData(@names)
   end
 
-  def tallyVisit(name)
-    @names[name] = (@names[name].to_i + 1).to_s
+  def tallyVisit(name, match)
+    # puts "Tally Debug:"
+    # puts @names[name]
+    row = [name.to_s,match.to_s, Time.now, Time.now.to_i]
+    @saveResults.data = row
+    @saveResults.append
+    # @names[name] = (@names[name].to_i + 1).to_s
+    @names[name] = (@names[name] + 1)
+    # puts @names[name]
   end
 
   def login(user, pass)
+    puts "Logging in..."
     begin
       @username = user
       @password = pass
       @saveResults = OutputScrape.new
       @saveResults.file = @username + ".csv"
+      @storeCounts = OutputScrape.new
+      @storeCounts.file = @username + "_count.csv"
       @log = Hash.new
       @agent = Mechanize.new
-      page = @agent.get("http://www.okcupid.com/login")
+      # @agent.user_agent_alias = 'Mac Safari'
+      page = @agent.get("https://www.okcupid.com/")
       # link = page.link_with(:text=>"CUSTOMER LOGIN")
       # page = link.click
       form = page.forms.first
       form['username']=@username
       form['password']=@password
       page = form.submit
-      puts "Logged in as: " + username.to_s
+      sleep 10
+      puts "Logged in as: " + @username.to_s
+      newUser
       # Regex to see if logged in
     rescue Exception => e
       puts e.backtrace
@@ -168,75 +188,111 @@ class AutoVisitor
     return @names[match]
   end
 
+  # def toDatabase
+  #   CSV.foreach(@username + ".csv", :headers => true) do |row|
+  #     DartaBase.create!(row.to_hash)
+  #   end
+  # end
 
+  def printDB
+    matches = @db[:matches]
+    matches.each{|row| puts row}
+  end
 
+  def getUserId(user)
+    return ids[user]
+  end
 
-  def smartRoll(number)
-
-    puts "Smart Roll: " + number.to_s
-    link_queue = Array.new(0)
-    visit_queue = Array.new(0)
-    puts "Gathering usernames..."
-    CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
-      text = row[0]
-      count = row[1].to_i
-      if count == number
-        visit_queue += [text]
+  def setUserIds
+    @ids = Hash.new(0)
+    matches = @db[:matches]
+    matches.each do |hash|
+      hash.each do |a,b|
+        if a == 'user'
+          @ids[a]=b.to_s
+        end
       end
     end
+    @ids.each do|a,b|
+      puts a.to_s + ":" + b.to_s
+    end
+  end
 
+
+
+
+  def smartRoll(q)
+    loadData
+    @varb = q
+    puts "Smart Roll: " + @varb.to_s
+    @link_queue = Array.new(0)
+    visit_queue = Array.new(0)
+    puts "Gathering usernames..."
+
+    # CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
+    #   text = row[0]
+    #   count = row[1].to_i
+    #   visit_queue += [text] if (count == q)
+    #   puts text if count == q
+    #   puts count if count == q
+    # end
+
+    # importCSV(@username)
+    @names.each do |a, b|
+      if @names[a] == @varb
+        visit_queue += [a]
+        # puts a,b
+      end
+    end
+    # puts visit_queue
     puts "Loading link queue..."
     # h = visit_queue.length
     c =0
     visit_queue.each do |user|
-
-      # puts "Visting: " + user
-      # roll = @agent.get("http://www.okcupid.com/profile/#{user}/")
-      if !(checkIgnore? user)
-        link_queue += ["http://www.okcupid.com/profile/#{user}/"]
-      end
+      @link_queue += ["http://www.okcupid.com/profile/#{user}/"]
       c += 1
-      # @names[user] += 1
-      # sleep 10
-      # h = h- 1
-      # puts h
-      # if ((((visit_queue.length - h)/visit_queue.length)%2)==0)
-      #   print "."
-      # end
     end
-    puts c
     j = 0
     has_matches = true
     quit = false
     while (has_matches == true && j<=31 && quit == false)
-
       if !(defined? @ignore[user])
         begin
-          user = link_queue[j].match(/profile\/(.*)\//)[1]
-          roll = @agent.get(link_queue[j])
+          begin
+          user = @link_queue[j].match(/profile\/(.*)\//)[1]
+        rescue
+          puts "Link queue error"
+          # puts @link_queue
+          # puts j
+        end
+          # match_per = link_queue[j].match(/"match"\>\<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
+          # @roll = @agent.get(link_queue[j])
+          rollDice(@link_queue[j])
           clear
-          smartRollGUI(user)
-          tallyVisit(user)
+          smartRollGUI(user, q)
+          tallyVisit(user, "")
+          @names[user] = @names[user].to_i + 1
           j += 1
           sleep 10
         rescue SystemExit, Interrupt
           quit = true
           clear
           puts "","User quit. Saving data..."
-        rescue
-          puts "There are no more matches that fit this criteria"
+          saveData(@names)
+        rescue Exception => e
+          # puts "There are no more matches that fit this criteria"
+          puts e
+          puts e.backtrace
           has_matches = false
         end
       end
-
     end
-
     saveData(@names)
   end
 
 
-  def smartRollGUI(user)
-    puts "=====================","    Smart Roll","=====================",""
+  def smartRollGUI(user, q)
+    puts "=====================","    Smart Roll  (#{q})","=====================",""
     puts "User: " + user,"","","====================="
   end
 
@@ -264,7 +320,26 @@ class AutoVisitor
   #
 
 
-
+def rollDice(url="http://www.okcupid.com/getlucky?type=1")
+  # begin
+    @match = @agent.get(url)
+    sleep 5
+    @body = @match.parser.xpath("//body").to_html
+    begin
+      @user_name = @body.match(/\/profile\/(.*)\/photos/)[1]
+      @match_per = @body.match(/"match"\>\<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
+    rescue
+      begin
+        @match_per = body.match(/<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
+      rescue
+        puts "Invalid user"
+      end
+    end
+    tallyVisit(@user_name, @match_per)
+  # rescue
+    # puts "Invalid user"
+  # end
+end
 
 
 
@@ -279,34 +354,32 @@ class AutoVisitor
     @speed = 3600/mph
 
     i=1
-
-
+    match = @agent.get("http://www.okcupid.com/getlucky?type=1")
+    sleep 5
+    body = match.parser.xpath("//body").to_html
+    loggedin = /logged_in/.match(body)
+    if (loggedin)
     begin
-      puts "---------"
-      # puts "","","",""
-      puts "Hitting " + @max.to_s + " matches total,"
-      puts "one every " + @speed.to_s + " seconds."
-      while (i<=@max.to_i) do
+
+        while (i<=5000) do
+          match = @agent.get("http://www.okcupid.com/getlucky?type=1")
+          sleep 5
+          body = match.parser.xpath("//body").to_html
+          # puts body
           begin
-            match = @agent.get("http://www.okcupid.com/getlucky?type=1")
-            body = match.parser.xpath("//body").to_html
+
 
             user_name = body.match(/\/profile\/(.*)\/photos/)[1]
-            tallyVisit(user_name)
             match_per = body.match(/"match"\>\<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
-            @log[user_name] = (@log[user_name].to_i + 1).to_s
           rescue
-            puts "Invalid user"
+            begin
+              match_per = body.match(/<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
+            rescue
+              puts "Invalid user"
+            end
           end
-          clear
-          # puts "Just visited " + user_name.to_s
-          # puts "You are a " + match_per + " percent match"
-          # puts "You have visited her " + @names[user_name].to_s + " times."
+          tallyVisit(user_name, match_per)
           formatter(user_name, match_per, @names[user_name].to_s, @mph)
-
-          row = [user_name.to_s,match_per.to_s, Time.now, Time.now.to_i]
-          @saveResults.data = row
-          @saveResults.append
           i+=1
           # puts "********************************"
           sleep @speed
@@ -321,7 +394,11 @@ class AutoVisitor
       rescue Exception => e
         puts e.message
         puts e.backtrace
-      end
-
     end
+else
+  puts "You are not logged in"
+  puts body
+end
   end
+
+end

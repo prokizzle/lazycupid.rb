@@ -1,24 +1,24 @@
- require_relative 'AutoRoller.rb'
+#!/usr/bin/env ruby
+require_relative 'AutoRoller.rb'
 
-  lazyCupid = AutoVisitor.new()
+class Roller
+attr_accessor :username
+attr_accessor :password
 
-  @u = ARGV[0]
-  @p = ARGV[1]
-  @m = ARGV[2].to_i
+@username = "danceyrselfcln"
+@password = "123457"
 
-  puts "Initializing..."
-  lazyCupid.login(@u, @p)
-  # lazyCupid.importCSV(@u)
-  lazyCupid.ignoreUser "james"
-  lazyCupid.loadIgnoreList
-  lazyCupid.loadData
-  # lazyCupid.run(@m, @s)
-  # lazyCupid.lastVisited()
-  lazyCupid.smartRoll(@m)
-  # lazyCupid.stalk()
-  lazyCupid.saveData(@names)
+  def run
+    @number = ARGV[0].to_i
+    app = AutoRoller.new()
+    app.clear
+    app.login(@username, @password)
+    app.smartRoll(@number)
+  end
+end
 
-  # singleVisits
-  puts ""
-  puts "Done."
-  puts "---"
+application = Roller.new
+application.username = "danceyrselfcln"
+application.password = "123457"
+application.run
+

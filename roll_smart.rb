@@ -1,24 +1,36 @@
 #!/usr/bin/env ruby
-require_relative 'AutoRoller.rb'
+require './SmartRoll'
+require './Session'
 
-class Roller
-attr_accessor :username
-attr_accessor :password
+class SmartStalker
 
-@username = "danceyrselfcln"
-@password = "123457"
-
-  def run
-    @number = ARGV[0].to_i
-    app = AutoRoller.new()
-    app.clear
-    app.login(@username, @password)
-    app.smartRoll(@number)
-  end
+def initialize(username, password, max)
+    @database = DataReader.new(username)
+    @search = Lookup.new(username)
+    @profile = Session.new(username, password)
+    @display = Output.new(username)
+    @roller = AutoRoller.new(username, password)
+    @smarty = SmartRoll.new(database, roller, max)
+    @database.load
+    @profile.login
 end
 
-application = Roller.new
-application.username = "danceyrselfcln"
-application.password = "123457"
+def run
+    @smarty.run
+end
+
+end
+
+print "Username: "
+username = gets.chomp
+puts ""
+print "Password: "
+password = gets.chomp
+puts ""
+print "Max: "
+max = gets.chomp
+
+
+application = SmartStalker.new(username, password, max)
 application.run
 

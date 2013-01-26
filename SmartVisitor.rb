@@ -1,5 +1,5 @@
 require_relative 'AutoRoller.rb'
-require_relative 'OutputScrape.rb'
+require_relative 'DataManager.rb'
 
 def SmartVisitor < AutoVisitor
 

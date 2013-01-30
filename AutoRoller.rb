@@ -44,36 +44,37 @@ class AutoRoller
   end
 
 
-  def rollDice(url=@GET_LUCKY_URL, mph=200, mode="normal")
+  def roll_dice(url=@GET_LUCKY_URL, mode="normal")
     # begin
-    @mph = mph
     @profile.go_to(url)
-    @database.log(@profile.scrape_user_name, @profile.scrape_match_percentage)
-    @display.output(@profile.scrape_user_name, @profile.scrape_match_percentage, @mph, mode)
-    sleep speed
+    if @profile.user_is_active
+      @database.log(@profile.scrape_user_name, @profile.scrape_match_percentage)
+      @display.output(@profile.scrape_user_name, @profile.scrape_match_percentage, @mph, mode)
+      sleep speed
+    end
   end
 
   def roller
     # i=1
-      begin
-        # while (i<=1000) do
-        500.times do
-            rollDice
-            # i+=1
-            sleep speed
-          end
-        rescue SystemExit, Interrupt
-          quit
-        rescue Exception => e
-          puts e.message
-          puts e.backtrace
-        end
-      @database.save
-      puts "Done."
+    begin
+      # while (i<=1000) do
+      500.times do
+        roll_dice
+        # i+=1
+        sleep speed
+      end
+    rescue SystemExit, Interrupt
+      quit
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     end
-
-    def run
-      roller
-    end
-
+    @database.save
+    puts "Done."
   end
+
+  def run
+    roller
+  end
+
+end

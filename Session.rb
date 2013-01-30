@@ -64,9 +64,9 @@ class Session
 
   def scrape_user_name
     begin
-      @user_name = @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
+      @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
     rescue
-      @user_name = "N/A"
+      "N/A"
     end
   end
 
@@ -82,4 +82,8 @@ class Session
     end
   end
 
+  def user_is_active(user)
+      go_to("http://www.okcupid.com/profile/#{user}")
+      @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)
+  end
 end

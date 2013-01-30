@@ -45,7 +45,7 @@ class Roller
     @roller.run
   end
 
-  def smart_roller(max, mph)
+  def smart_roller(max, mph=600)
     @smarty.max = max
     @smarty.mph = mph
     @smarty.run
@@ -101,13 +101,13 @@ end
 
 while quit == false
   application.clear
-  puts "LazyCupid Main Menu","--------------------",""
+  puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
   puts "(1) Blind Mode (Harvest)"
   puts "(2) Smart Mode"
   puts "(3) Lookup counts"
   puts "(4) Add to ignore list"
-  puts "(Q) Quit"
+  puts "(Q) Quit",""
   print "Mode: "
   mode = gets.chomp
 
@@ -119,9 +119,9 @@ while quit == false
   when "2"
     print "Max: "
     max = gets.chomp
-    print "MPH: "
-    mph = gets.chomp
-    application.smart_roller(max.to_i, mph.to_i)
+    # print "MPH: "
+    # mph = gets.chomp
+    application.smart_roller(max.to_i)
   when "3"
     puts ""
     print "User: "
@@ -145,4 +145,5 @@ if logout == true
 application.logout
 application.clear
 end
+application.clear
 puts ""

@@ -5,12 +5,12 @@ class AutoRoller
   attr_accessor :names, :speed, :current_user, :mph
   attr_reader :names, :speed, :current_user, :mph
 
-  def initialize(database, profile, display, mph=100)
+  def initialize(database, browser, display, mph=100)
     @mph = mph
     @GET_LUCKY_URL = "http://www.okcupid.com/getlucky?type=1"
     @max = 5000
     @database = database
-    @profile = profile
+    @browser = browser
     @display = display
     # speed
   end
@@ -46,10 +46,10 @@ class AutoRoller
 
   def roll_dice(url=@GET_LUCKY_URL, mode="normal")
     # begin
-    @profile.go_to(url)
-    # if @profile.user_is_active
-      @database.log(@profile.scrape_user_name, @profile.scrape_match_percentage)
-      @display.output(@profile.scrape_user_name, @profile.scrape_match_percentage, @mph, mode)
+    @browser.go_to(url)
+    # if @browser.user_is_active
+      @database.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
+      @display.output(@browser.scrape_user_name, @browser.scrape_match_percentage, @mph, mode)
       sleep speed
     # end
   end

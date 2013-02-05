@@ -1,17 +1,22 @@
 require './DataManager'
 
 class Lookup
-  attr_reader :match, :data
-  attr_accessor :match, :data
+  attr_reader :match, :data, :visits
+  attr_accessor :match, :data, :visits
 
   def initialize(database, manual_import=false)
     @importer = database
     @importer.import if manual_import
     @match = @importer.data
+    @visits = @importer.visit_count
   end
 
   def byUser(user)
     @match[user]
+  end
+
+  def visits(user)
+    @visits[user]
   end
 
   def match

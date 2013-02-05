@@ -6,8 +6,8 @@ class DataReader
   attr_accessor :username, :data, :load, :zindex, :visit_count
   attr_reader :username, :data, :load, :zindex, :visit_count
 
-  def initialize(u)
-    @username = u
+  def initialize(args)
+    @username = args[ :username]
     @db = DataWriter.new(@username.to_s + "_count.csv")
     @log = DataWriter.new(@username.to_s + ".csv")
     @names = Hash.new {|h, k| h[k] = 0 }

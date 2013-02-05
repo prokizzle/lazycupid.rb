@@ -16,7 +16,7 @@ class Roller
     @username = args[ :username]
     @password = args[ :password]
     @speed = speed
-    @database = DataReader.new(@username)
+    @database = DataReader.new(:username => @username)
     @search = Lookup.new(@database)
     @profile = Session.new(:username => self.username, :password => self.password)
     @display = Output.new(@search, @username)

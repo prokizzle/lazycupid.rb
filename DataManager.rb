@@ -3,14 +3,16 @@ require 'csv'
 require 'set'
 
 class DataReader
-  attr_accessor :username, :data, :load
-  attr_reader :username, :data, :load
+  attr_accessor :username, :data, :load, :zindex, :visit_count
+  attr_reader :username, :data, :load, :zindex, :visit_count
 
   def initialize(u)
     @username = u
     @db = DataWriter.new(@username.to_s + "_count.csv")
     @log = DataWriter.new(@username.to_s + ".csv")
     @names = Hash.new {|h, k| h[k] = 0 }
+    @zindex = Hash.new {|h, k| h[k] = 0 }
+    @visit_count = Hash.new {|h, k| h[k] = 0 }
     @ignore = Hash.new("false")
 
   end
@@ -56,16 +58,20 @@ class DataReader
   def load
     create_new_user if !(is_valid_user)
     begin
-    # puts "Loading data file"
-    CSV.foreach(@username.to_s + "_count.csv", :headers => true, :skip_blanks => false) do |row|
-      text = row[0]
-      count = row[1].to_i
-      ignore = row[2]
-      @names[text] = count
-      @ignore[text] = ignore
+      # puts "Loading data file"
+      CSV.foreach(@username.to_s + "_count.csv", :headers => true, :skip_blanks => false) do |row|
+        text = row[0]
+        count = row[1].to_i
+        ignore = row[2]
+        zindex = row[3].to_i
+        visit_count = row[4].to_i
+        @names[text] = count
+        @ignore[text] = ignore
+        @zindex[text] = zindex
+        @visit_count[text] = visit_count
+      end
+    rescue
     end
-  rescue
-  end
   end
 
   def ignore_init
@@ -74,13 +80,27 @@ class DataReader
     end
   end
 
+  def zindex_init
+    @names.each do |a, b|
+      @zindex[a] = 1
+    end
+  end
+
+  def visit_count_init
+    @names.each do |a, b|
+      @visit_count[a] = 0
+    end
+  end
+
   def save
     @db.clear
     @names.each do |a, b|
       c = @ignore[a].to_s
-      row = [a, b, c]
+      d = @zindex[a].to_s
+      e = @visit_count[a].to_s
+      row = [a, b, c, d, e]
       @db.data = row
-      @db.append(row)
+      @db.append(row) # if (a.length > 0)
     end
   end
 
@@ -93,6 +113,12 @@ class DataReader
 
   def data
     @names
+  end
+
+  def add_new_match(user)
+    if !(@names.has_key?(user))
+      @names[user] = 0
+    end
   end
 
   def ignore
@@ -132,6 +158,7 @@ class DataWriter
     @data = Array.new
     @file = file
     @writer = CSVWriter.new
+
   end
 
   def append(row=@data)
@@ -139,7 +166,8 @@ class DataWriter
   end
 
   def clear
-    @writer.write(@file, "wb", [])
+    # @writer.write(@file, "wb", [])
+    File.open(@file, 'w') {|f|  }
   end
 
   def new_file

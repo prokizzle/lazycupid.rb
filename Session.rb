@@ -2,13 +2,13 @@ require 'rubygems'
 require 'mechanize'
 
 class Session
-  attr_accessor :go_to, :agent
-  attr_reader :go_to, :agent
+  attr_accessor :go_to, :agent, :body, :current_user
+  attr_reader :go_to, :agent, :body, :current_user
 
 
-  def initialize(username, password)
-    @username = username
-    @password = password
+  def initialize(args)
+    @username = args[ :username]
+    @password = args[ :password]
     @agent = Mechanize.new
   end
 

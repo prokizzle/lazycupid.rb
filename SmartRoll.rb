@@ -13,13 +13,14 @@ class SmartRoll
     @profiles = Hash.new("---nick")
     @mph = mph
     @delete = Hash.new(false)
+    @ignore_list = @db.ignore
   end
 
 
 
   def select(max)
     @profiles = Hash.new("---nick")
-    @select = @names.select {|user, visits| visits <= @max }
+    @select = @names.select {|user, visits| visits <= @max || visits == 0 }
   end
 
   def build_queues
@@ -28,7 +29,10 @@ class SmartRoll
     @selection = self.select(@max)
     @selection.each do |user, counts|
       if user != nil && user != "N/A"
-        @profiles[user] = "http://www.okcupid.com/profile/#{user}/"
+        if !(@ignore_list[user])
+        puts @ignore_list[user]
+          @profiles[user] = "http://www.okcupid.com/profile/#{user}/"
+        end
       end
     end
   end

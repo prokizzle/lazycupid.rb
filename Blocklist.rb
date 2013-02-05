@@ -8,9 +8,9 @@ class BlockList
   end
 
   def add(user)
-    if @counts[user].to_i < 1 ||
+    # if @counts[user].to_i < 1
         @database.ignore[user] = true
-    end
+    # end
   end
 
   def ignoreUser(match)

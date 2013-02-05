@@ -47,11 +47,15 @@ class AutoRoller
   def roll_dice(url=@GET_LUCKY_URL, mode="normal")
     # begin
     @browser.go_to(url)
-    # if @browser.user_is_active
+    unless @browser.account_deleted
       @database.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
       @display.output(@browser.scrape_user_name, @browser.scrape_match_percentage, @mph, mode)
       sleep speed
-    # end
+    end
+  end
+
+  def account_deleted
+    @browser.account_deleted
   end
 
   def roller

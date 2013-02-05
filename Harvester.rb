@@ -19,7 +19,7 @@ class Harvester
   def get_100(url="http://www.okcupid.com/messages")
     i = 0
     15.times do
-      print "=" if i%5==0
+      print "=" if i%3==0
       i+=1
       scrape_from_page(url)
       sleep 1

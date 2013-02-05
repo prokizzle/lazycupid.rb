@@ -121,6 +121,14 @@ class DataReader
     end
   end
 
+  def remove_match(user)
+    if @names.has_key?(user)
+      puts "Removing #{user}"
+      # @names.tap { |hs| hs.delete(user) }
+      @names.delete(user)
+    end
+  end
+
   def ignore
     @ignore
   end

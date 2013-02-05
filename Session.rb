@@ -82,8 +82,7 @@ class Session
     end
   end
 
-  def user_is_active(user)
-      go_to("http://www.okcupid.com/profile/#{user}")
-      @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)
+  def account_deleted
+      @body.match(/Uh\-oh/)
   end
 end

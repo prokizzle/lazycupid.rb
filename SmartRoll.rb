@@ -20,7 +20,7 @@ class SmartRoll
 
   def select(max)
     @profiles = Hash.new("---nick")
-    @select = @names.select {|user, visits| visits <= @max || visits == 0 }
+    @select = @names.select {|user, visits| visits <= @max}
   end
 
   def build_queues
@@ -29,10 +29,10 @@ class SmartRoll
     @selection = self.select(@max)
     @selection.each do |user, counts|
       if user != nil && user != "N/A"
-        if !(@ignore_list[user])
+        # unless (@ignore_list[user])
         puts @ignore_list[user]
           @profiles[user] = "http://www.okcupid.com/profile/#{user}/"
-        end
+        # end
       end
     end
   end
@@ -46,7 +46,11 @@ class SmartRoll
       build_queues
       @roller.mph = @mph
       @profiles.each do |user, link|
+        # puts link
         @roller.roll_dice(link, "smart")
+        if @roller.account_deleted
+          @db.remove_match(user)
+        end
       end
     rescue SystemExit, Interrupt
     end

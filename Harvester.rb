@@ -17,9 +17,8 @@ class Harvester
   end
 
   def safety_dance(method)
-    @method = method
     begin
-      @method
+      method.call
     rescue SystemExit, Interrupt
     end
   end

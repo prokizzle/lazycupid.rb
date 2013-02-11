@@ -45,8 +45,11 @@ class Session
   end
 
   def go_to(url)
-    @current_user = @agent.get(url)
-    @body = @current_user.parser.xpath("//body").to_html
+    begin
+      @current_user = @agent.get(url)
+      @body = @current_user.parser.xpath("//body").to_html
+    rescue
+    end
   end
 
   def logout
@@ -83,6 +86,6 @@ class Session
   end
 
   def account_deleted
-      @body.match(/Uh\-oh/)
+    @body.match(/Uh\-oh/)
   end
 end

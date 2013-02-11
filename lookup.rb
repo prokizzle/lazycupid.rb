@@ -4,9 +4,9 @@ class Lookup
   attr_reader :match, :data, :visits
   attr_accessor :match, :data, :visits
 
-  def initialize(database, manual_import=false)
-    @importer = database
-    @importer.import if manual_import
+  def initialize(args)
+    @importer = args[ :database]
+    # @importer.import if manual_import
     @match = @importer.data
     @visits = @importer.visit_count
   end
@@ -18,6 +18,8 @@ class Lookup
   def visits(user)
     @visits[user]
   end
+
+
 
   def match
     @match

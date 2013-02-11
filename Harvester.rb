@@ -1,8 +1,8 @@
 require 'rubygems'
 
 class Harvester
-  attr_reader :type
-
+  attr_reader :type, :number
+  attr_accessor :type, :number
   def initialize(args)
     @browser = args[ :browser]
     @database = args[ :database]
@@ -13,18 +13,30 @@ class Harvester
 
   def run
     puts "Harvesting"
-    self.get_100
+    self.get_batch(@number)
   end
 
-  def get_100(url="http://www.okcupid.com/messages")
-    i = 0
-    15.times do
+  def safety_dance(method)
+    @method = method
+    begin
+      @method
+    rescue SystemExit, Interrupt
+    end
+  end
+
+
+  def get_batch(number, url="http://www.okcupid.com/messages")
+
+    for i in 0..number do
       print "=" if i%3==0
-      i+=1
       scrape_from_page(url)
       sleep 1
     end
     self.save
+  end
+
+  def number
+    @number
   end
 
   def scrape_from_page(url)

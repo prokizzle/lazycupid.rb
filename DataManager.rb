@@ -1,10 +1,9 @@
 require 'rubygems'
 require 'csv'
-require 'set'
 
 class DataReader
-  attr_accessor :username, :data, :load, :zindex, :visit_count
-  attr_reader :username, :data, :load, :zindex, :visit_count
+  attr_accessor :username, :data, :load, :zindex, :visit_count, :last_visit_date
+  attr_reader :username, :data, :load, :zindex, :visit_count, :last_visit_date
 
   def initialize(args)
     @username = args[ :username]
@@ -13,8 +12,8 @@ class DataReader
     @names = Hash.new {|h, k| h[k] = 0 }
     @zindex = Hash.new {|h, k| h[k] = 0 }
     @visit_count = Hash.new {|h, k| h[k] = 0 }
+    @last_visit_date = Hash.new {|h, k| h[k] = 0 }
     @ignore = Hash.new("false")
-
   end
 
   def create_new_user
@@ -28,30 +27,33 @@ class DataReader
   end
 
   def is_valid_user
-    begin
-      CSV.foreach(@username.to_s + "_count.csv", :headers => true, :skip_blanks => false) do |row|
-        # print "."
-      end
-      true
-    rescue
-      false
-    end
+    # begin
+    #   CSV.foreach(@username.to_s + "_count.csv", :headers => true, :skip_blanks => false) do |row|
+    #     # print "."
+    #   end
+    #   true
+    # rescue
+    #   false
+    # end
+    File.exists?(@username.to_s + "_count.csv")
   end
-
 
   def import
     CSV.foreach(@username.to_s + ".csv", :headers => true, :skip_blanks => false) do |row|
-      text = row[0]
-      @names[text] += 1
+      match_name = row[0]
+      last_visit = row[3]
+      @names[match_name] += 1
+      @last_visit_date[match_name] = last_visit
     end
-    save
+    self.convert_init
+    self.save
   end
 
-  def print
-    CSV.foreach(@username + "_count.csv", :headers => true, :skip_blanks => false) do |row|
-      text = row[0]
-      count = row[1]
-      puts count + " " + text.to_s
+  def convert_init
+    @names.each do |a, b|
+      @ignore[a] = false
+      @visit_count[a] = 0
+      @zindex[a] = 1
     end
   end
 
@@ -65,30 +67,14 @@ class DataReader
         ignore = row[2]
         zindex = row[3].to_i
         visit_count = row[4].to_i
+        last_visit = row[5].to_i
         @names[text] = count
         @ignore[text] = ignore
         @zindex[text] = zindex
         @visit_count[text] = visit_count
+        @last_visit_date[text] = last_visit
       end
     rescue
-    end
-  end
-
-  def ignore_init
-    @names.each do |a, b|
-      @ignore[a] = false
-    end
-  end
-
-  def zindex_init
-    @names.each do |a, b|
-      @zindex[a] = 1
-    end
-  end
-
-  def visit_count_init
-    @names.each do |a, b|
-      @visit_count[a] = 0
     end
   end
 
@@ -98,17 +84,20 @@ class DataReader
       c = @ignore[a].to_s
       d = @zindex[a].to_s
       e = @visit_count[a].to_s
-      row = [a, b, c, d, e]
+      f = @last_visit_date[a]
+      row = [a, b, c, d, e, f]
       @db.data = row
       @db.append(row) # if (a.length > 0)
     end
   end
+
 
   def log(match_name, match_percent=0)
     row = [match_name.to_s,match_percent.to_s, Time.now, Time.now.to_i]
     @log.data = row
     @log.append
     @names[match_name] = (@names[match_name] + 1)
+    @last_visit_date[match_name] = Time.now.to_i
   end
 
   def data

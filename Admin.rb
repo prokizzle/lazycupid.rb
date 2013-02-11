@@ -1,30 +1,32 @@
-require_relative 'DataManager.rb'
 
 class Admin
+  attr_reader :menu
+  attr_accessor :menu
 
-  def initialize(account, database)
-    @account = account
-    @db = database
+  def initialize(args)
+    @db = args[ :database]
+    @account = ""
   end
 
   def add_user(user)
-    @db.load
-    @db.datas(user, 0)
-    @db.log(user)
-    @db.save
+    @db.add_new_match(user)
   end
 
-  def block_user
-    #add user to block list or
-    #
+  def block_user(user)
+    @blocklist.add(user)
+  end
+
+  def import
+    @db.import
   end
 
   def user_exists
     @db.is_valid_user
   end
 
-end
 
-application = Admin.new(ARGV[0], DataReader.new(ARGV[0]))
-application.add_user(ARGV[1]) if application.user_exists
-puts "Added" if application.user_exists
+  # application = Admin.new(ARGV[0], DataReader.new(ARGV[0]))
+  # application.add_user(ARGV[1]) if application.user_exists
+  # puts "Added" if application.user_exists
+
+end

@@ -35,6 +35,15 @@ class Output
     puts "to quit press ctrl-c"
   end
 
+  def progress(total_matches)
+
+  end
+
+  def update_progress
+
+  end
+
+
   # def p(i)
   #   puts i
   # end

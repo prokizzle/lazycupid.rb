@@ -2,7 +2,9 @@ class Users
   attr_reader :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
   attr_accessor :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
 
-  def initialize
+  def initialize(args)
+    @db = args[ :database]
+    @browser = args[ :browser]
     @match_percentage = Hash.new(0)
     @age = Hash.new(0)
     @count = Hash.new(0)
@@ -13,11 +15,12 @@ class Users
   end
 
 def handle
-  @handle
+  @body.match(/href="\/profile\/([\w\d]+)\/photos"/)[1]
 end
 
+
 def match_percentage
-  @match[@handle]
+  @body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
 end
 
 def age

@@ -50,8 +50,8 @@ class AutoRoller
     unless @browser.account_deleted
       @database.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
       @display.output(@browser.scrape_user_name, @browser.scrape_match_percentage, @mph, mode)
-      sleep speed
     end
+      sleep speed
   end
 
   def account_deleted
@@ -78,7 +78,7 @@ class AutoRoller
   end
 
   def run
-    roller
+    self.roller
   end
 
 end

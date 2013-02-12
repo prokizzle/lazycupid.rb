@@ -9,15 +9,15 @@ class Roller
     @username = args[ :username]
     @password = args[ :password]
     @speed = speed
-    @database = DataReader.new(:username => @username)
-    @search = Lookup.new(:database => @database)
-    @profile = Session.new(:username => self.username, :password => self.password)
-    @display = Output.new(@search, @username)
-    @roller = AutoRoller.new(@database, @profile, @display)
-    @smarty = SmartRoll.new(:database => @database, :visitor => @roller)
-    @blocklist = BlockList.new(@database)
-    @harvester = Harvester.new(:browser => @profile, :database => @database)
-    @admin = Admin.new(:database => @database)
+    @browser = Session.new(:username => self.username, :password => self.password)
+    @database = DataReader.new(:username => self.username)
+    @search = Lookup.new(:database => self.db)
+    @display = Output.new(:stats => @search, :username => self.username)
+    @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display)
+    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller)
+    @blocklist = BlockList.new(:database => self.db)
+    @harvester = Harvester.new(:browser => @browser, :database => self.db)
+    @admin = Admin.new(:database => self.db)
   end
 
   def username
@@ -30,6 +30,10 @@ class Roller
 
   def password
     @password
+  end
+
+  def db
+    @database
   end
 
   def block(user)
@@ -60,15 +64,15 @@ class Roller
   end
 
   def logout
-    @profile.logout
+    @browser.logout
   end
 
   def logged_in
-    @profile.is_logged_in
+    @browser.is_logged_in
   end
 
   def login
-    @profile.login
+    @browser.login
   end
 
   def load_data

@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'csv'
+require 'progress_bar'
 
 class DataReader
   attr_accessor :username, :data, :load, :zindex, :visit_count, :last_visit_date
@@ -79,6 +80,7 @@ class DataReader
   end
 
   def save
+    @bar = ProgressBar.new(@names.size)
     @db.clear
     @names.each do |a, b|
       c = @ignore[a].to_s
@@ -88,6 +90,7 @@ class DataReader
       row = [a, b, c, d, e, f]
       @db.data = row
       @db.append(row) # if (a.length > 0)
+      @bar.increment!
     end
   end
 

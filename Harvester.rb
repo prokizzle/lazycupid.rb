@@ -7,7 +7,7 @@ class Harvester
     @browser = args[ :browser]
     @database = args[ :database]
     @scrape_queue = Array.new
-    @visitor_ranking = @database.visit_count
+    @visitor_counter = @database.visit_count
     @visitor_tracker = @database.zindex
   end
 
@@ -45,8 +45,8 @@ class Harvester
   end
 
   def save
-    @database.zindex = @visitor_ranking
-    @database.visit_count = @visitor_tracker
+    @database.zindex = @visitor_tracker
+    @database.visit_count = @visitor_counter
     @database.save
   end
 
@@ -65,10 +65,12 @@ class Harvester
     @visitors = @current_user.parser.xpath("//div[@id='main_column']").to_html
     array = @visitors.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
     array.each do |visitor, zindex|
-      if @visitor_ranking[visitor].to_i < zindex.to_i
-        @visitor_tracker[visitor] = @visitor_tracker[visitor].to_i + 1
+      @timestamp_block = @current_user.parser.xpath("//div[@id='usr-#{visitor}-info']/p/span[@class='fancydate']").to_html
+      @timestamp = @timestamp_block.match(/\d+/)[1]
+      if @visitor_tracker[visitor].to_i != @timestamp
+        @visitor_counter[visitor] = @visitor_counter[visitor].to_i + 1
       end
-      @visitor_ranking[visitor] = zindex
+      @visitor_tracker[visitor] = @timestamp
     end
     sleep 1
     self.save

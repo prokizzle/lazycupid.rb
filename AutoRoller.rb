@@ -5,13 +5,13 @@ class AutoRoller
   attr_accessor :names, :speed, :current_user, :mph
   attr_reader :names, :speed, :current_user, :mph
 
-  def initialize(database, browser, display, mph=100)
-    @mph = mph
+  def initialize(args)
+    @mph = args.fetch(:mph, 100)
     @GET_LUCKY_URL = "http://www.okcupid.com/getlucky?type=1"
     @max = 5000
-    @database = database
-    @browser = browser
-    @display = display
+    @database = args[ :database]
+    @browser = args[ :browser]
+    @display = args[ :gui]
     # speed
   end
 
@@ -38,9 +38,6 @@ class AutoRoller
 
   def quit
     @display.clear
-    puts "User quit. Saving data..."
-    # @database.save
-    # puts "Done."
   end
 
 
@@ -76,7 +73,6 @@ class AutoRoller
       puts e.backtrace
     end
     @database.save
-    puts "Done."
   end
 
   def run

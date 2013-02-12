@@ -5,9 +5,9 @@ class Output
   attr_accessor :username, :match_name, :match_percent, :visit_count
   attr_reader :username, :match_name, :match_percent, :visit_count
 
-  def initialize(database, username)
-    @username = username
-    @search = database
+  def initialize(args)
+    @username = args[ :username]
+    @search = args[ :stats]
   end
 
   def clear
@@ -29,9 +29,10 @@ class Output
     puts "LazyCupid Ruby","========================="
     puts "#{mode_name} @ #{speed} MPH","----------------------"
     puts "  For: #{@username}",""
-    puts "  Visiting: #{match_name}"
-    puts "  Match:    #{match_percent}%"
-    puts "  Visits:   #{@search.byUser(match_name)}",""
+    puts "  Visiting:    #{match_name}"
+    puts "  Match:       #{match_percent}%"
+    puts "  Visits:      #{@search.byUser(match_name)}"
+    puts "  Visited You: #{@search.visits(match_name)}",""
     puts "to quit press ctrl-c"
   end
 

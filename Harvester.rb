@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'progress_bar'
 
 class Harvester
   attr_reader :type, :number
@@ -25,9 +26,9 @@ class Harvester
 
 
   def get_batch(number, url="http://www.okcupid.com/messages")
-
+    @bar = ProgressBar.new(number)
     for i in 0..number do
-      print "=" if i%3==0
+      @bar.increment!
       scrape_from_page(url)
       sleep 1
     end
@@ -69,6 +70,7 @@ class Harvester
       @timestamp = @timestamp_block.match(/\d+/)[1]
       if @visitor_tracker[visitor].to_i != @timestamp
         @visitor_counter[visitor] = @visitor_counter[visitor].to_i + 1
+        puts "New visit from #{visitor}"
       end
       @visitor_tracker[visitor] = @timestamp
     end

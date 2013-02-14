@@ -36,8 +36,8 @@ class Roller
     @database
   end
 
-  def block(user)
-    @blocklist.add(user)
+  def ignore_user(user)
+    @blocklist.ignore_user(user)
   end
 
   def harvester(speed)
@@ -55,6 +55,13 @@ class Roller
   def smart_roller_by_visit(days)
     @smarty.mode = "v"
     @smarty.days = days
+    @smarty.mph = 600
+    @smarty.run
+  end
+
+  def overkill(min)
+    @smarty.mode = "k"
+    @smarty.max = min
     @smarty.mph = 600
     @smarty.run
   end
@@ -93,6 +100,17 @@ class Roller
     @harvester.visitors
   end
 
+  def check_visitors_loop
+    puts "Monitoring visitors"
+    begin
+      loop do
+        @harvester.visitors
+        sleep 60
+      end
+    rescue SystemExit, Interrupt
+    end
+  end
+
   def admin_menu
     @admin.menu
   end
@@ -106,22 +124,22 @@ quit = false
 logged_in = false
 
 begin
-while logged_in == false
-  print "Username: "
-  username = gets.chomp
-  password = ask("password: ") { |q| q.echo = false }
-  application = Roller.new(:username => username, :password => password)
-  if application.login
-    logged_in = true
-    application.load_data
-  else
-    puts "Incorrect password. Try again.",""
+  while logged_in == false
+    print "Username: "
+    username = gets.chomp
+    password = ask("password: ") { |q| q.echo = false }
+    application = Roller.new(:username => username, :password => password)
+    if application.login
+      logged_in = true
+      application.load_data
+    else
+      puts "Incorrect password. Try again.",""
+    end
   end
-end
 rescue SystemExit, Interrupt
-quit = true
-logout = false
-puts "","","Goodbye."
+  quit = true
+  logout = false
+  puts "","","Goodbye."
 end
 
 while quit == false
@@ -132,8 +150,7 @@ while quit == false
   puts "(1) Blind Mode (Harvest)"
   puts "(2) Smart Mode"
   puts "(3) Visit new users"
-  puts "(4) Add to ignore list"
-  puts "(5) Harvest"
+  puts "(4) Harvest"
   puts "(Q) Quit",""
   print "Mode: "
   mode = gets.chomp
@@ -150,12 +167,17 @@ while quit == false
     # mph = gets.chomp
     application.smart_roller(max.to_i)
   when "3"
+    application.load_data
     application.harvest(25)
     application.smart_roller(0)
-  when "5"
+  when "4"
     application.harvest
+  when "5"
+    puts "Min: "
+    min = gets.chomp
+    application.overkill(min)
   when "6"
-    application.check_visitors
+    application.check_visitors_loop
   when "8"
     print "User to add: "
     user=gets.chomp
@@ -188,7 +210,7 @@ while quit == false
     when "4"
       print "User: "
       user = gets.chomp
-      application.block_user(user)
+      application.ignore_user(user)
     end
   when "q"
     quit = true
@@ -199,8 +221,8 @@ while quit == false
   end
 end
 if logout == true
-application.logout
-application.clear
+  application.logout
+  application.clear
 end
 application.clear
 puts ""

@@ -21,36 +21,45 @@ class SmartRoll
     @days = 2
   end
 
+  def overkill(min)
+    self.reload
+    @names.select {|user, visits| visits.to_i >= @max.to_i}
+  end
+
   def mode
     @mode
   end
 
+  def reload
+    @names = @db.data
+  end
+
+  def names
+    @db.data
+  end
+
   def select_by_visit_count(max)
-    @select = @names.select {|user, visits| visits <= @max}
+    self.reload
+    @select = names.select {|user, visits| visits <= @max}
     @select = @select.sort_by {|k,v| v.to_i}
     # @selection = self.select_by_visit_count(@max)
   end
 
   def select_by_last_visit_date(day_input=1)
+    self.reload
+    self.fix_blank_dates
     @select = @last_visit.select {|user, time| (@now - time.to_i) > days(day_input)}
     # puts @select
     # @selection = self.select_by_visit_count
   end
 
-  def prepare_queue
-    case mode
-    when "c"
-      select_by_visit_count(@max)
-    when "v"
-      select_by_last_visit_date(2)
+  def fix_blank_dates
+    self.reload
+    @last_visit.each do |user, time|
+      if time == 0
+        @last_visit[user] = @now
+      end
     end
-
-    # @ignores = @select.select {|user,visits| @ignore_list.has_key?(user)}
-    # @ignores.each do |user, value|
-    #   @select.delete(user)
-    # end
-
-
   end
 
   def days(number)
@@ -58,14 +67,21 @@ class SmartRoll
   end
 
   def build_queues(mode)
+
     if mode == "v"
       @selection = select_by_last_visit_date(@days)
-    else
+    elsif mode == "c"
       @selection = select_by_visit_count(@max)
+    else
+      @selection = overkill(@max)
     end
+
+    self.fix_blank_dates
 
     @selection.each do |user, visits|
       if @ignore_list.has_key?(user)
+        @selection.delete(user)
+      elsif (@now - @last_visit[user].to_i) < days(2)
         @selection.delete(user)
       end
     end

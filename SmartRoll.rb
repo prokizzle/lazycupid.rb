@@ -1,5 +1,6 @@
 require './DataManager'
 require './AutoRoller'
+require './Blocklist'
 
 class SmartRoll
   attr_reader :max, :mph, :delete, :mode, :days
@@ -7,6 +8,7 @@ class SmartRoll
 
   def initialize(args)
     @db = args[ :database]
+    @blocklist = Blocklist.new(:database => @db)
     @roller = args[ :visitor]
     @mph = args.fetch(:mph, 600)
     @max = args.fetch(:max_visists, 0)
@@ -22,8 +24,7 @@ class SmartRoll
   end
 
   def overkill(min)
-    self.reload
-    @names.select {|user, visits| visits.to_i >= @max.to_i}
+    @db.filter_by_visits(1000,min)
   end
 
   def mode
@@ -38,32 +39,23 @@ class SmartRoll
     @db.data
   end
 
-  def select_by_visit_count(max)
-    self.reload
-    @select = names.select {|user, visits| visits <= @max}
-    @select = @select.sort_by {|k,v| v.to_i}
-    # @selection = self.select_by_visit_count(@max)
+  def select_by_visit_count(max, min=0)
+    @select = @db.filter_by_visits(max)
   end
 
   def select_by_last_visit_date(day_input=1)
-    self.reload
-    self.fix_blank_dates
-    @select = @last_visit.select {|user, time| (@now - time.to_i) > days(day_input)}
-    # puts @select
-    # @selection = self.select_by_visit_count
-  end
-
-  def fix_blank_dates
-    self.reload
-    @last_visit.each do |user, time|
-      if time == 0
-        @last_visit[user] = @now
-      end
-    end
+    max = Time.now.to_i - days(day_input).to_i
+    min = 0
+    @select = @db.filter_by_dates(min, max)
   end
 
   def days(number)
     86400 * number.to_i
+  end
+
+  def relative_last_visit(match)
+    unix_date = @db.get_last_visit_date(match)
+    ((Time.now.to_i - unix_date)/86400).round
   end
 
   def build_queues(mode)
@@ -76,13 +68,13 @@ class SmartRoll
       @selection = overkill(@max)
     end
 
-    self.fix_blank_dates
-
     @selection.each do |user, visits|
-      if @ignore_list.has_key?(user)
+      if @blocklist.is_ignored(user)
         @selection.delete(user)
-      elsif (@now - @last_visit[user].to_i) < days(2)
+        puts "#{user} is blocked. Removing."
+      elsif (relative_last_visit(user) < 2)
         @selection.delete(user)
+        puts "#{user} was visited recently. Removing."
       end
     end
 
@@ -111,7 +103,7 @@ class SmartRoll
   end
 
   def remove_match(user)
-    @db.remove_match(user)
+    @db.delete_user(user)
   end
 
   def set_speed

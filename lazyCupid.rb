@@ -18,6 +18,11 @@ class Roller
     @blocklist = BlockList.new(:database => self.db)
     @harvester = Harvester.new(:browser => @browser, :database => self.db)
     @admin = Admin.new(:database => self.db)
+
+  end
+
+  def fix_dates
+    @smarty.fix_blank_dates
   end
 
   def username
@@ -100,6 +105,10 @@ class Roller
     @harvester.visitors
   end
 
+  def scrape_similar(user)
+    @harvester.similar_user_scrape(user)
+  end
+
   def check_visitors_loop
     puts "Monitoring visitors"
     begin
@@ -142,6 +151,8 @@ rescue SystemExit, Interrupt
   puts "","","Goodbye."
 end
 
+# application.fix_dates
+
 while quit == false
   application.check_visitors
   application.clear
@@ -178,6 +189,10 @@ while quit == false
     application.overkill(min)
   when "6"
     application.check_visitors_loop
+  when "7"
+    puts "User: "
+    user = gets.chomp
+    application.scrape_similar(user)
   when "8"
     print "User to add: "
     user=gets.chomp

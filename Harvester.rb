@@ -27,7 +27,7 @@ class Harvester
 
   def get_batch(number, url="http://www.okcupid.com/messages")
     @bar = ProgressBar.new(number)
-    for i in 0..number do
+    for i in 0...number do
       @bar.increment!
       scrape_from_page(url)
       sleep 1
@@ -60,6 +60,36 @@ class Harvester
     end
   end
 
+  def similar_user_scrape(match)
+    # @found = Array.new
+    @database.log(match)
+    @browser.go_to("http://www.okcupid.com/profile/#{match}")
+    @body = @browser.body
+    array = @body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
+    # array.each do |users|
+    #   array.each do |user|
+    #     @browser.go_to("http://www.okcupid.com/profile/#{match}")
+    #     @body = @browser.body
+    #     array = @body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
+    #     array.each do |finds|
+    #       array.each do |find|
+    #         @found += [find]
+    #       end
+    #     end
+    #   end
+    # end
+
+    # @found.each do |finder|
+    #   @database.add_new_match(finder)
+    # end
+
+    array.each do |users|
+      users.each do |user|
+        @database.add_new_match(user)
+      end
+    end
+  end
+
   def visitors
     @browser.go_to("http://www.okcupid.com/visitors")
     @current_user = @browser.current_user
@@ -68,9 +98,10 @@ class Harvester
     array.each do |visitor, zindex|
       @timestamp_block = @current_user.parser.xpath("//div[@id='usr-#{visitor}-info']/p/span[@class='fancydate']").to_html
       @timestamp = @timestamp_block.match(/\d+/)[1]
-      if @visitor_tracker[visitor].to_i != @timestamp
+      if @visitor_tracker[visitor].to_i != @timestamp.to_i
         @visitor_counter[visitor] = @visitor_counter[visitor].to_i + 1
         puts "New visit from #{visitor}"
+        puts "Timestamp: #{@timestamp} & Stored: #{@visitor_tracker[visitor].to_i}"
       end
       @visitor_tracker[visitor] = @timestamp
     end

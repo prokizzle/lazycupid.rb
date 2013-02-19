@@ -10,12 +10,12 @@ class Roller
     @password = args[ :password]
     @speed = speed
     @browser = Session.new(:username => self.username, :password => self.password)
-    @database = DataReader.new(:username => self.username)
+    @database = DatabaseManager.new(:login_name => self.username)
+    @blocklist = BlockList.new(:database => self.db)
     @search = Lookup.new(:database => self.db)
     @display = Output.new(:stats => @search, :username => self.username)
     @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display)
-    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller)
-    @blocklist = BlockList.new(:database => self.db)
+    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller, :blocklist => self.blocklist)
     @harvester = Harvester.new(:browser => @browser, :database => self.db)
     @admin = Admin.new(:database => self.db)
 
@@ -23,6 +23,10 @@ class Roller
 
   def fix_dates
     @smarty.fix_blank_dates
+  end
+
+  def blocklist
+    @blocklist
   end
 
   def username
@@ -87,10 +91,6 @@ class Roller
     @browser.login
   end
 
-  def load_data
-    @database.load
-  end
-
   def add(user)
     @database.add_new_match(user)
     @database.save
@@ -140,7 +140,6 @@ begin
     application = Roller.new(:username => username, :password => password)
     if application.login
       logged_in = true
-      application.load_data
     else
       puts "Incorrect password. Try again.",""
     end
@@ -178,7 +177,6 @@ while quit == false
     # mph = gets.chomp
     application.smart_roller(max.to_i)
   when "3"
-    application.load_data
     application.harvest(25)
     application.smart_roller(0)
   when "4"

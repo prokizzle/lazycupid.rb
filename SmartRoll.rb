@@ -1,5 +1,3 @@
-require './DataManager'
-require './AutoRoller'
 require './Blocklist'
 
 class SmartRoll
@@ -8,15 +6,11 @@ class SmartRoll
 
   def initialize(args)
     @db = args[ :database]
-    @blocklist = Blocklist.new(:database => @db)
+    @blocklist = args[ :blocklist]
+    # @blocklist = Blocklist.new(:database => @db)
     @roller = args[ :visitor]
     @mph = args.fetch(:mph, 600)
     @max = args.fetch(:max_visists, 0)
-    @names = @db.data
-    @last_visit = @db.last_visit_date
-    @profiles = Hash.new("---nick")
-    @delete = Hash.new(false)
-    @ignore_list = @db.ignore
     @profiles = Hash.new("---nick")
     @now = Time.now.to_i
     @mode = "c"
@@ -29,14 +23,6 @@ class SmartRoll
 
   def mode
     @mode
-  end
-
-  def reload
-    @names = @db.data
-  end
-
-  def names
-    @db.data
   end
 
   def select_by_visit_count(max, min=0)
@@ -54,7 +40,7 @@ class SmartRoll
   end
 
   def relative_last_visit(match)
-    unix_date = @db.get_last_visit_date(match)
+    unix_date = @db.get_my_last_visit_date(match)
     ((Time.now.to_i - unix_date)/86400).round
   end
 
@@ -87,14 +73,11 @@ class SmartRoll
     end
   end
 
-  def delete_inactive_user(user)
-    @delete[user] = true
-  end
-
   def visit_user(url, user)
     @roller.roll_dice(url, "smart")
     if self.inactive_account
       self.remove_match(user)
+      puts "*Invalid user*"
     end
   end
 
@@ -110,10 +93,6 @@ class SmartRoll
     @roller.mph = @mph
   end
 
-  def save
-    @roller.save
-  end
-
   def roll
     begin
       @profiles.each do |user, link|
@@ -121,7 +100,6 @@ class SmartRoll
       end
     rescue SystemExit, Interrupt
     end
-    self.save
   end
 
   def run

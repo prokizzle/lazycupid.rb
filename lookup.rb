@@ -1,4 +1,3 @@
-require './DataManager'
 
 class Lookup
   attr_reader :match, :data, :visits
@@ -7,16 +6,14 @@ class Lookup
   def initialize(args)
     @importer = args[ :database]
     # @importer.import if manual_import
-    @match = @importer.data
-    @visits = @importer.visit_count
   end
 
   def byUser(user)
-    @match[user]
+    @importer.get_visit_count(user)
   end
 
   def visits(user)
-    @visits[user]
+    @importer.get_last_visit_date(user)
   end
 
 

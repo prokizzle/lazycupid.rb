@@ -2,8 +2,8 @@ require 'rubygems'
 
 class AutoRoller
 
-  attr_accessor :names, :speed, :current_user, :mph
-  attr_reader :names, :speed, :current_user, :mph
+  attr_accessor :speed, :current_user, :mph
+  attr_reader :speed, :current_user, :mph
 
   def initialize(args)
     @mph = args.fetch(:mph, 100)
@@ -25,15 +25,6 @@ class AutoRoller
 
   def speed
     3600/@mph
-  end
-
-  def names(u)
-    @database.data(u)
-  end
-
-
-  def save
-    @database.save
   end
 
   def quit
@@ -72,7 +63,6 @@ class AutoRoller
       puts e.message
       puts e.backtrace
     end
-    @database.save
   end
 
   def run

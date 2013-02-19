@@ -8,8 +8,6 @@ class Harvester
     @browser = args[ :browser]
     @database = args[ :database]
     @scrape_queue = Array.new
-    @visitor_counter = @database.visit_count
-    @visitor_tracker = @database.zindex
   end
 
   def run
@@ -32,7 +30,6 @@ class Harvester
       scrape_from_page(url)
       sleep 1
     end
-    self.save
   end
 
   def number
@@ -45,17 +42,11 @@ class Harvester
     self.leftbar_scrape
   end
 
-  def save
-    @database.zindex = @visitor_tracker
-    @database.visit_count = @visitor_counter
-    @database.save
-  end
-
   def leftbar_scrape
     array = @body.scan(/href="\/profile\/([\w\d]+)\?leftbar\_match\=1"/)
     array.each do |users|
       users.each do |user|
-        @database.add_new_match(user)
+        @database.add_user(user)
       end
     end
   end
@@ -85,9 +76,15 @@ class Harvester
 
     array.each do |users|
       users.each do |user|
-        @database.add_new_match(user)
+        @database.add_user(user)
       end
     end
+  end
+
+  def increment_visitor_counter(visitor)
+    original = @database.get_visitor_count(visitor)
+    new_counter  = original + 1
+    @database.set_visitor_counter(visitor, new_counter)
   end
 
   def visitors
@@ -97,15 +94,14 @@ class Harvester
     array = @visitors.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
     array.each do |visitor, zindex|
       @timestamp_block = @current_user.parser.xpath("//div[@id='usr-#{visitor}-info']/p/span[@class='fancydate']").to_html
-      @timestamp = @timestamp_block.match(/\d+/)[1]
-      if @visitor_tracker[visitor].to_i != @timestamp.to_i
-        @visitor_counter[visitor] = @visitor_counter[visitor].to_i + 1
+      @timestamp = @timestamp_block.match(/\d+/)[0]
+      if @database.get_visitor_timestamp(visitor) != @timestamp.to_i
+        self.increment_visitor_counter(visitor)
         puts "New visit from #{visitor}"
-        puts "Timestamp: #{@timestamp} & Stored: #{@visitor_tracker[visitor].to_i}"
+        puts "Timestamp: #{@timestamp} & Stored: #{@database.get_visitor_timestamp(visitor)}"
       end
-      @visitor_tracker[visitor] = @timestamp
+      @database.set_visitor_timestamp(visitor, @timestamp)
     end
     sleep 1
-    self.save
   end
 end

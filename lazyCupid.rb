@@ -11,12 +11,13 @@ class Roller
     @speed = speed
     @browser = Session.new(:username => self.username, :password => self.password)
     @database = DatabaseManager.new(:login_name => self.username)
-    @blocklist = BlockList.new(:database => self.db)
+    @blocklist = BlockList.new(:database => self.db, :browser => @browser)
     @search = Lookup.new(:database => self.db)
     @display = Output.new(:stats => @search, :username => self.username)
-    @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display)
-    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller, :blocklist => self.blocklist)
+    @user = Users.new(:database => self.db, :browser => @browser)
+    @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display, :user_stats => @user)
     @harvester = Harvester.new(:browser => @browser, :database => self.db)
+    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user)
     @admin = Admin.new(:database => self.db)
 
   end
@@ -75,6 +76,10 @@ class Roller
     @smarty.run
   end
 
+  def ignore_hidden_users
+    @blocklist.import_hidden_users
+  end
+
   def search(user)
     @search.byUser(user)
   end
@@ -104,6 +109,20 @@ class Roller
   def check_visitors
     @harvester.visitors
   end
+
+  def test_user_object(user)
+    @browser.go_to("http://www.okcupid.com/profile/#{user}/")
+    puts @user.handle
+    puts @user.age
+    puts @user.sexuality
+    puts @user.handle
+    puts @user.city
+    puts @user.state
+    puts @user.gender
+    puts @user.relationship_status
+    puts @user.match_percentage
+  end
+
 
   def scrape_similar(user)
     @harvester.similar_user_scrape(user)
@@ -161,6 +180,7 @@ while quit == false
   puts "(2) Smart Mode"
   puts "(3) Visit new users"
   puts "(4) Harvest"
+  puts "(a) Admin menu"
   puts "(Q) Quit",""
   print "Mode: "
   mode = gets.chomp
@@ -205,6 +225,8 @@ while quit == false
     puts "(2) Rebuild database"
     puts "(3) Lookup visit counts"
     puts "(4) Block user"
+    puts "(5) Auto import hidden users to blocklist"
+    puts "(6) Test user object"
     choice = gets.chomp
     case choice
     when "1"
@@ -224,6 +246,12 @@ while quit == false
       print "User: "
       user = gets.chomp
       application.ignore_user(user)
+    when "5"
+      application.ignore_hidden_users
+    when "6"
+      print "User: "
+      user = gets.chomp
+      application.test_user_object(user)
     end
   when "q"
     quit = true

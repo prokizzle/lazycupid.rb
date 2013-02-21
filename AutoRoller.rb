@@ -9,10 +9,12 @@ class AutoRoller
     @mph = args.fetch(:mph, 100)
     @GET_LUCKY_URL = "http://www.okcupid.com/getlucky?type=1"
     @max = 5000
+    @user = args[ :user_stats]
     @database = args[ :database]
     @browser = args[ :browser]
     @display = args[ :gui]
     # speed
+    @mph = 400
   end
 
   def init
@@ -33,15 +35,12 @@ class AutoRoller
 
 
   def roll_dice(url=@GET_LUCKY_URL, mode="normal")
-    begin
       @browser.go_to(url)
       unless @browser.account_deleted
         @database.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
         @display.output(@browser.scrape_user_name, @browser.scrape_match_percentage, @mph, mode)
       end
-      sleep speed
-    rescue
-    end
+      # sleep self.speed
   end
 
   def account_deleted

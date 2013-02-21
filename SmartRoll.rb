@@ -7,6 +7,8 @@ class SmartRoll
   def initialize(args)
     @db = args[ :database]
     @blocklist = args[ :blocklist]
+    @harvester = args[ :harvester]
+    @user = args[ :user_stats]
     # @blocklist = Blocklist.new(:database => @db)
     @roller = args[ :visitor]
     @mph = args.fetch(:mph, 600)
@@ -24,6 +26,9 @@ class SmartRoll
   def mode
     @mode
   end
+
+  # def remove_straight_men
+
 
   def select_by_visit_count(max, min=0)
     @select = @db.filter_by_visits(max)
@@ -61,51 +66,53 @@ class SmartRoll
       elsif (relative_last_visit(user) < 2)
         @selection.delete(user)
         puts "#{user} was visited recently. Removing."
-      end
-    end
-
-    # puts @selection
-    # construct array of usernames to visit
-    @selection.each do |user, counts|
-      if user != nil && user != "N/A"
-        @profiles[user] = "http://www.okcupid.com/profile/#{user}/"
+      # elsif (@user.sexuality == "Straight" && @user.gender == "M")
+      #   puts "#{user} is not what you're looking for. Removing."
+      #   @selection.delete(user)
+      #   @db.delete_user(user)
       end
     end
   end
 
-  def visit_user(url, user)
-    @roller.roll_dice(url, "smart")
-    if self.inactive_account
-      self.remove_match(user)
-      puts "*Invalid user*"
-    end
+  def autodiscover_new_users
+    @harvester.scrape_from_user
   end
 
-  def inactive_account
-    @roller.account_deleted
+  def visit_user(user)
+    @roller.roll_dice("http://www.okcupid.com/profile/#{user}/", "smart")
+    self.autodiscover_new_users
+     if self.inactive_account
+       self.remove_match(user)
+       puts "*Invalid user* : #{user}"
+     end
   end
 
-  def remove_match(user)
-    @db.delete_user(user)
-  end
+     def inactive_account
+       @roller.account_deleted
+     end
 
-  def set_speed
-    @roller.mph = @mph
-  end
+     def remove_match(user)
+       @db.delete_user(user)
+     end
 
-  def roll
-    begin
-      @profiles.each do |user, link|
-        self.visit_user(link, user)
-      end
-    rescue SystemExit, Interrupt
-    end
-  end
+     def set_speed
+       @roller.mph = @mph
+     end
 
-  def run
-    self.build_queues(@mode)
-    self.set_speed
-    self.roll
-  end
+     def roll
+       begin
+         @selection.each do |user, counts|
+           self.visit_user(user)
+           sleep (3600/600)
+         end
+       rescue SystemExit, Interrupt
+       end
+     end
 
-end
+     def run
+       self.build_queues(@mode)
+       self.set_speed
+       self.roll
+     end
+
+     end

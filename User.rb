@@ -5,51 +5,55 @@ class Users
   def initialize(args)
     @db = args[ :database]
     @browser = args[ :browser]
-    @match_percentage = Hash.new(0)
-    @age = Hash.new(0)
-    @count = Hash.new(0)
-    @city = Hash.new(0)
-    @sexuality = Hash.new(0)
-    @gender = Hash.new(0)
-    @relationship_status = Hash.new(0)
   end
 
-def handle
-  @body.match(/href="\/profile\/([\w\d]+)\/photos"/)[1]
-end
+  def body
+    @browser.body
+  end
 
+  def asl
+    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing Someone|Available) \/ (\w+), (\w+)/.match(body)
+  end
 
-def match_percentage
-  @body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
-end
+  def handle
+    /messages\?r1\=([\w\d]+)/.match(body)
+  end
 
-def age
-  @age[@handle]
-end
+  def match_percentage
+    body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
+  end
 
-def count
-  @names[@handle]
-end
+  def age
+    asl[1]
+  end
 
-def city
-  @city[@handle]
-end
+  def count
+    @names[@handle]
+  end
 
-def sexuality
-  @sexuality[@handle]
-end
+  def city
+    asl[5]
+  end
 
-def gender
-  @gender[@handle]
-end
+  def state
+    asl[6]
+  end
 
-def relationship_status
-  @relationship_status[@handle]
-end
+  def sexuality
+    asl[3]
+  end
 
-def is_blocked
-  @is_blocked[@handle]
-end
+  def gender
+    asl[2]
+  end
+
+  def relationship_status
+    asl[4]
+  end
+
+  def is_blocked
+    @db.is_ignored(handle)
+  end
 
 
 

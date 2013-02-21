@@ -13,7 +13,7 @@ class Lookup
   end
 
   def visits(user)
-    @importer.get_last_visit_date(user)
+    @importer.get_visitor_count(user)
   end
 
 

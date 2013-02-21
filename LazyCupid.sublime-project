@@ -1,9 +1,0 @@
-{
-	"folders":
-	[
-		{
-			"path": "/Users/***REMOVED***/dev/okcupid",
-            "file_exclude_patterns": ["*.csv", "*.db", "*.png"]
-		}
-	]
-}

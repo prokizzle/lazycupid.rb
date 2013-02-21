@@ -6,6 +6,7 @@ class BlockList
 
   def initialize(args)
     @database = args[ :database]
+    @browser = args[ :browser]
     # @ignore_list = @database.ignore
     # process_ignore_list
   end
@@ -26,4 +27,32 @@ class BlockList
     (@database.is_ignored(user))
   end
 
+  def body
+    @browser.body
+  end
+
+  def scrape_users
+    hidden_users = @body.scan(/"\/profile\/([\d\w]+)"/)
+    hidden_users.each do |array|
+      array.each do |user|
+        unless is_ignored(user)
+          self.add(user)
+        end
+      end
+    end
+  end
+
+  def import_hidden_users
+    @browser.go_to("http://www.okcupid.com/hidden-users?low=1")
+    @body = @browser.body
+    self.scrape_users
+    until @body.match(/"next inactive"/)
+      low = @body.match(/\<a href\="\/hidden\-users\?low\=(\d+)"\>Next/)[1]
+      puts low
+      @browser.go_to("http://www.okcupid.com/hidden-users?low=#{low}")
+      @body = @browser.body
+      self.scrape_users
+      sleep 2
+    end
+  end
 end

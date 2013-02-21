@@ -10,15 +10,37 @@ class DatabaseManager
   end
 
   def open_db( db )
-    begin
-      @db = SQLite3::Database.new( "#{db}.db" )
-    rescue
-    end
+    # begin
+    @db = SQLite3::Database.new( "#{db}.db" )
+    # rescue
+    # end
 
   end
 
   def import
-
+    begin
+      @db.execute("CREATE TABLE matches(
+        name text,
+        count integer,
+        ignore boolean,
+        zindex integer,
+        visit_count integer,
+        last_visit integer,
+        gender text,
+        sexuality text,
+        age integer,
+        relationship_status text,
+        match_percentage integer
+        )"
+                  )
+    rescue
+    end
+    CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
+      @db.execute( "insert into matches
+            (name, count, ignore, zindex, visit_count, last_visit)
+            values (?, ?, ?, ?, ?, ?)",
+                   row[0], row[1], row[2], row[3], row[4], row[5])
+    end
 
   end
 
@@ -57,6 +79,30 @@ class DatabaseManager
 
   end
 
+  def set_gender(user, gender)
+    begin
+      @db.execute("update matches set gender=? where name=?", gender, user)
+    rescue
+      @db.execute("insert into matches(gender)")
+    end
+  end
+
+  def get_gender(user)
+    @db.execute("select gender from matches where name=?", user)
+  end
+
+  def set_sexuality(user, sexuality)
+    begin
+      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
+    rescue
+      @db.execute("insert into matches(sexuality)")
+    end
+  end
+
+  def get_sexuality(user)
+    @db.execute("select sexuality from matches where name=?", user)
+  end
+
   def get_match_percentage(user)
     result = @db.execute("select match_percent from matches where name=?", user)
     result[0][0].to_i
@@ -91,6 +137,7 @@ class DatabaseManager
     else
       @db.execute("insert into matches(name, count, zindex, ignore) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
       self.set_visitor_timestamp(visitor, Time.now.to_i)
+      Time.now.to_i
     end
   end
 
@@ -99,9 +146,13 @@ class DatabaseManager
       count = self.get_visit_count(match_name) + 1
       self.update_visit_count(match_name, count)
       self.set_my_last_visit_date(match_name)
+      # self.set_gender(match_name, gender)
+      # self.set_sexuality(match_name, sexuality)
       # self.set_match_percentage(match_name, match_percent)
     else
       self.add_user(match_name)
+      # self.set_sexuality(match_name, sexuality)
+      # self.set_gender(match_name, gender)
     end
   end
 
@@ -131,11 +182,11 @@ class DatabaseManager
   end
 
   def ignore_user(username)
-    @db.execute( "update matches set ignore=true where name=?", username)
+    @db.execute( "update matches set ignore='true' where name=?", username)
   end
 
   def unignore_user(username)
-    @db.execute( "update matches set ignore=false where name=?", username)
+    @db.execute( "update matches set ignore='false' where name=?", username)
   end
 
   def existsCheck( id )

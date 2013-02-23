@@ -14,7 +14,7 @@ class Output
     print "\e[2J\e[f"
   end
 
-  def output(match_name, match_percent, speed, mode="normal")
+  def output(user, speed, mode="normal")
     case mode
     when "normal"
       mode_name = "AutoRoller"
@@ -29,10 +29,13 @@ class Output
     puts "LazyCupid Ruby","========================="
     puts "#{mode_name} @ #{speed} MPH","----------------------"
     puts "  For: #{@username}",""
-    puts "  Visiting:    #{match_name}"
-    puts "  Match:       #{match_percent}%"
-    puts "  Visits:      #{@search.byUser(match_name)}"
-    puts "  Visited You: #{@search.visits(match_name)}",""
+    puts "  Visiting:    #{user.handle}"
+    puts "  Match:       #{user.match_percentage}%"
+    puts "  Gender:      #{user.gender}"
+    puts "  Sexuality:   #{user.sexuality}"
+    puts "  State:       #{user.state}"
+    puts "  Visits:      #{@search.byUser(user.handle)}"
+    puts "  Visited You: #{@search.visits(user.handle)}",""
     puts "to quit press ctrl-c"
   end
 

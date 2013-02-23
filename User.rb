@@ -12,11 +12,11 @@ class Users
   end
 
   def asl
-    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing Someone|Available) \/ (\w+), (\w+)/.match(body)
+    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married) \/ (.+)\s<\/p>/.match(body)
   end
 
   def handle
-    /messages\?r1\=([\w\d]+)/.match(body)
+    body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
   end
 
   def match_percentage
@@ -31,12 +31,24 @@ class Users
     @names[@handle]
   end
 
-  def city
+  def location
     asl[5]
   end
 
+  def city
+    begin
+      location.match(/(\w[\w\s]+),/)[1]
+    rescue
+      "Invalid"
+    end
+  end
+
   def state
-    asl[6]
+    begin
+      location.match(/, (\w[\w\s]+)/)[1]
+    rescue
+      "Invalid"
+    end
   end
 
   def sexuality

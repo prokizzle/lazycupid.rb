@@ -44,6 +44,18 @@ class DatabaseManager
 
   end
 
+  def add_column(name, type)
+    @db.execute("alter table matches add column ? ?", name, type)
+  end
+
+  def delete_men
+    results = @db.execute("select name from matches where gender=?", "M")
+    results.each do |user|
+      puts "Deleting #{user}"
+      self.delete_user(user)
+    end
+  end
+
   def get_match_names
     @db.execute( "select name from matches" )
   end
@@ -75,7 +87,12 @@ class DatabaseManager
   end
 
   def set_match_percentage(user, match_percent)
-    @db.execute("update matches set match_percent=? where name=?", user, match_percent)
+    begin
+      @db.execute("update matches set match_percent=? where name=?", user, match_percent)
+    rescue
+      @db.execute("alter table matches add column match_percent text")
+      @db.execute("update matches set match_percent=? where name=?", user, match_percent)
+    end
 
   end
 
@@ -83,7 +100,8 @@ class DatabaseManager
     begin
       @db.execute("update matches set gender=? where name=?", gender, user)
     rescue
-      @db.execute("insert into matches(gender)")
+      @db.execute("alter table matches add column gender text")
+      @db.execute("update matches set gender=? where name=?", gender, user)
     end
   end
 
@@ -95,7 +113,8 @@ class DatabaseManager
     begin
       @db.execute("update matches set sexuality=? where name=?", sexuality, user)
     rescue
-      @db.execute("insert into matches(sexuality)")
+      @db.execute("alter table matches add column sexuality text")
+      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
     end
   end
 
@@ -156,6 +175,21 @@ class DatabaseManager
     end
   end
 
+  def log2(user)
+    if existsCheck(user.handle)
+      count = self.get_visit_count(user.handle) + 1
+      self.update_visit_count(user.handle, count)
+      self.set_my_last_visit_date(user.handle)
+      self.set_gender(user.handle, user.gender)
+      self.set_sexuality(user.handle, user.sexuality)
+      self.set_match_percentage(user.handle, user.match_percentage)
+    else
+      self.add_user(user.handle)
+      self.set_sexuality(user.handle, user.sexuality)
+      self.set_gender(user.handle, user.gender)
+    end
+  end
+
   def add_user(username, count=1)
     if !(existsCheck(username))
       @db.execute( "insert into matches(name, count, ignore) values (?, ?, ?)", username, count, 'false')
@@ -170,10 +204,11 @@ class DatabaseManager
 
   def is_ignored(username)
     result = @db.execute( "select ignore from matches where name=?", username)
-    if result != true
+    # to_boolean(result[0][0].to_s)
+    begin
+      (result[0][0].to_s == "true")
+    rescue
       false
-    else
-      true
     end
   end
 
@@ -195,6 +230,10 @@ class DatabaseManager
           from matches
           where name = ?
       ) ", [id] ).any?
+  end
+
+  def to_boolean(str)
+    str == 'true'
   end
 
   def close

@@ -16,8 +16,8 @@ class Roller
     @display = Output.new(:stats => @search, :username => self.username)
     @user = Users.new(:database => self.db, :browser => @browser)
     @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display, :user_stats => @user)
-    @harvester = Harvester.new(:browser => @browser, :database => self.db)
-    @smarty = SmartRoll.new(:database => self.db, :visitor => @roller, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user)
+    @harvester = Harvester.new(:browser => @browser, :database => self.db, :user_stats => @user)
+    @smarty = SmartRoll.new(:database => self.db, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user, :browser => @browser, :gui => @display)
     @admin = Admin.new(:database => self.db)
 
   end
@@ -55,10 +55,9 @@ class Roller
     @roller.run
   end
 
-  def smart_roller(max, mph=600)
+  def smart_roller(max)
     @smarty.mode = "c"
     @smarty.max = max
-    @smarty.mph = mph
     @smarty.run
   end
 

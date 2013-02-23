@@ -1,20 +1,18 @@
 require './Blocklist'
 
 class SmartRoll
-  attr_reader :max, :mph, :delete, :mode, :days
-  attr_accessor :max, :mph, :delete, :mode, :days
+  attr_reader :max, :delete, :mode, :days
+  attr_accessor :max, :delete, :mode, :days
 
   def initialize(args)
     @db = args[ :database]
     @blocklist = args[ :blocklist]
     @harvester = args[ :harvester]
     @user = args[ :user_stats]
-    # @blocklist = Blocklist.new(:database => @db)
-    @roller = args[ :visitor]
-    @mph = args.fetch(:mph, 600)
+    @browser = args[ :browser]
+    @display = args[ :gui]
     @max = args.fetch(:max_visists, 0)
-    @profiles = Hash.new("---nick")
-    @now = Time.now.to_i
+    @profiles = Hash.new(0)
     @mode = "c"
     @days = 2
   end
@@ -29,6 +27,27 @@ class SmartRoll
 
   # def remove_straight_men
 
+  def sexuality(user)
+    result = @database.get_sexuality(user)
+    result[0][0].to_s
+  end
+
+  def gender(user)
+    result = @database.get_gender(user)
+    result[0][0].to_s
+  end
+
+  def is_male(user)
+    begin
+      (self.gender(user)=='M')
+    rescue
+      false
+    end
+  end
+
+  def is_female(user)
+    (self.gender(user)=='F')
+  end
 
   def select_by_visit_count(max, min=0)
     @select = @db.filter_by_visits(max)
@@ -50,60 +69,85 @@ class SmartRoll
   end
 
   def build_queues(mode)
-
-    if mode == "v"
-      @selection = select_by_last_visit_date(@days)
-    elsif mode == "c"
+    puts "Building queues"
+    # if mode == "v"
+      # @selection = select_by_last_visit_date(@days)
+    # elsif mode == "c"
       @selection = select_by_visit_count(@max)
-    else
-      @selection = overkill(@max)
-    end
+      @bar = ProgressBar.new(@selection.size)
+    # else
+      # @selection = overkill(@max)
+    # end
 
     @selection.each do |user, visits|
       if @blocklist.is_ignored(user)
         @selection.delete(user)
-        puts "#{user} is blocked. Removing."
+        @bar.increment!
+        # puts "#{user} is blocked. Removing."
       elsif (relative_last_visit(user) < 2)
         @selection.delete(user)
-        puts "#{user} was visited recently. Removing."
-      # elsif (@user.sexuality == "Straight" && @user.gender == "M")
-      #   puts "#{user} is not what you're looking for. Removing."
-      #   @selection.delete(user)
-      #   @db.delete_user(user)
+        @bar.increment!
+        # puts "#{user} was visited recently. Removing."
+      elsif (is_male(user))
+        # puts "#{user} is not what you're looking for. Ignoring."
+        @selection.delete(user)
+        @db.ignore_user(user)
+        @bar.increment!
+      else
+      @bar.increment!
       end
     end
+    puts "#{@total} users queued up."
   end
 
   def autodiscover_new_users
     @harvester.scrape_from_user
   end
 
+  def user_ob_debug
+    begin
+    test = [@user.gender, @user.handle, @user.match_percentage, @user.city, @user.state]
+    rescue
+    puts @browser.body
+    user = gets.chomp
+    end
+  end
+
   def visit_user(user)
-    @roller.roll_dice("http://www.okcupid.com/profile/#{user}/", "smart")
-    self.autodiscover_new_users
+    mode = "smart"
+    @browser.go_to("http://www.okcupid.com/profile/#{user}/")
+
+     unless @browser.account_deleted
+       self.user_ob_debug
+       # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
+       @db.log2(@user)
+       @display.output(@user, @mph, mode)
+       self.autodiscover_new_users if @user.gender=="F"
+     end
      if self.inactive_account
        self.remove_match(user)
        puts "*Invalid user* : #{user}"
      end
-  end
+     end
+
+
+     def unix_time
+       Time.now.to_i
+     end
 
      def inactive_account
-       @roller.account_deleted
+       @browser.account_deleted
      end
 
      def remove_match(user)
        @db.delete_user(user)
      end
 
-     def set_speed
-       @roller.mph = @mph
-     end
-
      def roll
        begin
          @selection.each do |user, counts|
            self.visit_user(user)
-           sleep (3600/600)
+           sleep 6
          end
        rescue SystemExit, Interrupt
        end
@@ -111,7 +155,6 @@ class SmartRoll
 
      def run
        self.build_queues(@mode)
-       self.set_speed
        self.roll
      end
 

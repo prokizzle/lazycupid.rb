@@ -22,7 +22,7 @@ class DatabaseManager
       @db.execute("CREATE TABLE matches(
         name text,
         count integer,
-        ignore boolean,
+        ignore text,
         zindex integer,
         visit_count integer,
         last_visit integer,
@@ -31,6 +31,7 @@ class DatabaseManager
         age integer,
         relationship_status text,
         match_percentage integer
+        PRIMARY KEY(name)
         )"
                   )
     rescue

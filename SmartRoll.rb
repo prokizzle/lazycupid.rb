@@ -113,6 +113,10 @@ class SmartRoll
     end
   end
 
+  def check_for_new_visitors
+    @harvester.visitors
+  end
+
   def visit_user(user)
     mode = "smart"
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
@@ -147,6 +151,7 @@ class SmartRoll
        begin
          @selection.each do |user, counts|
            self.visit_user(user)
+           self.check_for_new_visitors
            sleep 6
          end
        rescue SystemExit, Interrupt

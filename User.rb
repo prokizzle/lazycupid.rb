@@ -12,7 +12,7 @@ class Users
   end
 
   def asl
-    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married) \/ (.+)\s<\/p>/.match(body)
+    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married|Unknown) \/ (.+)\s<\/p>/.match(body)
   end
 
   def handle

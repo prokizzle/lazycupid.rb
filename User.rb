@@ -24,20 +24,20 @@ class Users
   end
 
   def age
-    asl[1]
+    asl[1].to_s
   end
 
   def count
-    @names[@handle]
+    @names[@handle].to_i
   end
 
   def location
-    asl[5]
+    asl[5].to_s
   end
 
   def city
     begin
-      location.match(/(\w[\w\s]+),/)[1]
+      location.match(/(\w[\w\s]+),/)[1].to_s
     rescue
       "Invalid"
     end
@@ -45,22 +45,22 @@ class Users
 
   def state
     begin
-      location.match(/, (\w[\w\s]+)/)[1]
+      location.match(/, (\w[\w\s]+)/)[1].to_s
     rescue
       "Invalid"
     end
   end
 
   def sexuality
-    asl[3]
+    asl[3].to_s
   end
 
   def gender
-    asl[2]
+    asl[2].to_s
   end
 
   def relationship_status
-    asl[4]
+    asl[4].to_s
   end
 
   def is_blocked

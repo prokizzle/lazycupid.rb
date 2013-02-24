@@ -83,6 +83,13 @@ class SmartRoll
     sleep 2
   end
 
+  def build_queue_no_gender
+    @selection = @db.no_gender
+    puts "#{@selection.size} users queued up."
+    sleep 2
+  end
+
+
   def autodiscover_new_users
     @harvester.scrape_from_user
   end
@@ -146,4 +153,9 @@ class SmartRoll
        self.roll
      end
 
+     def gender_fix
+      self.build_queue_no_gender
+      self.roll
      end
+
+end

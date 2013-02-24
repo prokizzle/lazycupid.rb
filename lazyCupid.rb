@@ -50,6 +50,10 @@ class Roller
     @blocklist.ignore_user(user)
   end
 
+  def gender_fix
+    @smarty.gender_fix
+  end
+
   def harvester(speed)
     @roller.mph = speed.to_i
     @roller.run
@@ -226,6 +230,7 @@ while quit == false
     puts "(4) Block user"
     puts "(5) Auto import hidden users to blocklist"
     puts "(6) Test user object"
+    puts "(7) Populate blank genders"
     choice = gets.chomp
     case choice
     when "1"
@@ -251,6 +256,8 @@ while quit == false
       print "User: "
       user = gets.chomp
       application.test_user_object(user)
+    when "7"
+      application.gender_fix
     end
   when "q"
     quit = true

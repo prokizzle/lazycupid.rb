@@ -15,11 +15,8 @@ class Roller
     @search = Lookup.new(:database => self.db)
     @display = Output.new(:stats => @search, :username => self.username)
     @user = Users.new(:database => self.db, :browser => @browser)
-    @roller = AutoRoller.new(:database => self.db, :browser => @browser, :gui => @display, :user_stats => @user)
     @harvester = Harvester.new(:browser => @browser, :database => self.db, :user_stats => @user)
     @smarty = SmartRoll.new(:database => self.db, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user, :browser => @browser, :gui => @display)
-    @admin = Admin.new(:database => self.db)
-
   end
 
   def fix_dates
@@ -54,28 +51,8 @@ class Roller
     @smarty.gender_fix(d)
   end
 
-  def harvester(speed)
-    @roller.mph = speed.to_i
-    @roller.run
-  end
-
   def smart_roller(max)
-    @smarty.mode = "c"
     @smarty.max = max
-    @smarty.run
-  end
-
-  def smart_roller_by_visit(days)
-    @smarty.mode = "v"
-    @smarty.days = days
-    @smarty.mph = 600
-    @smarty.run
-  end
-
-  def overkill(min)
-    @smarty.mode = "k"
-    @smarty.max = min
-    @smarty.mph = 600
     @smarty.run
   end
 
@@ -102,11 +79,6 @@ class Roller
   def add(user)
     @database.add_new_match(user)
     @database.save
-  end
-
-  def harvest(num=50)
-    @harvester.number = num
-    @harvester.run
   end
 
   def check_visitors
@@ -141,11 +113,6 @@ class Roller
     rescue SystemExit, Interrupt
     end
   end
-
-  def admin_menu
-    @admin.menu
-  end
-
 end
 
 puts "LazyCupid Main Menu","--------------------",""
@@ -172,17 +139,14 @@ rescue SystemExit, Interrupt
   puts "","","Goodbye."
 end
 
-# application.fix_dates
-
 while quit == false
   application.check_visitors
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
-  puts "(1) Blind Mode (Harvest)"
-  puts "(2) Smart Mode"
-  puts "(3) Visit new users"
-  puts "(4) Harvest"
+  puts "(1) Smart Mode"
+  puts "(2) Visit new users"
+  puts "(3) Monitor Visitors"
   puts "(a) Admin menu"
   puts "(Q) Quit",""
   print "Mode: "
@@ -190,73 +154,46 @@ while quit == false
 
   case mode
   when "1"
-    print "Speed: "
-    speed = gets.chomp
-    application.harvester(speed.to_i)
-  when "2"
     print "Max: "
     max = gets.chomp
     # print "MPH: "
     # mph = gets.chomp
     application.smart_roller(max.to_i)
-  when "3"
-    application.harvest(25)
+  when "2"
     application.smart_roller(0)
-  when "4"
-    application.harvest
-  when "5"
-    puts "Min: "
-    min = gets.chomp
-    application.overkill(min)
-  when "6"
+  when "3"
     application.check_visitors_loop
-  when "7"
+  when "4"
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
-  when "8"
-    print "User to add: "
-    user=gets.chomp
-    application.add(user)
-  when "9"
-    print "Days: "
-    days =gets.chomp
-    application.smart_roller_by_visit(days)
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"
-    puts "(2) Rebuild database"
-    puts "(3) Lookup visit counts"
-    puts "(4) Block user"
-    puts "(5) Auto import hidden users to blocklist"
-    puts "(6) Test user object"
-    puts "(7) Populate blank genders"
+    puts "(2) Lookup visit counts"
+    puts "(3) Block user"
+    puts "(4) Auto import hidden users to blocklist"
+    puts "(5) Populate blank genders"
     choice = gets.chomp
     case choice
     when "1"
       print "User to add: "
       user = gets.chomp
-      self.add_user(user)
+      application.add_user(user)
     when "2"
-      self.import
-    when "3"
       puts ""
       print "User: "
       user = gets.chomp
       print "You have visited #{user} "
       puts application.search(user).to_s + " times."
       sleep 5
-    when "4"
+    when "3"
       print "User: "
       user = gets.chomp
       application.ignore_user(user)
-    when "5"
+    when "4"
       application.ignore_hidden_users
-    when "6"
-      print "User: "
-      user = gets.chomp
-      application.test_user_object(user)
-    when "7"
+    when "5"
       application.gender_fix(5)
     end
   when "q"

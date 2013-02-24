@@ -13,16 +13,11 @@ class SmartRoll
     @display = args[ :gui]
     @max = args.fetch(:max_visists, 0)
     @profiles = Hash.new(0)
-    @mode = "c"
     @days = 2
   end
 
   def overkill(min)
     @db.filter_by_visits(1000,min)
-  end
-
-  def mode
-    @mode
   end
 
   # def remove_straight_men

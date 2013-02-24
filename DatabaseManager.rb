@@ -82,8 +82,8 @@ class DatabaseManager
     @db.execute( "select name from matches where last_visit between ? and ?", min, max)
   end
 
-  def no_gender
-    @db.execute( "select name from matches where gender is null" )
+  def no_gender(days)
+    @db.execute( "select name from matches where gender is null and last_visit<?", days )
   end
 
   def better_smart_query(min_time, max_counts, desired_gender="F")
@@ -192,7 +192,7 @@ class DatabaseManager
       count = self.get_visit_count(user.handle) + 1
       self.update_visit_count(user.handle, count)
       self.set_my_last_visit_date(user.handle)
-      self.set_gender(user.handle, user.gender)
+      self.set_gender(user.handle.to_s, user.gender.to_s)
       self.set_sexuality(user.handle, user.sexuality)
       self.set_match_percentage(user.handle, user.match_percentage)
     else

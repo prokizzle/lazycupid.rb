@@ -47,11 +47,11 @@ class Roller
   end
 
   def ignore_user(user)
-    @blocklist.ignore_user(user)
+    @blocklist.add(user)
   end
 
-  def gender_fix
-    @smarty.gender_fix
+  def gender_fix(d)
+    @smarty.gender_fix(d)
   end
 
   def harvester(speed)
@@ -257,7 +257,7 @@ while quit == false
       user = gets.chomp
       application.test_user_object(user)
     when "7"
-      application.gender_fix
+      application.gender_fix(5)
     end
   when "q"
     quit = true
@@ -271,5 +271,4 @@ if logout == true
   application.logout
   application.clear
 end
-application.clear
 puts ""

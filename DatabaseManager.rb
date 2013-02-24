@@ -82,6 +82,14 @@ class DatabaseManager
     @db.execute( "select name from matches where last_visit between ? and ?", min, max)
   end
 
+  def better_smart_query(min_time, max_counts, desired_gender="F")
+    @db.execute("select name from matches
+      where (last_visit <= ? or last_visit is null)
+      and count=?
+      and (ignore='false' or ignore is null)
+      and (gender is null or gender=?)", min_time, max_counts, desired_gender)
+  end
+
   def user_record_exists(user)
     @db.execute( "select exists(select * from matches where name=" + user )
   end

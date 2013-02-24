@@ -53,6 +53,10 @@ class SmartRoll
     @select = @db.filter_by_visits(max)
   end
 
+  def query_for_users(days, counts)
+    @select = @db.better_smart_query(days_ago(days), counts)
+  end
+
   def select_by_last_visit_date(day_input=1)
     max = Time.now.to_i - days(day_input).to_i
     min = 0
@@ -68,36 +72,15 @@ class SmartRoll
     ((Time.now.to_i - unix_date)/86400).round
   end
 
-  def build_queues(mode)
-    puts "Building queues"
-    # if mode == "v"
-      # @selection = select_by_last_visit_date(@days)
-    # elsif mode == "c"
-      @selection = select_by_visit_count(@max)
-      @bar = ProgressBar.new(@selection.size)
-    # else
-      # @selection = overkill(@max)
-    # end
+  def days_ago(number)
+    unix_time - (86400*number)
+  end
 
-    @selection.each do |user, visits|
-      if @blocklist.is_ignored(user)
-        @selection.delete(user)
-        @bar.increment!
-        # puts "#{user} is blocked. Removing."
-      elsif (relative_last_visit(user) < 2)
-        @selection.delete(user)
-        @bar.increment!
-        # puts "#{user} was visited recently. Removing."
-      elsif (is_male(user))
-        # puts "#{user} is not what you're looking for. Ignoring."
-        @selection.delete(user)
-        @db.ignore_user(user)
-        @bar.increment!
-      else
-      @bar.increment!
-      end
-    end
-    puts "#{@total} users queued up."
+  def build_queues
+    puts "Building queues"
+    @selection = query_for_users(2, @max)
+    puts "#{@selection.size} users queued up."
+    sleep 2
   end
 
   def autodiscover_new_users
@@ -151,7 +134,7 @@ class SmartRoll
        begin
          @selection.each do |user, counts|
            self.visit_user(user)
-           self.check_for_new_visitors
+           # self.check_for_new_visitors if (unix_time%7==0)
            sleep 6
          end
        rescue SystemExit, Interrupt
@@ -159,7 +142,7 @@ class SmartRoll
      end
 
      def run
-       self.build_queues(@mode)
+       self.build_queues
        self.roll
      end
 

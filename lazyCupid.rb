@@ -10,7 +10,7 @@ class Roller
     @password = args[ :password]
     @speed = speed
     @browser = Session.new(:username => self.username, :password => self.password)
-    @database = DatabaseManager.new(:login_name => self.username)
+    @db = DatabaseManager.new(:login_name => self.username)
     @blocklist = BlockList.new(:database => self.db, :browser => @browser)
     @search = Lookup.new(:database => self.db)
     @display = Output.new(:stats => @search, :username => self.username)
@@ -40,7 +40,7 @@ class Roller
   end
 
   def db
-    @database
+    @db
   end
 
   def ignore_user(user)
@@ -77,8 +77,8 @@ class Roller
   end
 
   def add(user)
-    @database.add_new_match(user)
-    @database.save
+    @db.add_new_match(user)
+    @db.save
   end
 
   def check_visitors

@@ -1,5 +1,3 @@
-require 'rubygems'
-
 class AutoRoller
 
   attr_accessor :speed, :current_user, :mph

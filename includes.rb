@@ -1,7 +1,7 @@
 require './lib/AutoRoller'
 require './lib/DataManager'
 require './lib/Output'
-require './lib/lookup'
+require './lib/Lookup'
 require './lib/Session'
 require './lib/SmartRoll'
 require './lib/BlockList'

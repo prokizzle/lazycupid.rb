@@ -108,7 +108,8 @@ class SmartRoll
        self.user_ob_debug
        # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
        @db.log2(@user)
-       @display.output(@user, @mph, mode)
+       @bar.increment!
+       # @display.output(@user, @mph, mode)
        self.autodiscover_new_users if @user.gender=="F"
      end
      if self.inactive_account
@@ -131,6 +132,7 @@ class SmartRoll
      end
 
      def roll
+      @bar = ProgressBar.new(@selection.size)
        begin
          @selection.each do |user, counts|
            self.visit_user(user)

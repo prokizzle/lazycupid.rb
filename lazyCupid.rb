@@ -93,6 +93,10 @@ class Roller
     @smarty.run_range(min, max)
   end
 
+  def new_roll
+    @smarty.run_new_users_only
+  end
+
   def check_visitors
     @harvester.visitors
   end
@@ -174,7 +178,7 @@ while quit == false
     # mph = gets.chomp
     application.smart_roller(max.to_i)
   when "2"
-    application.smart_roller(0)
+    application.new_roll
   when "3"
     application.check_visitors_loop
   when "4"

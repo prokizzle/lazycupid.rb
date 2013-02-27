@@ -45,7 +45,7 @@ class Harvester
     array = body.scan(/href="\/profile\/([\w\d]+)\?leftbar\_match\=1"/)
     array.each do |users|
       users.each do |user|
-        @database.add_user(user, 0)
+          @database.add_user(:username => user, :state => @user.state)
       end
     end
   end
@@ -58,7 +58,7 @@ class Harvester
     array.each do |users|
       users.each do |user|
         if @user.gender == "F"
-          @database.add_user(user, 0)
+          @database.add_user(:username => user, :state => @user.state)
           @database.set_gender(user, @user.gender)
         end
       end
@@ -78,14 +78,34 @@ class Harvester
     @visitors = @current_user.parser.xpath("//div[@id='main_column']").to_html
     # puts @visitors
     # wait=gets.chomp
-    @genders = @visitors.scan(/>([\w\d]+).+\d{2} \/ (F|M) /)
+    @details = @visitors.scan(/>([\w\d]+).+(\d{2}) \/ (F|M)\s\/\s(\w+)\s\/\s[\w\s]+.+"location".([\w\s]+)..([\w\s]+)/)
     # puts @genders
     # wait=gets.chomp
 
     @gender = Hash.new(0)
+    @age = Hash.new(0)
+    @sexuality = Hash.new(0)
+    @state = Hash.new(0)
+    @city = Hash.new(0)
 
-    @genders.each do |user, gender|
-      @gender[user] = gender
+    @details.each do |user|
+      # puts user
+      handle = user[1]
+      age = user[2]
+      gender = user[3]
+      sexuality = user[4]
+      city = user[5]
+      state = user[6]
+      @gender[handle] = gender
+      # begin
+      @state[handle] = state
+    # rescue
+      @state[handle] = ""
+    # end
+      @city[handle] = city
+      @state[handle] = state
+      @sexuality[handle] = sexuality
+      @age[handle] = age
     end
 
     array = @visitors.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
@@ -103,8 +123,9 @@ class Harvester
           @database.ignore_user(visitor)
           @database.set_gender(visitor, "M")
         else
-          @database.add_user(visitor, 0)
+          @database.add_user(:username => visitor)
           @database.set_gender(visitor, "F")
+          @database.set_state(:username => @state[visitor])
         end
       end
 
@@ -117,9 +138,14 @@ class Harvester
 
   def scrape_home_page
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
-    results = body.scan(/class="username".+(?:\/profile\/)([\d\w]+)(?:\?cf=home_matches)/)
+    results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
     results.each do |user|
-      @database.add_user(user, 0)
+      @database.add_user(:username => user[1], :state => user[6])
+      # @database.set_gender(user[3])
+      # @database.set_age(user[2])
+      @database.set_state(:username => user[1], :state => user[6])
+      # @database.set_city(user[5])
+      # @database
     end
   end
 end

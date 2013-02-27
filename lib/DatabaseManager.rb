@@ -8,10 +8,8 @@ class DatabaseManager
   end
 
   def open_db( db )
-    # begin
     @db = SQLite3::Database.new( "./db/#{db}.db" )
-    # rescue
-    # end
+    # self.import
 
   end
 
@@ -19,8 +17,8 @@ class DatabaseManager
     begin
       @db.execute("CREATE TABLE matches(
         name text,
-        count integer,
-        ignore text,
+        counts integer,
+        ignored text,
         zindex integer,
         visit_count integer,
         last_visit integer,
@@ -29,9 +27,10 @@ class DatabaseManager
         age integer,
         relationship_status text,
         match_percentage integer,
+        state text,
+        city text,
         PRIMARY KEY(name)
-        )"
-                  )
+        )")
     rescue
     end
     # CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
@@ -41,6 +40,20 @@ class DatabaseManager
     #                row[0], row[1], row[2], row[3], row[4], row[5])
     # end
 
+  end
+
+  def add_user(args)
+    username = args[ :username]
+    count = 0
+    if !(existsCheck(username))
+      @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
+    end
+  end
+
+  def delete_user(username)
+    if existsCheck(username)
+      @db.execute( "delete from matches where name=?", username)
+    end
   end
 
   def add_column(name, type)
@@ -60,7 +73,7 @@ class DatabaseManager
   end
 
   def get_visit_count(user)
-    row = @db.execute( "select count from matches where name= ? ", user)
+    row = @db.execute( "select counts from matches where name= ? ", user)
     row[0][0].to_i
   end
 
@@ -70,11 +83,11 @@ class DatabaseManager
   # end
 
   def update_visit_count(match_name, number)
-    @db.execute( "update matches set count=? where name=?", number, match_name )
+    @db.execute( "update matches set counts=? where name=?", number, match_name )
   end
 
   def filter_by_visits(max, min=0)
-    @db.execute( "select name from matches where count between ? and ?", min, max )
+    @db.execute( "select name from matches where counts between ? and ?", min, max )
   end
 
   def filter_by_dates(min=0, max)
@@ -88,37 +101,56 @@ class DatabaseManager
   def better_smart_query(min_time, max_counts, desired_gender="F")
     @db.execute("select name from matches
       where (last_visit <= ? or last_visit is null)
-      and count=?
+      and counts=?
       and (gender is null or gender=?)", min_time, max_counts, desired_gender)
   end
+
+  def new_user_smart_query
+    @db.execute("select name from matches
+    where (counts=0 or counts is null)
+    and (ignored is 'false' or ignored is null)
+    and (gender is null or gender=?)", "F")
+  end
+
 
   def better_smart_query2(desired_gender="F")
     @db.execute("select name from matches
       where last_visit is null
-      and count is null
-      and (ignore='false' or ignore is null)
+      and counts is null
+      and (ignored='false' or ignored is null)
       and (gender is null or gender=?)", desired_gender)
   end
 
   def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
       @db.execute("select name from matches
         where (last_visit <= ? or last_visit is null)
-        and count between ? and ?
+        and counts between ? and ?
         and (gender is null or gender=?)", min_time, min_counts, max_counts, desired_gender)
   end
 
   def user_record_exists(user)
-    @db.execute( "select exists(select * from matches where name=" + user )
+    @db.execute( "select exists(select * from matches where name=?", user )
   end
 
   def set_match_percentage(user, match_percent)
     begin
-      @db.execute("update matches set match_percent=? where name=?", user, match_percent)
+      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
     rescue
       @db.execute("alter table matches add column match_percent text")
-      @db.execute("update matches set match_percent=? where name=?", user, match_percent)
+      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
     end
 
+  end
+
+  def set_state(args)
+    user = args[ :username]
+    state = args[ :state]
+    begin
+      @db.execute("update matches set state=? where name=?", state, user)
+    rescue
+      @db.execute("alter table matches add column state text")
+      @db.execute("update matches set state=? where name=?", state, user)
+    end
   end
 
   def set_gender(user, gender)
@@ -179,7 +211,7 @@ class DatabaseManager
       result = @db.execute("select zindex from matches where name=?", visitor)
       result[0][0].to_i
     else
-      @db.execute("insert into matches(name, count, zindex, ignore) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
+      @db.execute("insert into matches(name, counts, zindex, ignored) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
       self.set_visitor_timestamp(visitor, Time.now.to_i)
       Time.now.to_i
     end
@@ -201,34 +233,21 @@ class DatabaseManager
   end
 
   def log2(user)
-    if existsCheck(user.handle)
+    if !(existsCheck(user.handle))
+      self.add_user(user.handle)
+    end
       count = self.get_visit_count(user.handle) + 1
       self.update_visit_count(user.handle, count)
       self.set_my_last_visit_date(user.handle)
       self.set_gender(user.handle.to_s, user.gender.to_s)
       self.set_sexuality(user.handle, user.sexuality)
       self.set_match_percentage(user.handle, user.match_percentage)
-    else
-      self.add_user(user.handle)
-      self.set_sexuality(user.handle, user.sexuality)
-      self.set_gender(user.handle, user.gender)
-    end
+      self.set_state(:username => user.handle, :state => user.state)
   end
 
-  def add_user(username, count=1)
-    if !(existsCheck(username))
-      @db.execute( "insert into matches(name, count, ignore) values (?, ?, ?)", username, count, 'false')
-    end
-  end
-
-  def delete_user(username)
-    if existsCheck(username)
-      @db.execute( "delete from matches where name=?", username)
-    end
-  end
 
   def is_ignored(username)
-    result = @db.execute( "select ignore from matches where name=?", username)
+    result = @db.execute( "select ignored from matches where name=?", username)
     # to_boolean(result[0][0].to_s)
     begin
       (result[0][0].to_s == "true")
@@ -242,11 +261,11 @@ class DatabaseManager
   end
 
   def ignore_user(username)
-    @db.execute( "update matches set ignore='true' where name=?", username)
+    @db.execute( "update matches set ignored='true' where name=?", username)
   end
 
   def unignore_user(username)
-    @db.execute( "update matches set ignore='false' where name=?", username)
+    @db.execute( "update matches set ignored='false' where name=?", username)
   end
 
   def existsCheck( id )

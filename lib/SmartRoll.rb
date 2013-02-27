@@ -80,6 +80,12 @@ class SmartRoll
     sleep 2
   end
 
+  def build_queues_new_users
+    @selection = @db.new_user_smart_query
+    puts "#{@selection.size} users queued up."
+    sleep 2
+  end
+
   def build_queue_no_gender(days)
     @selection = @db.no_gender(self.days_ago(days))
     puts "#{@selection.size} users queued up."
@@ -168,8 +174,13 @@ class SmartRoll
      end
 
      def run_range(min, max)
-      self.build_range(min, max)
-      self.roll
+       self.build_range(min, max)
+       self.roll
+     end
+
+     def run_new_users_only
+       self.build_queues_new_users
+       self.roll
      end
 
 end

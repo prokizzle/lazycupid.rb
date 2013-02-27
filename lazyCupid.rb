@@ -43,6 +43,10 @@ class Roller
     @db
   end
 
+  def visit_newbs
+    @smarty.run2
+  end
+
   def ignore_user(user)
     @blocklist.add(user)
   end
@@ -72,6 +76,10 @@ class Roller
     @browser.is_logged_in
   end
 
+  def harvest_home_page
+    @harvester.scrape_home_page
+  end
+
   def login
     @browser.login
   end
@@ -79,6 +87,10 @@ class Roller
   def add(user)
     @db.add_new_match(user)
     @db.save
+  end
+
+  def range_roll(min, max)
+    @smarty.run_range(min, max)
   end
 
   def check_visitors
@@ -167,6 +179,16 @@ while quit == false
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
+  when "5"
+    application.visit_newbs
+  when "6"
+    print "Min: "
+    min = gets.chomp
+    print "Max: "
+    max = gets.chomp
+    application.range_roll(min, max)
+  when "7"
+    application.harvest_home_page
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"

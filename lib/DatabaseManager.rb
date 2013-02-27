@@ -28,18 +28,18 @@ class DatabaseManager
         sexuality text,
         age integer,
         relationship_status text,
-        match_percentage integer
+        match_percentage integer,
         PRIMARY KEY(name)
         )"
                   )
     rescue
     end
-    CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
-      @db.execute( "insert into matches
-            (name, count, ignore, zindex, visit_count, last_visit)
-            values (?, ?, ?, ?, ?, ?)",
-                   row[0], row[1], row[2], row[3], row[4], row[5])
-    end
+    # CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
+    #   @db.execute( "insert into matches
+    #         (name, count, ignore, zindex, visit_count, last_visit)
+    #         values (?, ?, ?, ?, ?, ?)",
+    #                row[0], row[1], row[2], row[3], row[4], row[5])
+    # end
 
   end
 
@@ -89,8 +89,22 @@ class DatabaseManager
     @db.execute("select name from matches
       where (last_visit <= ? or last_visit is null)
       and count=?
-      and (ignore='false' or ignore is null)
       and (gender is null or gender=?)", min_time, max_counts, desired_gender)
+  end
+
+  def better_smart_query2(desired_gender="F")
+    @db.execute("select name from matches
+      where last_visit is null
+      and count is null
+      and (ignore='false' or ignore is null)
+      and (gender is null or gender=?)", desired_gender)
+  end
+
+  def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
+      @db.execute("select name from matches
+        where (last_visit <= ? or last_visit is null)
+        and count between ? and ?
+        and (gender is null or gender=?)", min_time, min_counts, max_counts, desired_gender)
   end
 
   def user_record_exists(user)
@@ -236,11 +250,15 @@ class DatabaseManager
   end
 
   def existsCheck( id )
+    begin
     temp = @db.execute( "select 1 where exists(
           select 1
           from matches
           where name = ?
       ) ", [id] ).any?
+    rescue
+    self.import
+    end
   end
 
   def to_boolean(str)

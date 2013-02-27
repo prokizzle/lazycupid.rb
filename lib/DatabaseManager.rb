@@ -134,10 +134,10 @@ class DatabaseManager
 
   def set_match_percentage(user, match_percent)
     begin
-      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
+      @db.execute("update matches set match_percentage=? where name=?", match_percent, user)
     rescue
-      @db.execute("alter table matches add column match_percent text")
-      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
+      @db.execute("alter table matches add column match_percentage integer")
+      @db.execute("update matches set match_percentage=? where name=?", match_percent, user)
     end
 
   end

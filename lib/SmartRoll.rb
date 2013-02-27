@@ -50,6 +50,10 @@ class SmartRoll
     @select = @db.better_smart_query(days_ago(days), counts)
   end
 
+  def build_new
+    @selection = @db.better_smart_query2
+  end
+
   def select_by_last_visit_date(day_input=1)
     max = Time.now.to_i - days(day_input).to_i
     min = 0
@@ -82,6 +86,11 @@ class SmartRoll
     sleep 2
   end
 
+  def build_range(min, max)
+    @selection = @db.range_smart_query(self.days_ago(4), min, max)
+    puts "#{@selection.size} users queued up."
+    sleep 2
+  end
 
   def autodiscover_new_users
     @harvester.scrape_from_user
@@ -104,17 +113,17 @@ class SmartRoll
     mode = "smart"
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
 
-     unless @browser.account_deleted
+     if !(@browser.account_deleted)
        self.user_ob_debug
        # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
        @db.log2(@user)
-       @bar.increment!
-       # @display.output(@user, @mph, mode)
+       # @bar.increment!
+       @display.output(@user, @mph, mode)
        self.autodiscover_new_users if @user.gender=="F"
      end
      if self.inactive_account
        self.remove_match(user)
-       puts "*Invalid user* : #{user}"
+       # puts "*Invalid user* : #{user}"
      end
      end
 
@@ -132,7 +141,7 @@ class SmartRoll
      end
 
      def roll
-      @bar = ProgressBar.new(@selection.size)
+       # @bar = ProgressBar.new(@selection.size)
        begin
          @selection.each do |user, counts|
            self.visit_user(user)
@@ -149,7 +158,17 @@ class SmartRoll
      end
 
      def gender_fix(days)
-      self.build_queue_no_gender(days)
+       self.build_queue_no_gender(days)
+       self.roll
+     end
+
+     def run2
+       self.build_new
+       self.roll
+     end
+
+     def run_range(min, max)
+      self.build_range(min, max)
       self.roll
      end
 

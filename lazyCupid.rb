@@ -159,6 +159,8 @@ while quit == false
   puts "(1) Smart Mode"
   puts "(2) Visit new users"
   puts "(3) Monitor Visitors"
+  puts "(4) Follow up"
+  puts "(5) Scrape home page"
   puts "(a) Admin menu"
   puts "(Q) Quit",""
   print "Mode: "
@@ -176,19 +178,15 @@ while quit == false
   when "3"
     application.check_visitors_loop
   when "4"
+    application.range_roll(2, 10)
+  when "5"
+    application.harvest_home_page
+  when "7"
+    application.visit_newbs
+  when "6"
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
-  when "5"
-    application.visit_newbs
-  when "6"
-    print "Min: "
-    min = gets.chomp
-    print "Max: "
-    max = gets.chomp
-    application.range_roll(min, max)
-  when "7"
-    application.harvest_home_page
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"

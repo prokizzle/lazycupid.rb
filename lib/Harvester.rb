@@ -119,7 +119,7 @@ class Harvester
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
     results = body.scan(/class="username".+(?:\/profile\/)([\d\w]+)(?:\?cf=home_matches)/)
     results.each do |user|
-      @database.add_user(visitor, 0)
+      @database.add_user(user, 0)
     end
   end
 end

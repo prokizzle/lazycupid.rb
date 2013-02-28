@@ -83,7 +83,7 @@ class DatabaseManager
   # end
 
   def update_visit_count(match_name, number)
-    @db.execute( "update matches set counts=? where name=?", number, match_name )
+    @db.execute( "update matches set counts=? where name=?", number.to_i, match_name )
   end
 
   def filter_by_visits(max, min=0)

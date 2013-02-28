@@ -59,7 +59,7 @@ class Harvester
       users.each do |user|
         if @user.gender == "F"
           @database.add_user(:username => user, :state => @user.state)
-          @database.set_gender(user, @user.gender)
+          @database.set_gender(:username => user, :gender => @user.gender)
         end
       end
     end
@@ -79,7 +79,7 @@ class Harvester
     # puts @visitors
     # wait=gets.chomp
     @details = @visitors.scan(/>([\w\d]+).+(\d{2}) \/ (F|M)\s\/\s(\w+)\s\/\s[\w\s]+.+"location".([\w\s]+)..([\w\s]+)/)
-    # puts @genders
+    # puts @details
     # wait=gets.chomp
 
     @gender = Hash.new(0)
@@ -89,19 +89,14 @@ class Harvester
     @city = Hash.new(0)
 
     @details.each do |user|
-      # puts user
-      handle = user[1]
-      age = user[2]
-      gender = user[3]
-      sexuality = user[4]
-      city = user[5]
-      state = user[6]
+      handle = user[0]
+      age = user[1]
+      gender = user[2]
+      sexuality = user[3]
+      city = user[4]
+      state = user[5]
       @gender[handle] = gender
-      # begin
       @state[handle] = state
-    # rescue
-      @state[handle] = ""
-    # end
       @city[handle] = city
       @state[handle] = state
       @sexuality[handle] = sexuality
@@ -121,11 +116,11 @@ class Harvester
         if (@gender[visitor]=="M")
           puts "Ignoring man named #{visitor}"
           @database.ignore_user(visitor)
-          @database.set_gender(visitor, "M")
+          @database.set_gender(:username => visitor, :gender => "M")
         else
           @database.add_user(:username => visitor)
-          @database.set_gender(visitor, "F")
-          @database.set_state(:username => @state[visitor])
+          @database.set_gender(:username => visitor, :gender => "F")
+          @database.set_state(:username => visitor, :state => @state[visitor])
         end
       end
 
@@ -140,11 +135,24 @@ class Harvester
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
     results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
     results.each do |user|
-      @database.add_user(:username => user[1], :state => user[6])
-      # @database.set_gender(user[3])
-      # @database.set_age(user[2])
-      @database.set_state(:username => user[1], :state => user[6])
-      # @database.set_city(user[5])
+      handle = user[0]
+      puts handle
+      age = user[1]
+      puts age
+      gender = user[2]
+      puts gender
+      sexuality = user[3]
+      puts sexuality
+      city = user[4]
+      puts city
+      state = user[5]
+      puts state
+      sleep 2
+      @database.add_user(:username => handle, :state => state)
+      @database.set_gender(:username => handle, :gender => gender)
+      # @database.set_age(:username => handle, :age => age)
+      @database.set_state(:username => handle, :state => state)
+      # @database.set_city(:username => handle, :city => city)
       # @database
     end
   end

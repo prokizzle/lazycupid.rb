@@ -14,12 +14,6 @@ class SmartRoll
     @days = 2
   end
 
-  def overkill(min)
-    @db.filter_by_visits(1000,min)
-  end
-
-  # def remove_straight_men
-
   def sexuality(user)
     result = @database.get_sexuality(user)
     result[0][0].to_s
@@ -82,6 +76,14 @@ class SmartRoll
 
   def build_queues_new_users
     @selection = @db.new_user_smart_query
+    @bandaid = Hash.new(0)
+    @bandaid = {"JamieLee311" => 0, "Letsgocowtippin" => 0, "_JaneSlayre_" => 0, "k-zona" => 0, "CityTVGirl" => 0, "yogameg99" => 0, "BeStill1956" => 0, "smile236" => 0, "MA_WRX" => 0, "whatup_fool" => 0, "Wanderlove80" => 0}
+    @bandaid.each do |users|
+      users.each do |user|
+      @selection.delete(user)
+    end
+    end
+    # puts @selection
     puts "#{@selection.size} users queued up."
     sleep 2
     # @selection.each do |user|
@@ -135,7 +137,7 @@ class SmartRoll
        self.remove_match(user)
        # puts "*Invalid user* : #{user}"
      end
-     end
+  end
 
 
      def unix_time
@@ -154,9 +156,13 @@ class SmartRoll
        # @bar = ProgressBar.new(@selection.size)
        begin
          @selection.each do |user, counts|
-           self.visit_user(user)
-           # self.check_for_new_visitors if (unix_time%7==0)
-           sleep 6
+           # if !(@bandaid.has_key?(user))
+             self.visit_user(user)
+             # self.check_for_new_visitors if (unix_time%7==0)
+             sleep 6
+           # else
+           #   puts "#{user} strikes again"
+           # end
          end
        rescue SystemExit, Interrupt
        end
@@ -187,4 +193,4 @@ class SmartRoll
        self.roll
      end
 
-end
+     end

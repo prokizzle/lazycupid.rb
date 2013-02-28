@@ -1,16 +1,27 @@
 class DatabaseManager
 
   def initialize(args)
-    login = args[ :login_name]
-    open_db(login)
-
-
+    @login = args[ :login_name]
+    open_db
   end
 
-  def open_db( db )
-    @db = SQLite3::Database.new( "./db/#{db}.db" )
-    # self.import
+  def db
+    @db
+  end
 
+  def action(stmt)
+    db.transaction
+    stmt.execute
+    db.commit
+  end
+
+  def open_db
+    @db = SQLite3::Database.new( "./db/#{@login}.db" )
+    # self.import
+  end
+
+  def open
+    db.open
   end
 
   def import
@@ -31,7 +42,8 @@ class DatabaseManager
         city text,
         PRIMARY KEY(name)
         )")
-    rescue
+    rescue Exception => e
+      puts e.message
     end
     # CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
     #   @db.execute( "insert into matches
@@ -46,13 +58,17 @@ class DatabaseManager
     username = args[ :username]
     count = 0
     if !(existsCheck(username))
+      @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
+      @db.commit
     end
   end
 
   def delete_user(username)
     if existsCheck(username)
+      @db.transaction
       @db.execute( "delete from matches where name=?", username)
+      @db.commit
     end
   end
 
@@ -61,11 +77,7 @@ class DatabaseManager
   end
 
   def delete_men
-    results = @db.execute("select name from matches where gender=?", "M")
-    results.each do |user|
-      puts "Deleting #{user}"
-      self.delete_user(user)
-    end
+    results = @db.execute("delete from matches where gender=?", "M")
   end
 
   def get_match_names
@@ -106,193 +118,189 @@ class DatabaseManager
   end
 
   def new_user_smart_query
-    @db.execute("select name from matches
+    @db.execute("select name, counts from matches
     where (counts=0 or counts is null)
     and (ignored is 'false' or ignored is null)
     and (gender is null or gender=?)", "F")
-  end
+
+    end
 
 
-  def better_smart_query2(desired_gender="F")
-    @db.execute("select name from matches
+    def better_smart_query2(desired_gender="F")
+      @db.execute("select name from matches
       where last_visit is null
       and counts is null
       and (ignored='false' or ignored is null)
       and (gender is null or gender=?)", desired_gender)
-  end
+    end
 
-  def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
+    def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
       @db.execute("select name from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (gender is null or gender=?)", min_time, min_counts, max_counts, desired_gender)
-  end
-
-  def user_record_exists(user)
-    @db.execute( "select exists(select * from matches where name=?", user )
-  end
-
-  def set_match_percentage(user, match_percent)
-    begin
-      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
-    rescue
-      @db.execute("alter table matches add column match_percent text")
-      @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
     end
 
-  end
-
-  def set_state(args)
-    user = args[ :username]
-    state = args[ :state]
-    begin
-      @db.execute("update matches set state=? where name=?", state, user)
-    rescue
-      @db.execute("alter table matches add column state text")
-      @db.execute("update matches set state=? where name=?", state, user)
+    def user_record_exists(user)
+      @db.execute( "select exists(select * from matches where name=?", user )
     end
-  end
 
-  def set_gender(user, gender)
-    begin
-      @db.execute("update matches set gender=? where name=?", gender, user)
-    rescue
-      @db.execute("alter table matches add column gender text")
-      @db.execute("update matches set gender=? where name=?", gender, user)
+    def set_match_percentage(user, match_percent)
+      # begin
+      @db.execute("update matches set match_percent=? where name=?", match_percent, user)
+      # rescue
+      #   @db.execute("alter table matches add column match_percent text")
+      #   @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
+      # end
+
     end
-  end
 
-  def get_gender(user)
-    @db.execute("select gender from matches where name=?", user)
-  end
-
-  def set_sexuality(user, sexuality)
-    begin
-      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
-    rescue
-      @db.execute("alter table matches add column sexuality text")
-      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
+    def set_state(args)
+      user = args[ :username]
+      state = args[ :state]
+      begin
+        @db.execute("update matches set state=? where name=?", state, user)
+      rescue
+        @db.execute("alter table matches add column state text")
+        @db.execute("update matches set state=? where name=?", state, user)
+      end
     end
-  end
 
-  def get_sexuality(user)
-    @db.execute("select sexuality from matches where name=?", user)
-  end
+    def set_gender(args)
+      user = args[ :username]
+      gender = args[ :gender]
+      begin
+        @db.execute("update matches set gender=? where name=?", gender, user)
+      rescue
+        @db.execute("alter table matches add column gender text")
+        @db.execute("update matches set gender=? where name=?", gender, user)
+      end
+    end
 
-  def get_match_percentage(user)
-    result = @db.execute("select match_percent from matches where name=?", user)
-    result[0][0].to_i
-  end
+    def get_gender(user)
+      @db.execute("select gender from matches where name=?", user)
+    end
 
-  def set_visitor_counter(visitor, number)
-    @db.execute( "update matches set visit_count=? where name=?", number, visitor)
-  end
+    def set_sexuality(user, sexuality)
+      begin
+        @db.execute("update matches set sexuality=? where name=?", sexuality, user)
+      rescue
+        @db.execute("alter table matches add column sexuality text")
+        @db.execute("update matches set sexuality=? where name=?", sexuality, user)
+      end
+    end
 
-  def get_visitor_count(visitor)
-    result = @db.execute( "select visit_count from matches where name=?", visitor)
-    result[0][0].to_i
-  end
+    def get_sexuality(user)
+      @db.execute("select sexuality from matches where name=?", user)
+    end
 
-  def get_my_last_visit_date(user)
-    result = @db.execute("select last_visit from matches where name=?", user)
-    result[0][0].to_i
-  end
-
-  def set_my_last_visit_date(user)
-    @db.execute( "update matches set last_visit=? where name=?", Time.now.to_i, user)
-  end
-
-  def set_visitor_timestamp(visitor, timestamp)
-    @db.execute( "update matches set zindex=? where name=?", timestamp, visitor)
-  end
-
-  def get_visitor_timestamp(visitor)
-    if self.existsCheck(visitor)
-      result = @db.execute("select zindex from matches where name=?", visitor)
+    def get_match_percentage(user)
+      result = @db.execute("select match_percent from matches where name=?", user)
       result[0][0].to_i
-    else
-      @db.execute("insert into matches(name, counts, zindex, ignored) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
-      self.set_visitor_timestamp(visitor, Time.now.to_i)
-      Time.now.to_i
     end
-  end
 
-  def log(match_name, match_percent=0)
-    if existsCheck(match_name)
-      count = self.get_visit_count(match_name) + 1
-      self.update_visit_count(match_name, count)
-      self.set_my_last_visit_date(match_name)
-      # self.set_gender(match_name, gender)
-      # self.set_sexuality(match_name, sexuality)
-      # self.set_match_percentage(match_name, match_percent)
-    else
-      self.add_user(match_name)
-      # self.set_sexuality(match_name, sexuality)
-      # self.set_gender(match_name, gender)
+    def set_visitor_counter(visitor, number)
+      @db.execute( "update matches set visit_count=? where name=?", number, visitor)
     end
-  end
 
-  def log2(user)
-    if !(existsCheck(user.handle))
-      self.add_user(user.handle)
+    def get_visitor_count(visitor)
+      result = @db.execute( "select visit_count from matches where name=?", visitor)
+      result[0][0].to_i
     end
+
+    def get_my_last_visit_date(user)
+      result = @db.execute("select last_visit from matches where name=?", user)
+      result[0][0].to_i
+    end
+
+    def set_my_last_visit_date(user)
+      @db.execute( "update matches set last_visit=? where name=?", Time.now.to_i, user)
+    end
+
+    def set_visitor_timestamp(visitor, timestamp)
+      @db.execute( "update matches set zindex=? where name=?", timestamp, visitor)
+    end
+
+    def get_visitor_timestamp(visitor)
+      if self.existsCheck(visitor)
+        result = @db.execute("select zindex from matches where name=?", visitor)
+        result[0][0].to_i
+      else
+        @db.execute("insert into matches(name, counts, zindex, ignored) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
+        self.set_visitor_timestamp(visitor, Time.now.to_i)
+        Time.now.to_i
+      end
+    end
+
+    def log(match_name, match_percent=0)
+      if existsCheck(match_name)
+        count = self.get_visit_count(match_name) + 1
+        self.update_visit_count(match_name, count)
+        self.set_my_last_visit_date(match_name)
+        # self.set_gender(:username => match_name, :gender => gender)
+        # self.set_sexuality(match_name, sexuality)
+        # self.set_match_percentage(match_name, match_percent)
+      else
+        self.add_user(:username => match_name)
+        # self.set_sexuality(match_name, sexuality)
+        # self.set_gender(:username => match_name, :gender => gender)
+      end
+    end
+
+    def log2(user)
+      if !(existsCheck(user.handle))
+        self.add_user(:username => user.handle)
+      end
       count = self.get_visit_count(user.handle) + 1
       self.update_visit_count(user.handle, count)
       self.set_my_last_visit_date(user.handle)
-      self.set_gender(user.handle.to_s, user.gender.to_s)
+      self.set_gender(:username => user.handle.to_s, :gender => user.gender.to_s)
       self.set_sexuality(user.handle, user.sexuality)
       self.set_match_percentage(user.handle, user.match_percentage)
       self.set_state(:username => user.handle, :state => user.state)
-  end
-
-
-  def is_ignored(username)
-    result = @db.execute( "select ignored from matches where name=?", username)
-    # to_boolean(result[0][0].to_s)
-    begin
-      (result[0][0].to_s == "true")
-    rescue
-      false
     end
-  end
 
-  def send_command(command)
-    @db.execute( "?", command)
-  end
 
-  def ignore_user(username)
-    @db.execute( "update matches set ignored='true' where name=?", username)
-  end
+    def is_ignored(username)
+      result = @db.execute( "select ignored from matches where name=?", username)
+      # to_boolean(result[0][0].to_s)
+      begin
+        (result[0][0].to_s == "true")
+      rescue
+        false
+      end
+    end
 
-  def unignore_user(username)
-    @db.execute( "update matches set ignored='false' where name=?", username)
-  end
+    def send_command(command)
+      @db.execute( "?", command)
+    end
 
-  def existsCheck( id )
-    begin
-    temp = @db.execute( "select 1 where exists(
+    def ignore_user(username)
+      @db.execute( "update matches set ignored='true' where name=?", username)
+    end
+
+    def unignore_user(username)
+      @db.execute( "update matches set ignored='false' where name=?", username)
+    end
+
+    def existsCheck( id )
+      # begin
+      temp = @db.execute( "select 1 where exists(
           select 1
           from matches
           where name = ?
       ) ", [id] ).any?
-    rescue
-    self.import
+      # rescue
+      # self.import
+      # end
     end
+
+    def to_boolean(str)
+      str == 'true'
+    end
+
+    def close
+      @db.close
+    end
+
   end
-
-  def to_boolean(str)
-    str == 'true'
-  end
-
-  def close
-    @db.close
-  end
-
-end
-
-# app = DatabaseManager.new(:login_name => "***REMOVED***")
-# puts app.log("CyanideLady2")
-# puts app.get_visit_count("CyanideLady2")
-# app.delete_user("CyanideLady2")
-# app.log("CyanideLady2")
-# puts app.get_visit_count("CyanideLady2")

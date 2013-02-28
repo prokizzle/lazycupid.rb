@@ -60,6 +60,14 @@ class Roller
     @smarty.run
   end
 
+  def close_db
+    db.close
+  end
+
+  def open_db
+    db.open
+  end
+
   def ignore_hidden_users
     @blocklist.import_hidden_users
   end
@@ -85,11 +93,12 @@ class Roller
   end
 
   def add(user)
-    @db.add_new_match(user)
-    @db.save
+    @db.add_user(:username => user)
   end
 
-  def range_roll(min, max)
+  def range_roll(args)
+    min = args[ :min_value]
+    max = args[ :max_value]
     @smarty.run_range(min, max)
   end
 
@@ -182,7 +191,7 @@ while quit == false
   when "3"
     application.check_visitors_loop
   when "4"
-    application.range_roll(2, 10)
+    application.range_roll(:min_value => 1, :max_value => 10)
   when "5"
     application.harvest_home_page
   when "7"
@@ -222,14 +231,19 @@ while quit == false
     end
   when "q"
     quit = true
+    @logout = true
+    application.close_db
   when "Q"
     quit = true
+    @logout = true
+    application.close_db
   else
     puts "Invalid selection."
   end
 end
-if logout == true
+if @logout == true
   application.logout
   application.clear
+  application.close_db
 end
 puts ""

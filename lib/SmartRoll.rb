@@ -84,6 +84,10 @@ class SmartRoll
     @selection = @db.new_user_smart_query
     puts "#{@selection.size} users queued up."
     sleep 2
+    # @selection.each do |user|
+    #   puts user
+    #   wait=gets.chomp
+    # end
   end
 
   def build_queue_no_gender(days)
@@ -120,7 +124,7 @@ class SmartRoll
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
 
      if !(@browser.account_deleted)
-       self.user_ob_debug
+       # self.user_ob_debug
        # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
        @db.log2(@user)
        # @bar.increment!

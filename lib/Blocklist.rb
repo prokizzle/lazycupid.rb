@@ -5,7 +5,7 @@ class BlockList
   attr_reader :is_ignored, :add, :remove
 
   def initialize(args)
-    @database = args[ :database]
+    @db = args[ :database]
     @browser = args[ :browser]
     # @ignore_list = @database.ignore
     # process_ignore_list
@@ -13,19 +13,19 @@ class BlockList
   end
 
   def user_exists(match)
-    @database.existsCheck(match)
+    @db.existsCheck(match)
   end
 
   def add(match)
-    @database.ignore_user(match) if user_exists(match)
+    @db.ignore_user(match) if user_exists(match)
   end
 
   def remove(match)
-    @database.unignore_user(match) if user_exists(match)
+    @db.unignore_user(match) if user_exists(match)
   end
 
   def is_ignored (user)
-    (@database.is_ignored(user))
+    (@db.is_ignored(user))
   end
 
   def body

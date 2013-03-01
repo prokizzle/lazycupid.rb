@@ -72,7 +72,6 @@ class Harvester
   end
 
   def visitors
-
     @browser.go_to("http://www.okcupid.com/visitors")
     @current_user = @browser.current_user
     @visitors = @current_user.parser.xpath("//div[@id='main_column']").to_html
@@ -136,18 +135,11 @@ class Harvester
     results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
     results.each do |user|
       handle = user[0]
-      puts handle
       age = user[1]
-      puts age
       gender = user[2]
-      puts gender
       sexuality = user[3]
-      puts sexuality
       city = user[4]
-      puts city
       state = user[5]
-      puts state
-      sleep 2
       @database.add_user(:username => handle, :state => state)
       @database.set_gender(:username => handle, :gender => gender)
       # @database.set_age(:username => handle, :age => age)

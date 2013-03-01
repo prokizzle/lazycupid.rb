@@ -20,7 +20,9 @@ class Roller
   end
 
   def fix_dates
+    self.open_db
     @smarty.fix_blank_dates
+    self.close_db
   end
 
   def blocklist
@@ -44,36 +46,50 @@ class Roller
   end
 
   def visit_newbs
+    self.open_db
     @smarty.run2
+    self.close_db
   end
 
   def ignore_user(user)
+    self.open_db
     @blocklist.add(user)
+    self.close_db
   end
 
   def gender_fix(d)
+    self.open_db
     @smarty.gender_fix(d)
+    self.close_db
   end
 
   def smart_roller(max)
+    self.open_db
     @smarty.max = max
     @smarty.run
+    self.close_db
   end
 
   def close_db
+    puts "Debug: Closing database."
     db.close
   end
 
   def open_db
+    puts "Debug: Opening database"
     db.open
   end
 
   def ignore_hidden_users
+    self.open_db
     @blocklist.import_hidden_users
+    self.close_db
   end
 
   def search(user)
+    self.open_db
     @search.byUser(user)
+    self.close_db
   end
 
   def logout
@@ -85,7 +101,9 @@ class Roller
   end
 
   def harvest_home_page
+    self.open_db
     @harvester.scrape_home_page
+    self.close_db
   end
 
   def login
@@ -93,21 +111,29 @@ class Roller
   end
 
   def add(user)
+    self.open_db
     @db.add_user(:username => user)
+    self.close_db
   end
 
   def range_roll(args)
+    self.open_db
     min = args[ :min_value]
     max = args[ :max_value]
     @smarty.run_range(min, max)
+    self.close_db
   end
 
   def new_roll
+    self.open_db
     @smarty.run_new_users_only
+    self.close_db
   end
 
   def check_visitors
+    self.open_db
     @harvester.visitors
+    self.close_db
   end
 
   def test_user_object(user)
@@ -125,10 +151,13 @@ class Roller
 
 
   def scrape_similar(user)
+    self.open_db
     @harvester.similar_user_scrape(user)
+    self.close_db
   end
 
   def check_visitors_loop
+    self.open_db
     puts "Monitoring visitors"
     begin
       loop do
@@ -137,6 +166,7 @@ class Roller
       end
     rescue SystemExit, Interrupt
     end
+  self.close_db
   end
 end
 
@@ -212,7 +242,7 @@ while quit == false
     when "1"
       print "User to add: "
       user = gets.chomp
-      application.add_user(user)
+      application.add(user)
     when "2"
       puts ""
       print "User: "

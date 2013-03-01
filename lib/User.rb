@@ -20,7 +20,11 @@ class Users
   end
 
   def match_percentage
-    body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
+    begin
+      body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
+    rescue
+      0
+    end
   end
 
   def age
@@ -63,7 +67,7 @@ class Users
     begin
       /\((\d+) miles\)/.match(body)[1]
     rescue
-      "error"
+      9999999
     end
   end
 

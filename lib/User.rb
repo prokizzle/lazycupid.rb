@@ -59,6 +59,14 @@ class Users
     asl[2].to_s
   end
 
+  def relative_distance
+    begin
+      /\((\d+) miles\)/.match(body)[1]
+    rescue
+      "error"
+    end
+  end
+
   def relationship_status
     asl[4].to_s
   end

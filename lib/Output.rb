@@ -31,7 +31,9 @@ class Output
     puts "  Gender:      #{user.gender}"
     puts "  Sexuality:   #{user.sexuality}"
     puts "  State:       #{user.state}"
+    puts "  Distance:    #{user.relative_distance}"
     puts "  Visits:      #{@search.byUser(user.handle)}"
+    puts "  Last visit:  #{@search.last_visited(user.handle)}"
     puts "  Visited You: #{@search.visits(user.handle)}",""
     puts "to quit press ctrl-c"
   end

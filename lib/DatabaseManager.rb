@@ -314,8 +314,12 @@ class DatabaseManager
   end
 
   def close
-    @db.commit
+    # @db.commit
     @db.close
+  end
+
+  def commit
+    @db.commit
   end
 
 end

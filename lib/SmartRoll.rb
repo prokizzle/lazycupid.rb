@@ -72,13 +72,6 @@ class SmartRoll
 
   def build_queues_new_users
     @selection = @db.new_user_smart_query
-    @bandaid = Hash.new(0)
-    @bandaid = {"JamieLee311" => 0, "Letsgocowtippin" => 0, "_JaneSlayre_" => 0, "k-zona" => 0, "CityTVGirl" => 0, "yogameg99" => 0, "BeStill1956" => 0, "smile236" => 0, "MA_WRX" => 0, "whatup_fool" => 0, "Wanderlove80" => 0}
-    @bandaid.each do |users|
-      users.each do |user|
-      @selection.delete(user)
-    end
-    end
     # puts @selection
     puts "#{@selection.size} users queued up."
     sleep 2

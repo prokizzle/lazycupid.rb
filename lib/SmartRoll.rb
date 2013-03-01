@@ -40,8 +40,8 @@ class SmartRoll
     @select = @db.filter_by_visits(max)
   end
 
-  def query_for_users(days, counts)
-    @select = @db.better_smart_query(days_ago(days), counts)
+  def query_for_users(num, counts)
+    @select = @db.better_smart_query(days_ago(num), counts)
   end
 
   def build_new
@@ -54,17 +54,13 @@ class SmartRoll
     @select = @db.filter_by_dates(min, max)
   end
 
-  def days(number)
-    86400 * number.to_i
-  end
-
   def relative_last_visit(match)
-    unix_date = @db.get_my_last_visit_date(match)
-    ((Time.now.to_i - unix_date)/86400).round
+    unix_date2 = @db.get_my_last_visit_date(match)
+    ((Time.now.to_i - unix_date2)/86400).round
   end
 
-  def days_ago(number)
-    unix_time - (86400*number)
+  def days_ago(num)
+    Chronic.parse("#{num} days ago").to_i
   end
 
   def build_queues
@@ -128,9 +124,9 @@ class SmartRoll
      if !(@browser.account_deleted)
        # self.user_ob_debug
        # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
+       @display.output(@user, @mph, mode)
        @db.log2(@user)
        # @bar.increment!
-       @display.output(@user, @mph, mode)
        self.autodiscover_new_users if @user.gender=="F"
      end
      if self.inactive_account
@@ -155,7 +151,7 @@ class SmartRoll
      def roll
        # @bar = ProgressBar.new(@selection.size)
        begin
-         @selection.each do |user, counts|
+         @selection.reverse_each do |user, counts|
            # if !(@bandaid.has_key?(user))
              self.visit_user(user)
              # self.check_for_new_visitors if (unix_time%7==0)

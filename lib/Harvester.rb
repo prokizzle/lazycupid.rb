@@ -59,6 +59,7 @@ class Harvester
       users.each do |user|
         if @user.gender == "F"
           @database.add_user(:username => user, :state => @user.state)
+          @database.set_state(:username => user, :state => @user.state)
           @database.set_gender(:username => user, :gender => @user.gender)
         end
       end

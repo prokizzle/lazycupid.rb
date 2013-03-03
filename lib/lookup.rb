@@ -8,11 +8,11 @@ class Lookup
     # @importer.import if manual_import
   end
 
-  def byUser(user)
+  def visited(user)
     @importer.get_visit_count(user)
   end
 
-  def visits(user)
+  def were_visited(user)
     @importer.get_visitor_count(user)
   end
 

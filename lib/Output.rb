@@ -4,7 +4,8 @@ class Output
 
   def initialize(args)
     @username = args[ :username]
-    @search = args[ :stats]
+    @you = args[ :stats]
+    @distance_traveled = 0
   end
 
   def clear
@@ -32,11 +33,34 @@ class Output
     puts "  Sexuality:   #{user.sexuality}"
     puts "  State:       #{user.state}"
     puts "  Distance:    #{user.relative_distance}"
-    puts "  Visits:      #{@search.byUser(user.handle)}"
-    puts "  Last visit:  #{@search.last_visited(user.handle)}"
-    puts "  Visited You: #{@search.visits(user.handle)}",""
+    puts "  Visits:      #{@you.visited(user.handle)}"
+    puts "  Last visit:  #{@you.last_visited(user.handle)}"
+    puts "  Visited You: #{@you.were_visited(user.handle)}",""
     puts "to quit press ctrl-c"
   end
+
+  def console_out(user)
+    puts "#{@username}: #{user.handle}; #{user.match_percentage}%; #{user.state}; #{user.relative_distance}; #{@you.visited(user.handle)}"
+  end
+
+  def travel_plans(user)
+    puts "*******************"
+    @distance_traveled += (@last_destination.to_f - user.relative_distance.to_f).abs
+    puts "#{@username} is visting #{user.state},","#{user.relative_distance} miles away."
+    puts "Trip total: #{@distance_traveled}"
+    @last_destination = user.relative_distance.to_f
+  end
+
+  def dashboard(visited, visitors)
+    self.clear
+    puts "LazyCupid Dashboard"
+    puts "--------------------","",""
+    puts "Updated:  #{Time.now}"
+    puts "Account:  #{@username}"
+    puts "Visited:  #{visited}"
+    puts "Visitor:  #{visitors}"
+  end
+
 
   def progress(total_matches)
 

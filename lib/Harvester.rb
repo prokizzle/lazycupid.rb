@@ -40,12 +40,16 @@ class Harvester
     self.similar_user_scrape
   end
 
+  def meets_preferences
+    ((@user.match_percentage >= 60) && (@user.relative_distance <= 250) && (@user.age <= 50))
+  end
+
   def leftbar_scrape
     # @browser.go_to(url)
     array = body.scan(/href="\/profile\/([\w\d]+)\?leftbar\_match\=1"/)
     array.each do |users|
       users.each do |user|
-          @database.add_user(:username => user, :state => @user.state)
+        @database.add_user(:username => user, :state => @user.state)
       end
     end
   end
@@ -54,13 +58,16 @@ class Harvester
     # @found = Array.new
     # @database.log(match)
     # @browser.go_to("http://www.okcupid.com/profile/#{match}")
-    array = body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
-    array.each do |users|
-      users.each do |user|
-        if @user.gender == "F"
-          @database.add_user(:username => user, :state => @user.state)
-          @database.set_state(:username => user, :state => @user.state)
-          @database.set_gender(:username => user, :gender => @user.gender)
+    if (self.meets_preferences)
+      array = body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
+      array.each do |users|
+        users.each do |user|
+          if @user.gender == "F"
+            @database.add_user(:username => user, :state => @user.state)
+            @database.set_state(:username => user, :state => @user.state)
+            @database.set_gender(:username => user, :gender => @user.gender)
+            @database.set_distance(:username => user, :distance => @user.relative_distance)
+          end
         end
       end
     end
@@ -104,17 +111,19 @@ class Harvester
     end
 
     array = @visitors.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
+    @count = 0
     array.each do |visitor, zindex|
       @timestamp_block = @current_user.parser.xpath("//div[@id='usr-#{visitor}-info']/p/script/text()").to_html
       @timestamp = @timestamp_block.match(/(\d{10}), 'JOU/)[1].to_i
       @stored_timestamp = @database.get_visitor_timestamp(visitor).to_i
 
       if !(@stored_timestamp == @timestamp)
+        @count += 1
         self.increment_visitor_counter(visitor)
-        puts "New visit from #{visitor}" if (@gender[visitor] == "F")
+        # puts "New visit from #{visitor}" if (@gender[visitor] == "F")
         # puts "Timestamp: #{@timestamp} & Stored: #{@database.get_visitor_timestamp(visitor)}"
         if (@gender[visitor]=="M")
-          puts "Ignoring man named #{visitor}"
+          # puts "Ignoring man named #{visitor}"
           @database.ignore_user(visitor)
           @database.set_gender(:username => visitor, :gender => "M")
         else
@@ -129,6 +138,8 @@ class Harvester
 
       # sleep 1
     end
+    # puts "#{@count} new visitors"
+    @count.to_i
   end
 
   def scrape_home_page

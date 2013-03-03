@@ -21,14 +21,14 @@ class Users
 
   def match_percentage
     begin
-      body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
+      body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1].to_i
     rescue
       0
     end
   end
 
   def age
-    asl[1].to_s
+    asl[1].to_i
   end
 
   def count
@@ -65,9 +65,9 @@ class Users
 
   def relative_distance
     begin
-      /\((\d+) miles\)/.match(body)[1]
+      /\((\d+) miles*\)/.match(body)[1].to_i
     rescue
-      9999999
+      1
     end
   end
 

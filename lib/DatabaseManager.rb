@@ -60,6 +60,7 @@ class DatabaseManager
     if !(existsCheck(username))
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
+      self.set_time_added(:username => username)
       @db.commit
     end
   end
@@ -124,7 +125,7 @@ class DatabaseManager
   end
 
   def new_user_smart_query
-    @db.execute("select name, counts from matches
+    @db.execute("select name, counts, state from matches
     where (counts=0 or counts is null)
     and (ignored is 'false' or ignored is null)
     and (gender is null or gender=?)", "F")
@@ -144,6 +145,7 @@ class DatabaseManager
     @db.execute("select name from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
+        and (match_percentage between 60 and 100 or match_percentage is null)
         and (gender is null or gender=?)", min_time, min_counts, max_counts, desired_gender)
   end
 
@@ -151,14 +153,35 @@ class DatabaseManager
     @db.execute( "select exists(select * from matches where name=?", user )
   end
 
-  def set_match_percentage(user, match_percent)
+  def set_match_percentage(user, match_percentage)
     # begin
-    @db.execute("update matches set match_percent=? where name=?", match_percent, user)
+    @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
     # rescue
     #   @db.execute("alter table matches add column match_percent text")
     #   @db.execute("update matches set match_percent=? where name=?", match_percentage, user)
     # end
 
+  end
+
+  def set_distance(args)
+    user = args[ :username]
+    dist = args[ :distance]
+    begin
+      @db.execute("update matches set distance=? where name=?", dist, user)
+    rescue
+      @db.execute("alter table matches add column distance integer")
+      @db.execute("update matches set distance=? where name=?", dist, user)
+    end
+  end
+
+  def get_distance(args)
+    user = args[ :username]
+    begin
+      @db.execute("select distance from matches where name=?", user)
+    rescue
+      @db.execute("alter table matches add column distance integer")
+      nil
+    end
   end
 
   def set_state(args)
@@ -169,6 +192,16 @@ class DatabaseManager
     rescue
       @db.execute("alter table matches add column state text")
       @db.execute("update matches set state=? where name=?", state, user)
+    end
+  end
+
+  def set_time_added(args)
+    user = args[ :username]
+    begin
+      @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
+    rescue
+      @db.execute("alter table matches add column time_added integer")
+      @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
     end
   end
 
@@ -272,6 +305,7 @@ class DatabaseManager
     self.set_sexuality(user.handle, user.sexuality)
     self.set_match_percentage(user.handle, user.match_percentage)
     self.set_state(:username => user.handle, :state => user.state)
+    self.set_distance(:username => user.handle, :distance => user.relative_distance)
   end
 
 

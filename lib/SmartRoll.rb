@@ -60,7 +60,7 @@ class SmartRoll
   end
 
   def days_ago(num)
-    Chronic.parse("#{num} days ago").to_i
+    # Chronic.parse("#{num} days ago").to_i
   end
 
   def build_queues
@@ -113,11 +113,12 @@ class SmartRoll
   def visit_user(user)
     mode = "smart"
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
-
      if !(@browser.account_deleted)
        # self.user_ob_debug
-       # @db.log(@browser.scrape_user_name, @browser.scrape_match_percentage)
-       @display.output(@user, @mph, mode)
+       # @display.output(@user, @mph, mode)
+       @tally += 1
+       # @display.console_out(@user)
+       # @display.travel_plans(@user)
        @db.log2(@user)
        # @bar.increment!
        self.autodiscover_new_users if @user.gender=="F"
@@ -126,7 +127,7 @@ class SmartRoll
        self.remove_match(user)
        # puts "*Invalid user* : #{user}"
      end
-  end
+     end
 
 
      def unix_time
@@ -141,20 +142,55 @@ class SmartRoll
        @db.delete_user(user)
      end
 
+     def event_time
+       @event_time
+     end
+
+     def visitor_count
+      @harvester.visitors
+    end
+
+     def check_visitors
+       viz = @harvester.visitors
+       # puts "************************"
+       # puts "Vistors:  #{viz}"
+       # puts "Visited:  #{@tally}"
+       # puts "************************"
+       @total_visitors += viz
+       @total_visits += @tally
+       @display.dashboard(@total_visits, @total_visitors)
+       # puts "Ratio: #{(viz/@tally).to_f}"
+       @event_time = Chronic.parse('5 minutes from now').to_i
+       @tally = 0
+     end
+
+    def summary
+      self.check_visitors
+      puts "Results: "
+      puts "Visited:  #{@total_visits} people"
+      puts "Visitors: #{@total_visitors}"
+      sleep 4
+    end
+
      def roll
        # @bar = ProgressBar.new(@selection.size)
+       @tally = 0
+       @total_visitors =0
+       @total_visits =0
+       self.check_visitors
        begin
-         @selection.reverse_each do |user, counts|
+         @selection.reverse_each do |user, counts, state|
            # if !(@bandaid.has_key?(user))
-             self.visit_user(user)
-             # self.check_for_new_visitors if (unix_time%7==0)
-             sleep 6
-           # else
-           #   puts "#{user} strikes again"
-           # end
+           self.visit_user(user)
+           # self.check_for_new_visitors if (unix_time%7==0)
+           sleep 6
+           if unix_time >= event_time
+             self.check_visitors
+           end
          end
        rescue SystemExit, Interrupt
        end
+       self.summary
      end
 
      def run

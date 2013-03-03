@@ -11,6 +11,7 @@ class Roller
     @speed = speed
     @browser = Session.new(:username => self.username, :password => self.password)
     @db = DatabaseManager.new(:login_name => self.username)
+    @prefs = Preferences.new(:browser => @browser)
     @blocklist = BlockList.new(:database => self.db, :browser => @browser)
     @search = Lookup.new(:database => self.db)
     @display = Output.new(:stats => @search, :username => self.username)
@@ -132,8 +133,9 @@ class Roller
 
   def check_visitors
     self.open_db
-    @harvester.visitors
+    result = @harvester.visitors
     self.close_db
+    result
   end
 
   def test_user_object(user)
@@ -149,6 +151,10 @@ class Roller
     puts @user.match_percentage
   end
 
+  def test_prefs
+    @prefs.get_match_preferences
+  end
+
 
   def scrape_similar(user)
     self.open_db
@@ -161,7 +167,7 @@ class Roller
     puts "Monitoring visitors"
     begin
       loop do
-        @harvester.visitors
+        puts "#{@harvester.visitors} new visitors"
         sleep 60
       end
     rescue SystemExit, Interrupt
@@ -195,7 +201,7 @@ rescue SystemExit, Interrupt
 end
 
 while quit == false
-  application.check_visitors
+  puts "#{application.check_visitors} new visitors"
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
@@ -230,6 +236,8 @@ while quit == false
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
+  when "8"
+    application.test_prefs
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"

@@ -51,14 +51,20 @@ class Output
     @last_destination = user.relative_distance.to_f
   end
 
-  def dashboard(visited, visitors)
+  def dashboard(args)
+    visited = args[ :visits]
+    visitors = args[ :visitors]
+    start_time = args[ :start]
+    messages = args[ :messages]
     self.clear
     puts "LazyCupid Dashboard"
     puts "--------------------","",""
-    puts "Updated:  #{Time.now}"
-    puts "Account:  #{@username}"
-    puts "Visited:  #{visited}"
-    puts "Visitor:  #{visitors}"
+    puts "Started:   #{Time.at(start_time).ago_in_words}"
+    puts "Updated:   #{Time.now}"
+    puts "Account:   #{@username}"
+    puts "Visited:   #{visited}"
+    puts "Visitors:  #{visitors}"
+    puts "Messages:  #{messages}"
   end
 
 

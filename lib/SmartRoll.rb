@@ -110,6 +110,10 @@ class SmartRoll
     @harvester.visitors
   end
 
+  def new_messages
+    @browser.body.match(/.badge..\d+<\/span>/)[2].to_i
+  end
+
   def visit_user(user)
     mode = "smart"
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
@@ -142,13 +146,22 @@ class SmartRoll
        @db.delete_user(user)
      end
 
+     def pre_roll_actions
+       @tally = 0
+       @total_visitors =0
+       @total_visits =0
+       @start_time = Time.now.to_i
+       self.check_visitors
+     end
+
+
      def event_time
        @event_time
      end
 
      def visitor_count
-      @harvester.visitors
-    end
+       @harvester.visitors
+     end
 
      def check_visitors
        viz = @harvester.visitors
@@ -158,26 +171,23 @@ class SmartRoll
        # puts "************************"
        @total_visitors += viz
        @total_visits += @tally
-       @display.dashboard(@total_visits, @total_visitors)
+       @display.dashboard(:visits => @total_visits, :visitors => @total_visitors, :start => @start_time.to_i, :messages => new_messages)
        # puts "Ratio: #{(viz/@tally).to_f}"
        @event_time = Chronic.parse('5 minutes from now').to_i
        @tally = 0
      end
 
-    def summary
-      self.check_visitors
-      puts "Results: "
-      puts "Visited:  #{@total_visits} people"
-      puts "Visitors: #{@total_visitors}"
-      sleep 4
-    end
+     def summary
+       self.check_visitors
+       puts "Results: "
+       puts "Visited:  #{@total_visits} people"
+       puts "Visitors: #{@total_visitors}"
+       sleep 4
+     end
 
      def roll
        # @bar = ProgressBar.new(@selection.size)
-       @tally = 0
-       @total_visitors =0
-       @total_visits =0
-       self.check_visitors
+       self.pre_roll_actions
        begin
          @selection.reverse_each do |user, counts, state|
            # if !(@bandaid.has_key?(user))

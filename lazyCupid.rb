@@ -9,27 +9,54 @@ class Roller
     @username   = args[ :username]
     @password   = args[ :password]
     @speed      = speed
-    @config     = YAML.load_file("./config/#{username}.yml")
+    @config     = initialize_settings
     @browser    = Session.new(:username => username, :password => password)
-    @db         = DatabaseManager.new(:login_name => username)
+    @db         = initialize_db
     # @prefs    = Preferences.new(:browser => @browser)
     @blocklist  = BlockList.new(:database => db, :browser => @browser)
     @search     = Lookup.new(:database => db)
     @display    = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
     @user       = Users.new(:database => db, :browser => @browser)
     @harvester  = Harvester.new(
-                    :browser => @browser,
-                    :database => db,
-                    :user_stats => @user,
-                    :settings => @config)
+      :browser => @browser,
+      :database => db,
+      :user_stats => @user,
+    :settings => @config)
     @smarty     = SmartRoll.new(
-                    :database => db,
-                    :blocklist => blocklist,
-                    :harvester => @harvester,
-                    :user_stats => @user,
-                    :browser => @browser,
-                    :gui => @display,
-                    :settings => @config)
+      :database => db,
+      :blocklist => blocklist,
+      :harvester => @harvester,
+      :user_stats => @user,
+      :browser => @browser,
+      :gui => @display,
+    :settings => @config)
+  end
+
+  def initialize_settings
+    filename = "./config/#{@username}.yml"
+    unless File.exists?(filename)
+      config = {distance: 200, min_percent: 60, min_age: 18, max_age: 60, days_ago: 4}
+      File.open(filename, "w") do |f|
+        f.write(config.to_yaml)
+      end
+    end
+    YAML.load_file(filename)
+  end
+
+  def initialize_db
+    filename = "./db/#{@username}.db"
+    unless File.exists?(filename)
+      puts "Create new db for #{@username}?"
+      choice = gets.chomp
+      case choice
+      when "y"
+        DatabaseManager.new(:login_name => @username)
+      else
+        ""
+      end
+    else
+      DatabaseManager.new(:login_name => @username)
+    end
   end
 
   def fix_dates
@@ -68,15 +95,15 @@ class Roller
     # @config['min_age']
   end
 
-def max_match_age
-  # Settings.match_preferences[:max_age]
-  # @config['max_age']
-end
+  def max_match_age
+    # Settings.match_preferences[:max_age]
+    # @config['max_age']
+  end
 
-def test_prefs
-puts @config[:distance]
-wait = gets.chomp
-end
+  def test_prefs
+    puts @config[:distance]
+    wait = gets.chomp
+  end
 
   def db
     @db
@@ -101,12 +128,12 @@ end
   end
 
   def close_db
-    puts "Debug: Closing database."
+    # puts "Debug: Closing database."
     db.close
   end
 
   def open_db
-    puts "Debug: Opening database"
+    # puts "Debug: Opening database"
     db.open
   end
 
@@ -142,22 +169,22 @@ end
 
   def add(user)
     open_db
-    @db.add_user(:username => user)
+    @db.add_user(user)
     close_db
   end
 
   def range_roll(args)
-    open_db
-    min = args[ :min_value]
-    max = args[ :max_value]
-    @smarty.run_range(min, max)
-    close_db
+      open_db
+      min = args[ :min_value]
+      max = args[ :max_value]
+      @smarty.run_range(min, max)
+      close_db
   end
 
   def new_roll
-    open_db
-    @smarty.run_new_users_only
-    close_db
+      open_db
+      @smarty.run_new_users_only
+      close_db
   end
 
   def check_visitors
@@ -270,7 +297,9 @@ until quit
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)
       end
-    rescue
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     rescue SystemExit, Interrupt
     end
   when "10"
@@ -316,7 +345,7 @@ until quit
     puts "Invalid selection."
   end
 end
-if @logout == true
+if @logout
   application.logout
   application.clear
   application.close_db

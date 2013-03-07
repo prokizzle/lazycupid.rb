@@ -3,15 +3,16 @@ class SmartRoll
   attr_accessor :max, :delete, :mode, :days
 
   def initialize(args)
-    @db = args[ :database]
-    @blocklist = args[ :blocklist]
-    @harvester = args[ :harvester]
-    @user = args[ :user_stats]
-    @browser = args[ :browser]
-    @display = args[ :gui]
-    @max = args.fetch(:max_visists, 0)
-    @profiles = Hash.new(0)
-    @days = 2
+    @db         = args[ :database]
+    @blocklist  = args[ :blocklist]
+    @harvester  = args[ :harvester]
+    @user       = args[ :user_stats]
+    @browser    = args[ :browser]
+    @display    = args[ :gui]
+    @profiles   = Hash.new(0)
+    @settings   = args[ :settings]
+    @days       = 2
+    @stats      = Statistics.new
   end
 
   def sexuality(user)
@@ -26,14 +27,14 @@ class SmartRoll
 
   def is_male(user)
     begin
-      (self.gender(user)=='M')
+      gender(user) == 'M'
     rescue
       false
     end
   end
 
   def is_female(user)
-    (self.gender(user)=='F')
+    gender(user) == 'F'
   end
 
   def select_by_visit_count(max, min=0)
@@ -60,37 +61,24 @@ class SmartRoll
   end
 
   def days_ago(num)
-    # Chronic.parse("#{num} days ago").to_i
-  end
-
-  def build_queues
-    puts "Building queues"
-    @selection = query_for_users(2, @max)
-    puts "#{@selection.size} users queued up."
-    sleep 2
+    Chronic.parse("#{num} days ago").to_i
   end
 
   def build_queues_new_users
     @selection = @db.new_user_smart_query
-    # puts @selection
-    puts "#{@selection.size} users queued up."
-    sleep 2
-    # @selection.each do |user|
-    #   puts user
-    #   wait=gets.chomp
-    # end
   end
 
   def build_queue_no_gender(days)
-    @selection = @db.no_gender(self.days_ago(days))
+    @selection = @db.no_gender(days_ago(days))
     puts "#{@selection.size} users queued up."
     sleep 2
   end
 
   def build_range(min, max)
-    @selection = @db.range_smart_query(self.days_ago(4), min, max)
-    puts "#{@selection.size} users queued up."
-    sleep 2
+    @selection = @db.range_smart_query(
+                  days_ago(@settings[:days_ago].to_i),
+                  min,
+                  max)
   end
 
   def autodiscover_new_users
@@ -102,6 +90,7 @@ class SmartRoll
     test = [@user.gender, @user.handle, @user.match_percentage, @user.city, @user.state]
     rescue
     puts @browser.body
+    puts "Scraping ERROR!"
     user = gets.chomp
     end
   end
@@ -115,117 +104,104 @@ class SmartRoll
   end
 
   def visit_user(user)
-    mode = "smart"
     @browser.go_to("http://www.okcupid.com/profile/#{user}/")
-     if !(@browser.account_deleted)
-       # self.user_ob_debug
-       # @display.output(@user, @mph, mode)
-       @tally += 1
-       # @display.console_out(@user)
-       # @display.travel_plans(@user)
-       @db.log2(@user)
-       # @bar.increment!
-       self.autodiscover_new_users if @user.gender=="F"
-     end
-     if self.inactive_account
-       self.remove_match(user)
-       # puts "*Invalid user* : #{user}"
-     end
-     end
+    if inactive_account
+      remove_match(user)
+    else
+      user_ob_debug
+      @tally += 1
+      @db.log2(@user)
+      autodiscover_new_users if @user.gender == "F"
+    end
+  end
 
 
-     def unix_time
-       Time.now.to_i
-     end
+  def unix_time
+    Time.now.to_i
+  end
 
-     def inactive_account
-       @browser.account_deleted
-     end
+  def inactive_account
+    @browser.account_deleted
+  end
 
-     def remove_match(user)
-       @db.delete_user(user)
-     end
+  def remove_match(user)
+    @db.delete_user(user)
+  end
 
-     def pre_roll_actions
-       @tally = 0
-       @total_visitors =0
-       @total_visits =0
-       @start_time = Time.now.to_i
-       self.check_visitors
-     end
+  def pre_roll_actions
+    @display.progress(@selection.size)
+    @tally = 0
+    @total_visitors =0
+    @total_visits =0
+    @start_time = Time.now.to_i
+    check_visitors
+  end
 
 
-     def event_time
-       @event_time
-     end
+  def event_time
+    @event_time
+  end
 
-     def visitor_count
-       @harvester.visitors
-     end
+  def visitor_count
+    @harvester.visitors
+  end
 
-     def check_visitors
-       viz = @harvester.visitors
-       # puts "************************"
-       # puts "Vistors:  #{viz}"
-       # puts "Visited:  #{@tally}"
-       # puts "************************"
-       @total_visitors += viz
-       @total_visits += @tally
-       @display.dashboard(:visits => @total_visits, :visitors => @total_visitors, :start => @start_time.to_i, :messages => new_messages)
-       # puts "Ratio: #{(viz/@tally).to_f}"
-       @event_time = Chronic.parse('5 minutes from now').to_i
-       @tally = 0
-     end
+  def stats
+    {:total_visits => @total_visits, :total_visitors => @total_visitors, :start_time => @start_time.to_i}
+  end
 
-     def summary
-       self.check_visitors
-       puts "Results: "
-       puts "Visited:  #{@total_visits} people"
-       puts "Visitors: #{@total_visitors}"
-       sleep 4
-     end
+  def check_visitors
+    viz = @harvester.visitors
+    # puts "************************"
+    # puts "Vistors:  #{viz}"
+    # puts "Visited:  #{@tally}"
+    # puts "************************"
+    @total_visitors += viz
+    @total_visits += @tally
+    @display.update_progress(@total_visits)
+    @display.dashboard(stats)
+    # puts "Ratio: #{(viz/@tally).to_f}"
+    @event_time = Chronic.parse('5 minutes from now').to_i
+    @tally = 0
+  end
 
-     def roll
-       # @bar = ProgressBar.new(@selection.size)
-       self.pre_roll_actions
-       begin
-         @selection.reverse_each do |user, counts, state|
-           # if !(@bandaid.has_key?(user))
-           self.visit_user(user)
-           # self.check_for_new_visitors if (unix_time%7==0)
-           sleep 6
-           if unix_time >= event_time
-             self.check_visitors
-           end
-         end
-       rescue SystemExit, Interrupt
-       end
-       self.summary
-     end
+  def summary
+    check_visitors
+    puts "Results: "
+    puts "Visited:  #{@total_visits} people"
+    puts "Visitors: #{@total_visitors}"
+    sleep 4
+  end
 
-     def run
-       self.build_queues
-       self.roll
-     end
+  def roll
+    # @bar = ProgressBar.new(@selection.size)
+    pre_roll_actions
+      @selection.reverse_each do |user, counts, state|
+        visit_user(user)
+        sleep 6
+        check_visitors if unix_time >= event_time
+      end
+    summary
+  end
 
-     def gender_fix(days)
-       self.build_queue_no_gender(days)
-       self.roll
-     end
+  def gender_fix(days)
+    build_queue_no_gender(days)
+    roll
+  end
 
-     def run2
-       self.build_new
-       self.roll
-     end
+  def run2
+    build_new
+    roll
+  end
 
-     def run_range(min, max)
-       self.build_range(min, max)
-       self.roll
-     end
+  def run_range(min, max)
+    build_range(min, max)
+    roll
+  end
 
-     def run_new_users_only
-       self.build_queues_new_users
-       self.roll
-     end
+  def run_new_users_only
+    build_queues_new_users
+    roll
+  end
 
-     end
+end

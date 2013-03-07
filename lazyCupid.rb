@@ -6,24 +6,36 @@ class Roller
 
 
   def initialize(args)
-    @username = args[ :username]
-    @password = args[ :password]
-    @speed = speed
-    @browser = Session.new(:username => self.username, :password => self.password)
-    @db = DatabaseManager.new(:login_name => self.username)
-    @prefs = Preferences.new(:browser => @browser)
-    @blocklist = BlockList.new(:database => self.db, :browser => @browser)
-    @search = Lookup.new(:database => self.db)
-    @display = Output.new(:stats => @search, :username => self.username)
-    @user = Users.new(:database => self.db, :browser => @browser)
-    @harvester = Harvester.new(:browser => @browser, :database => self.db, :user_stats => @user)
-    @smarty = SmartRoll.new(:database => self.db, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user, :browser => @browser, :gui => @display)
+    @username   = args[ :username]
+    @password   = args[ :password]
+    @speed      = speed
+    @config     = YAML.load_file("./config/#{username}.yml")
+    @browser    = Session.new(:username => username, :password => password)
+    @db         = DatabaseManager.new(:login_name => username)
+    # @prefs    = Preferences.new(:browser => @browser)
+    @blocklist  = BlockList.new(:database => db, :browser => @browser)
+    @search     = Lookup.new(:database => db)
+    @display    = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
+    @user       = Users.new(:database => db, :browser => @browser)
+    @harvester  = Harvester.new(
+                    :browser => @browser,
+                    :database => db,
+                    :user_stats => @user,
+                    :settings => @config)
+    @smarty     = SmartRoll.new(
+                    :database => db,
+                    :blocklist => blocklist,
+                    :harvester => @harvester,
+                    :user_stats => @user,
+                    :browser => @browser,
+                    :gui => @display,
+                    :settings => @config)
   end
 
   def fix_dates
-    self.open_db
+    open_db
     @smarty.fix_blank_dates
-    self.close_db
+    close_db
   end
 
   def blocklist
@@ -35,40 +47,57 @@ class Roller
   end
 
   def clear
-    @display.clear
+    @display.clear_screen
   end
 
   def password
     @password
   end
 
+  def max_match_distance
+    @config[:distance]
+  end
+
+  def min_match_percent
+    # Settings.match_preferences[:min_percent]
+    # @config['min_percent']
+  end
+
+  def min_match_age
+    # Settings.match_preferences[:min_age]
+    # @config['min_age']
+  end
+
+def max_match_age
+  # Settings.match_preferences[:max_age]
+  # @config['max_age']
+end
+
+def test_prefs
+puts @config[:distance]
+wait = gets.chomp
+end
+
   def db
     @db
   end
 
   def visit_newbs
-    self.open_db
+    open_db
     @smarty.run2
-    self.close_db
+    close_db
   end
 
   def ignore_user(user)
-    self.open_db
+    open_db
     @blocklist.add(user)
-    self.close_db
+    close_db
   end
 
   def gender_fix(d)
-    self.open_db
+    open_db
     @smarty.gender_fix(d)
-    self.close_db
-  end
-
-  def smart_roller(max)
-    self.open_db
-    @smarty.max = max
-    @smarty.run
-    self.close_db
+    close_db
   end
 
   def close_db
@@ -82,15 +111,15 @@ class Roller
   end
 
   def ignore_hidden_users
-    self.open_db
+    open_db
     @blocklist.import_hidden_users
-    self.close_db
+    close_db
   end
 
   def search(user)
-    self.open_db
+    open_db
     @search.byUser(user)
-    self.close_db
+    close_db
   end
 
   def logout
@@ -102,9 +131,9 @@ class Roller
   end
 
   def harvest_home_page
-    self.open_db
+    open_db
     @harvester.scrape_home_page
-    self.close_db
+    close_db
   end
 
   def login
@@ -112,29 +141,29 @@ class Roller
   end
 
   def add(user)
-    self.open_db
+    open_db
     @db.add_user(:username => user)
-    self.close_db
+    close_db
   end
 
   def range_roll(args)
-    self.open_db
+    open_db
     min = args[ :min_value]
     max = args[ :max_value]
     @smarty.run_range(min, max)
-    self.close_db
+    close_db
   end
 
   def new_roll
-    self.open_db
+    open_db
     @smarty.run_new_users_only
-    self.close_db
+    close_db
   end
 
   def check_visitors
-    self.open_db
+    open_db
     result = @harvester.visitors
-    self.close_db
+    close_db
     result
   end
 
@@ -151,19 +180,19 @@ class Roller
     puts @user.match_percentage
   end
 
-  def test_prefs
-    @prefs.get_match_preferences
-  end
+  # def test_prefs
+  #   @prefs.get_match_preferences
+  # end
 
 
   def scrape_similar(user)
-    self.open_db
+    open_db
     @harvester.similar_user_scrape(user)
-    self.close_db
+    close_db
   end
 
   def check_visitors_loop
-    self.open_db
+    open_db
     puts "Monitoring visitors"
     begin
       loop do
@@ -172,7 +201,7 @@ class Roller
       end
     rescue SystemExit, Interrupt
     end
-  self.close_db
+    close_db
   end
 end
 
@@ -183,7 +212,7 @@ quit = false
 logged_in = false
 
 begin
-  while logged_in == false
+  until logged_in
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
@@ -200,16 +229,16 @@ rescue SystemExit, Interrupt
   puts "","","Goodbye."
 end
 
-while quit == false
+until quit
   puts "#{application.check_visitors} new visitors"
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
-  puts "(1) Smart Mode"
-  puts "(2) Visit new users"
-  puts "(3) Monitor Visitors"
-  puts "(4) Follow up"
-  puts "(5) Scrape home page"
+  puts "(n) Visit new users"
+  puts "(m) Monitor Visitors"
+  puts "(f) Follow up"
+  puts "(h) Scrape home page"
+  puts "(e) Endless mode"
   puts "(a) Admin menu"
   puts "(Q) Quit",""
   print "Mode: "
@@ -217,26 +246,34 @@ while quit == false
 
   case mode
   when "1"
-    print "Max: "
-    max = gets.chomp
-    # print "MPH: "
-    # mph = gets.chomp
-    application.smart_roller(max.to_i)
-  when "2"
+    puts "Deprecated"
+  when "n"
     application.new_roll
-  when "3"
+  when "m"
     application.check_visitors_loop
-  when "4"
+  when "f"
     application.range_roll(:min_value => 1, :max_value => 10)
-  when "5"
+  when "h"
     application.harvest_home_page
-  when "7"
-    application.visit_newbs
   when "6"
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
+  when "7"
+    application.visit_newbs
   when "8"
+    application.test_prefs
+  when "e"
+    begin
+      loop do
+        application.new_roll
+        # application.range_rollq
+        # (:min_value => 1, :max_value => 10)
+      end
+    rescue
+    rescue SystemExit, Interrupt
+    end
+  when "10"
     application.test_prefs
   when "a"
     puts "Admin Menu","-----"

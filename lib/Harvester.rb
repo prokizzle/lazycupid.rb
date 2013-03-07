@@ -55,7 +55,7 @@ class Harvester
   def leftbar_scrape
     # @browser.go_to(url)
     array = body.scan(/href="\/profile\/([\w\d]+)\?leftbar\_match\=1"/)
-    array.each { |user| @database.add_user(:username => user[0], :state => @user.state) }
+    array.each { |user| @database.add_user(user[0]) }
   end
 
   def similar_user_scrape
@@ -66,7 +66,7 @@ class Harvester
       users = body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
       users.each do |user|
           if @user.gender == "F"
-            @database.add_user(:username => user[0], :state => @user.state)
+            @database.add_user(user[0])
             @database.set_state(:username => user[0], :state => @user.state)
             @database.set_gender(:username => user[0], :gender => @user.gender)
             @database.set_distance(:username => user[0], :distance => @user.relative_distance)
@@ -126,7 +126,7 @@ class Harvester
           @database.ignore_user(visitor)
           @database.set_gender(:username => visitor, :gender => "M")
         else
-          @database.add_user(:username => visitor)
+          @database.add_user(visitor)
           @database.set_gender(:username => visitor, :gender => "F")
           @database.set_state(:username => visitor, :state => @state[visitor])
         end
@@ -151,7 +151,7 @@ class Harvester
       sexuality   = user[3]
       city        = user[4]
       state       = user[5]
-      @database.add_user(:username => handle, :state => state)
+      @database.add_user(handle)
       @database.set_gender(:username => handle, :gender => gender)
       # @database.set_age(:username => handle, :age => age)
       @database.set_state(:username => handle, :state => state)

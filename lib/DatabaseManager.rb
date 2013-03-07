@@ -3,10 +3,20 @@ class DatabaseManager
   def initialize(args)
     @login = args[ :login_name]
     open_db
+    db_migrations
+
   end
 
   def db
     @db
+  end
+
+  def db_migrations
+    begin
+      @db.execute("alter table matches add column age integer")
+      @db.execute("alter table matches add column city text")
+    rescue
+    end
   end
 
   def action(stmt)
@@ -54,8 +64,7 @@ class DatabaseManager
 
   end
 
-  def add_user(args)
-    username = args[ :username]
+  def add_user(username)
     count = 0
     unless existsCheck(username)
       @db.transaction
@@ -126,10 +135,9 @@ class DatabaseManager
 
   def new_user_smart_query
     @db.execute("select name, counts, state from matches
-    where (counts=0 or counts is null)
+    where counts = 0
     and (ignored is 'false' or ignored is null)
     and (gender is null or gender=?)", "F")
-
   end
 
 
@@ -141,13 +149,23 @@ class DatabaseManager
       and (gender is null or gender=?)", desired_gender)
   end
 
-  def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
+  def range_smart_query(
+    min_time,
+    min_counts,
+    max_counts,
+    distance,
+    min_age,
+    max_age,
+    min_percent,
+    desired_gender="F")
     @db.execute("select name, visit_count from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
+        and distance between 0 and ?
+        and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null)
         and (gender is null or gender=?)
-        order by visit_count desc", min_time, min_counts, max_counts, 60, desired_gender)
+        order by visit_count desc", min_time, min_counts, max_counts, distance, min_age, max_age, min_percent, desired_gender)
   end
 
   def user_record_exists(user)
@@ -196,6 +214,15 @@ class DatabaseManager
     end
   end
 
+  def set_age(user, age)
+    @db.execute("update matches set age=? where name=?", age.to_i, user)
+  end
+
+  def get_age(user)
+      result = @db.execute("select age from matches where name=?", user)
+      result[0][0].to_i
+  end
+
   def set_time_added(args)
     user = args[ :username]
     begin
@@ -204,6 +231,15 @@ class DatabaseManager
       @db.execute("alter table matches add column time_added integer")
       @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
     end
+  end
+
+  def set_city(user, city)
+    @db.execute("update matches set city=? where name=?", city, user)
+  end
+
+  def get_city(user)
+    result = @db.execute("select city from matches where user=?", user)
+    result[0][0].to_s
   end
 
   def set_gender(args)
@@ -289,7 +325,7 @@ class DatabaseManager
       # set_sexuality(match_name, sexuality)
       # set_match_percentage(match_name, match_percent)
     else
-      add_user(:username => match_name)
+      add_user(match_name)
       # set_sexuality(match_name, sexuality)
       # set_gender(:username => match_name, :gender => gender)
     end
@@ -298,7 +334,7 @@ class DatabaseManager
   def log2(user)
     if user.handle
       unless existsCheck(user.handle)
-        add_user(:username => user.handle)
+        add_user(user.handle)
       end
       count = get_visit_count(user.handle) + 1
       update_visit_count(user.handle, count)
@@ -308,6 +344,8 @@ class DatabaseManager
       set_match_percentage(user.handle, user.match_percentage)
       set_state(:username => user.handle, :state => user.state)
       set_distance(:username => user.handle, :distance => user.relative_distance)
+      set_age(user.handle, user.age)
+      set_city(user.handle, user.city)
     end
   end
 
@@ -334,16 +372,13 @@ class DatabaseManager
     @db.execute( "update matches set ignored='false' where name=?", username)
   end
 
-  def existsCheck( id )
+  def existsCheck(id)
     # begin
     temp = @db.execute( "select 1 where exists(
           select 1
           from matches
           where name = ?
-      ) ", [id] ).any?
-    # rescue
-    # import
-    # end
+      ) ", id).any?
   end
 
   def to_boolean(str)

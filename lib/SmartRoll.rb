@@ -37,6 +37,12 @@ class SmartRoll
     gender(user) == 'F'
   end
 
+  def remove_duplicates(array)
+    s = array.to_set
+    a = s.to_a
+  end
+
+
   def select_by_visit_count(max, min=0)
     @select = @db.filter_by_visits(max)
   end
@@ -78,7 +84,11 @@ class SmartRoll
     @selection = @db.range_smart_query(
                   days_ago(@settings[:days_ago].to_i),
                   min,
-                  max)
+                  max,
+                  @settings[:distance].to_i,
+                  @settings[:min_age].to_i,
+                  @settings[:max_age].to_i,
+                  @settings[:min_percent].to_i)
   end
 
   def autodiscover_new_users
@@ -174,13 +184,16 @@ class SmartRoll
   end
 
   def roll
-    # @bar = ProgressBar.new(@selection.size)
-    pre_roll_actions
+    begin
+      # @bar = ProgressBar.new(@selection.size)
+      pre_roll_actions
       @selection.reverse_each do |user, counts, state|
         visit_user(user)
         sleep 6
         check_visitors if unix_time >= event_time
       end
+    rescue Interrupt
+    end
     summary
   end
 

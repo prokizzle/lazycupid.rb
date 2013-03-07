@@ -16,7 +16,7 @@ class Users
   end
 
   def handle
-    body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
+    body.match(/profile\/([\w\d_-]+)\/photos\?cf=profile/)[1]
   end
 
   def match_percentage

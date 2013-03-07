@@ -4,15 +4,14 @@ class AutoRoller
   attr_reader :speed, :current_user, :mph
 
   def initialize(args)
-    @mph = args.fetch(:mph, 100)
-    @GET_LUCKY_URL = "http://www.okcupid.com/getlucky?type=1"
-    @max = 5000
-    @user = args[ :user_stats]
-    @database = args[ :database]
-    @browser = args[ :browser]
-    @display = args[ :gui]
-    # speed
-    @mph = 400
+    @mph            = args.fetch(:mph, 100)
+    @GET_LUCKY_URL  = "http://www.okcupid.com/getlucky?type=1"
+    @max            = 5000
+    @user           = args[ :user_stats]
+    @database       = args[ :database]
+    @browser        = args[ :browser]
+    @display        = args[ :gui]
+    @mph            = 400
   end
 
   def init
@@ -24,7 +23,7 @@ class AutoRoller
   end
 
   def speed
-    3600/@mph
+    3600 / @mph
   end
 
   def quit
@@ -48,10 +47,10 @@ class AutoRoller
   def roller
     # i=1
     begin
-      # while (i<=1000) do
+      # while i <= 1000 do
       500.times do
         roll_dice
-        # i+=1
+        # i += 1
         sleep speed
       end
     rescue SystemExit, Interrupt

@@ -17,11 +17,11 @@ class DatabaseManager
 
   def open_db
     @db = SQLite3::Database.new( "./db/#{@login}.db" )
-    # self.import
+    # import
   end
 
   def open
-    self.open_db
+    open_db
   end
 
   def import
@@ -57,10 +57,10 @@ class DatabaseManager
   def add_user(args)
     username = args[ :username]
     count = 0
-    if !(existsCheck(username))
+    unless existsCheck(username)
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
-      self.set_time_added(:username => username)
+      set_time_added(:username => username)
       @db.commit
     end
   end
@@ -142,11 +142,12 @@ class DatabaseManager
   end
 
   def range_smart_query(min_time, min_counts, max_counts, desired_gender="F")
-    @db.execute("select name from matches
+    @db.execute("select name, visit_count from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
-        and (match_percentage between 60 and 100 or match_percentage is null)
-        and (gender is null or gender=?)", min_time, min_counts, max_counts, desired_gender)
+        and (match_percent between ? and 100 or match_percent is null)
+        and (gender is null or gender=?)
+        order by visit_count desc", min_time, min_counts, max_counts, 60, desired_gender)
   end
 
   def user_record_exists(user)
@@ -269,43 +270,45 @@ class DatabaseManager
   end
 
   def get_visitor_timestamp(visitor)
-    if self.existsCheck(visitor)
+    if existsCheck(visitor)
       result = @db.execute("select zindex from matches where name=?", visitor)
       result[0][0].to_i
     else
       @db.execute("insert into matches(name, counts, zindex, ignored) values (?, 1, ?, ?)", visitor, Time.now.to_i, 'false')
-      self.set_visitor_timestamp(visitor, Time.now.to_i)
+      set_visitor_timestamp(visitor, Time.now.to_i)
       Time.now.to_i
     end
   end
 
   def log(match_name, match_percent=0)
     if existsCheck(match_name)
-      count = self.get_visit_count(match_name) + 1
-      self.update_visit_count(match_name, count)
-      self.set_my_last_visit_date(match_name)
-      # self.set_gender(:username => match_name, :gender => gender)
-      # self.set_sexuality(match_name, sexuality)
-      # self.set_match_percentage(match_name, match_percent)
+      count = get_visit_count(match_name) + 1
+      update_visit_count(match_name, count)
+      set_my_last_visit_date(match_name)
+      # set_gender(:username => match_name, :gender => gender)
+      # set_sexuality(match_name, sexuality)
+      # set_match_percentage(match_name, match_percent)
     else
-      self.add_user(:username => match_name)
-      # self.set_sexuality(match_name, sexuality)
-      # self.set_gender(:username => match_name, :gender => gender)
+      add_user(:username => match_name)
+      # set_sexuality(match_name, sexuality)
+      # set_gender(:username => match_name, :gender => gender)
     end
   end
 
   def log2(user)
-    if !(existsCheck(user.handle))
-      self.add_user(:username => user.handle)
+    if user.handle
+      unless existsCheck(user.handle)
+        add_user(:username => user.handle)
+      end
+      count = get_visit_count(user.handle) + 1
+      update_visit_count(user.handle, count)
+      set_my_last_visit_date(user.handle)
+      set_gender(:username => user.handle.to_s, :gender => user.gender.to_s)
+      set_sexuality(user.handle, user.sexuality)
+      set_match_percentage(user.handle, user.match_percentage)
+      set_state(:username => user.handle, :state => user.state)
+      set_distance(:username => user.handle, :distance => user.relative_distance)
     end
-    count = self.get_visit_count(user.handle) + 1
-    self.update_visit_count(user.handle, count)
-    self.set_my_last_visit_date(user.handle)
-    self.set_gender(:username => user.handle.to_s, :gender => user.gender.to_s)
-    self.set_sexuality(user.handle, user.sexuality)
-    self.set_match_percentage(user.handle, user.match_percentage)
-    self.set_state(:username => user.handle, :state => user.state)
-    self.set_distance(:username => user.handle, :distance => user.relative_distance)
   end
 
 
@@ -339,7 +342,7 @@ class DatabaseManager
           where name = ?
       ) ", [id] ).any?
     # rescue
-    # self.import
+    # import
     # end
   end
 

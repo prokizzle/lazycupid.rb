@@ -59,7 +59,7 @@ class DataReader
   end
 
   def load
-    create_new_user if !(is_valid_user)
+    create_new_user unless (is_valid_user)
     begin
       # puts "Loading data file"
       CSV.foreach(@username.to_s + "_count.csv", :headers => true, :skip_blanks => false) do |row|
@@ -108,7 +108,7 @@ class DataReader
   end
 
   def add_new_match(user)
-    if !(@names.has_key?(user))
+    unless (@names.has_key?(user))
       @names[user] = 0
     end
   end

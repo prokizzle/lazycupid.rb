@@ -46,23 +46,18 @@ class Output
     @last_destination = user.relative_distance.to_f
   end
 
-  def dashboard(args)
-    visited     = args[ :total_visits]
-    visitors    = args[ :total_visitors]
-    start_time  = args[ :start_time]
+  def dashboard(visited, visitors, start_time, progress_amount)
 
-    @total_visited += visited.to_i
-    @total_visitors += visitors
     # messages = args[ :messages]
     clear_screen
     puts "LazyCupid Dashboard"
     puts "--------------------","",""
-    puts "Started:   #{Time.at(start_time).ago_in_words}"
-    puts "Updated:   #{Time.now}"
+    puts "Started:   #{Time.at(start_time).ago.to_words}"
+    puts "Updated:   #{Time.now.hour}:#{Time.now.min}"
     puts "Account:   #{@username}"
-    puts "Visited:   #{@total_visited}"
-    puts "Visitors:  #{@total_visitors}",""
-    @bar.increment! @progress_amount
+    puts "Visited:   #{visited}"
+    puts "Visitors:  #{visitors}",""
+    @bar.increment! progress_amount
 
   end
 
@@ -71,21 +66,21 @@ class Output
     @bar = ProgressBar.new(total_matches, :counter, :eta)
   end
 
-  def update_progress(amount)
-    @progress_amount = amount
-  end
+  # def update_progress(amount)
+  #   @progress_amount = amount
+  # end
 
-  def users_visited
-    @smarty.stats(:item => "visited")
-  end
+  # def users_visited
+  #   @smarty.stats(:item => "visited")
+  # end
 
-  def visitors_tally
-    @smarty.stats(:item => "visitors")
-  end
+  # def visitors_tally
+  #   @smarty.stats(:item => "visitors")
+  # end
 
-  def roll_start_time
-    @smarty.stats(:item => "start_time")
-  end
+  # def roll_start_time
+  #   @smarty.stats(:item => "start_time")
+  # end
 
   def state_abbr(state)
     @state_abbr[state]

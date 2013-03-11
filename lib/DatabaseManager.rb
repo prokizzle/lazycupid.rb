@@ -55,13 +55,6 @@ class DatabaseManager
     rescue Exception => e
       puts e.message
     end
-    # CSV.foreach("#{@login}_count.csv", :headers => false, :skip_blanks => false) do |row|
-    #   @db.execute( "insert into matches
-    #         (name, count, ignore, zindex, visit_count, last_visit)
-    #         values (?, ?, ?, ?, ?, ?)",
-    #                row[0], row[1], row[2], row[3], row[4], row[5])
-    # end
-
   end
 
   def add_user(username)
@@ -112,41 +105,15 @@ class DatabaseManager
     @db.execute( "update matches set counts=? where name=?", number.to_i, match_name )
   end
 
-  def filter_by_visits(max, min=0)
-    @db.execute( "select name from matches where counts between ? and ?", min, max )
-  end
-
-  def filter_by_dates(min=0, max)
-    @db.execute( "select name from matches where last_visit between ? and ?", min, max)
-  end
-
   def no_gender(days)
     @db.execute( "select name from matches where gender is null and last_visit<?", days )
   end
 
-  def better_smart_query(min_time, max_counts, desired_gender="F")
-    puts min_time
-    sleep 2
-    @db.execute("select name from matches
-      where (last_visit <= ? or last_visit is null)
-      and counts=?
-      and (gender is null or gender=?)", min_time, max_counts, desired_gender)
-  end
-
   def new_user_smart_query
     @db.execute("select name, counts, state from matches
-    where counts = 0
+    where (counts = 0 or counts is null)
     and (ignored is 'false' or ignored is null)
     and (gender is null or gender=?)", "F")
-  end
-
-
-  def better_smart_query2(desired_gender="F")
-    @db.execute("select name from matches
-      where last_visit is null
-      and counts is null
-      and (ignored='false' or ignored is null)
-      and (gender is null or gender=?)", desired_gender)
   end
 
   def range_smart_query(
@@ -162,6 +129,7 @@ class DatabaseManager
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and distance between 0 and ?
+        and ignored is not 'true'
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null)
         and (gender is null or gender=?)

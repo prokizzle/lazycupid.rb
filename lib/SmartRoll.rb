@@ -42,25 +42,6 @@ class SmartRoll
     a = s.to_a
   end
 
-
-  def select_by_visit_count(max, min=0)
-    @select = @db.filter_by_visits(max)
-  end
-
-  def query_for_users(num, counts)
-    @select = @db.better_smart_query(days_ago(num), counts)
-  end
-
-  def build_new
-    @selection = @db.better_smart_query2
-  end
-
-  def select_by_last_visit_date(day_input=1)
-    max = Time.now.to_i - days(day_input).to_i
-    min = 0
-    @select = @db.filter_by_dates(min, max)
-  end
-
   def relative_last_visit(match)
     unix_date2 = @db.get_my_last_visit_date(match)
     ((Time.now.to_i - unix_date2)/86400).round
@@ -141,8 +122,8 @@ class SmartRoll
   def pre_roll_actions
     @display.progress(@selection.size)
     @tally = 0
-    @total_visitors =0
-    @total_visits =0
+    @total_visitors = 0
+    @total_visits = 0
     @start_time = Time.now.to_i
     check_visitors
   end
@@ -168,8 +149,8 @@ class SmartRoll
     # puts "************************"
     @total_visitors += viz
     @total_visits += @tally
-    @display.update_progress(@total_visits)
-    @display.dashboard(stats)
+    # @display.update_progress(@total_visits)
+    @display.dashboard(@total_visits, @total_visitors, @start_time, @tally)
     # puts "Ratio: #{(viz/@tally).to_f}"
     @event_time = Chronic.parse('5 minutes from now').to_i
     @tally = 0
@@ -199,11 +180,6 @@ class SmartRoll
 
   def gender_fix(days)
     build_queue_no_gender(days)
-    roll
-  end
-
-  def run2
-    build_new
     roll
   end
 

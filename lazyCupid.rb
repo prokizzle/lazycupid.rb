@@ -207,6 +207,12 @@ class Roller
     puts @user.match_percentage
   end
 
+  def test_bug
+    open_db
+    @smarty.test_bug
+    close_db
+  end
+
   # def test_prefs
   #   @prefs.get_match_preferences
   # end
@@ -310,6 +316,8 @@ until quit
     end
   when "10"
     application.test_prefs
+  when "b"
+    application.test_bug
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"

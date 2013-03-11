@@ -13,6 +13,7 @@ class SmartRoll
     @settings   = args[ :settings]
     @days       = 2
     @stats      = Statistics.new
+    @selection  = Array.new
   end
 
   def sexuality(user)
@@ -191,6 +192,16 @@ class SmartRoll
   def run_new_users_only
     build_queues_new_users
     roll
+  end
+
+  def test_bug
+    # @bar = ProgressBar.new(@selection.size)
+    build_range(1, 10)
+    # build_queues_new_users
+    @selection.each do |user, visitor_count|
+      puts "#{user}"
+      # @bar.increment!
+    end
   end
 
 end

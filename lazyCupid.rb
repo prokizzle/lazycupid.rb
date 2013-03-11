@@ -174,17 +174,17 @@ class Roller
   end
 
   def range_roll(args)
-      open_db
-      min = args[ :min_value]
-      max = args[ :max_value]
-      @smarty.run_range(min, max)
-      close_db
+    open_db
+    min = args[ :min_value]
+    max = args[ :max_value]
+    @smarty.run_range(min, max)
+    close_db
   end
 
   def new_roll
-      open_db
-      @smarty.run_new_users_only
-      close_db
+    open_db
+    @smarty.run_new_users_only
+    close_db
   end
 
   def check_visitors
@@ -232,22 +232,28 @@ class Roller
   end
 end
 
-puts "LazyCupid Main Menu","--------------------",""
-puts "Please login.",""
 
-quit = false
-logged_in = false
+login_message = "Please login."
+quit          = false
+logged_in     = false
 
 begin
   until logged_in
+    print "\e[2J\e[f"
+    puts "LazyCupid Main Menu","--------------------",""
+    puts "#{login_message}",""
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
     application = Roller.new(:username => username, :password => password)
     if application.login
       logged_in = true
+      login_message = "Success. Initializing."
+      print "\e[2J\e[f"
+      puts "LazyCupid Main Menu","--------------------",""
+      puts "#{login_message}",""
     else
-      puts "Incorrect password. Try again.",""
+      login_message = "Incorrect password. Try again."
     end
   end
 rescue SystemExit, Interrupt
@@ -346,6 +352,10 @@ until quit
   end
 end
 if @logout
+  login_message = "Logging out."
+  print "\e[2J\e[f"
+  puts "LazyCupid Main Menu","--------------------",""
+  puts "#{login_message}",""
   application.logout
   application.clear
   application.close_db

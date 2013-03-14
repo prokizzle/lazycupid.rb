@@ -1,3 +1,6 @@
+# TBD - Due to changes in OKCupid, this class is now useless
+# This was the first class of the project, the starting point from which everything
+# grew. So long, auto-roller.
 class AutoRoller
 
   attr_accessor :speed, :current_user, :mph

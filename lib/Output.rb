@@ -15,7 +15,7 @@ class Output
     print "\e[2J\e[f"
   end
 
-  def output(user, speed)
+  def output(user)
 
 
     clear_screen
@@ -46,7 +46,7 @@ class Output
     @last_destination = user.relative_distance.to_f
   end
 
-  def dashboard(visited, visitors, start_time, progress_amount)
+  def dashboard(visited, visitors, start_time, progress_amount, current_state)
 
     # messages = args[ :messages]
     clear_screen
@@ -56,7 +56,9 @@ class Output
     puts "Updated:   #{Time.now.hour}:#{Time.now.min}"
     puts "Account:   #{@username}"
     puts "Visited:   #{visited}"
-    puts "Visitors:  #{visitors}",""
+    puts "Visitors:  #{visitors}"
+    puts "State:     #{current_state}.",""
+
     @bar.increment! progress_amount
 
   end

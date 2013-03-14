@@ -60,6 +60,7 @@ class DatabaseManager
   def add_user(username)
     count = 0
     unless existsCheck(username)
+      puts "Adding user: #{username}"
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
       set_time_added(:username => username)
@@ -117,23 +118,59 @@ class DatabaseManager
   end
 
   def range_smart_query(
-    min_time,
-    min_counts,
-    max_counts,
-    distance,
-    min_age,
-    max_age,
-    min_percent,
-    desired_gender="F")
+      min_time,
+      min_counts,
+      max_counts,
+      location_filter,
+      min_age,
+      max_age,
+      min_percent,
+      mode,
+      desired_gender="F")
+
+      if mode == "state"
+    preferred_state_alt = "#{location_filter} "
     @db.execute("select name, visit_count from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
-        and distance between 0 and ?
+        and (state = ? or state = ? or state is null)
         and ignored is not 'true'
         and (age between ? and ? or age is null)
-        and (match_percent between ? and 100 or match_percent is null)
+        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)
-        order by visit_count desc", min_time, min_counts, max_counts, distance, min_age, max_age, min_percent, desired_gender)
+        order by visit_count desc", min_time, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
+  else
+   @db.execute("select name, visit_count from matches
+       where (last_visit <= ? or last_visit is null)
+       and counts between ? and ?
+       and (state = ? or state = ? or state is null)
+       and ignored is not 'true'
+       and (age between ? and ? or age is null)
+       and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+       and (gender is null or gender=?)
+       order by visit_count desc", min_time, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
+ end
+  end
+
+  def range_smart_query_by_state(
+      min_time,
+      min_counts,
+      max_counts,
+      preferred_state,
+      min_age,
+      max_age,
+      min_percent,
+    desired_gender="F")
+    preferred_state_alt = "#{preferred_state} "
+    @db.execute("select name, visit_count from matches
+        where (last_visit <= ? or last_visit is null)
+        and counts between ? and ?
+        and (state = ? or state = ? or state is null)
+        and ignored is not 'true'
+        and (age between ? and ? or age is null)
+        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+        and (gender is null or gender=?)
+        order by visit_count desc", min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
   end
 
   def user_record_exists(user)
@@ -149,6 +186,87 @@ class DatabaseManager
     # end
 
   end
+
+  def set_friend_percentage(user, percent)
+    @db.execute("update matches set friend_percent=? where name=?", percent, user)
+  end
+
+  def get_friend_percentage(user)
+    @db.execute("select friend_percent from matches where name=?", user)
+  end
+
+  def set_enemy_percentage(user, percent)
+    @db.execute("update matches set friend_percentage=? where name=?", percent, user)
+  end
+
+  def get_enemy_percentage(user)
+    @db.execute("select enemy_percent from matches where name=?", user)
+  end
+
+  def set_slut_test_results(user, value)
+    @db.execute("update matches set slut_test_results=? where name=?", value, user)
+  end
+
+  def get_slut_test_results(user)
+    @db.execute("select slut_test_results from matches where name=?", user)
+  end
+
+  def set_ethnicity(user, value)
+    @db.execute("update matches set ethnicity=? where name=?", value, user)
+  end
+
+  def get_ethnicity(user)
+    @db.execute("select ethnicity from matches where name=?", user)
+  end
+
+  def set_height(user, value)
+    @db.execute("update matches set height=? where name=?", value, user)
+  end
+
+  def get_height(user)
+    @db.execute("select height from matches where name=?", user)
+  end
+
+  def set_body_type(user, value)
+	   @db.execute("update matches set body_type=? where name=?", value, user)
+  end
+
+  def get_body_type(user)
+    @db.execute("select body_type from matches where name=?", user)
+  end
+
+  def set_smoking(user, value)
+    @db.execute("update matches set smoking=? where name=?", value, user)
+  end
+
+  def get_smoking(user)
+    @db.execute("select smoking from matches where name=?", user)
+  end
+
+  def set_drinking(user, value)
+    @db.execute("update matches set drinking=? where name=?", value, user)
+  end
+
+  def get_drinking(user)
+    @db.execute("select drinking from matches where name=?", user)
+  end
+
+  def set_drugs(user, value)
+    @db.execute("update matches set drugs=? where name=?", value, user)
+  end
+
+  def get_drugs(user)
+    @db.execute("select drugs from matches where name=?", user)
+  end
+
+  def set_kids(user, value)
+    @db.execute("update matches set kids=? where name=?", value, user)
+  end
+
+  def get_kids(user)
+    @db.execute("select kids from matches where name=?", user)
+  end
+
 
   def set_distance(args)
     user = args[ :username]
@@ -187,8 +305,8 @@ class DatabaseManager
   end
 
   def get_age(user)
-      result = @db.execute("select age from matches where name=?", user)
-      result[0][0].to_i
+    result = @db.execute("select age from matches where name=?", user)
+    result[0][0].to_i
   end
 
   def set_time_added(args)

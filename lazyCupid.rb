@@ -20,13 +20,13 @@ class Roller
     @harvester  = Harvester.new(
       :browser => @browser,
       :database => db,
-      :user_stats => @user,
+      :profile_scraper => @user,
     :settings => @config)
     @smarty     = SmartRoll.new(
       :database => db,
       :blocklist => blocklist,
       :harvester => @harvester,
-      :user_stats => @user,
+      :profile_scraper => @user,
       :browser => @browser,
       :gui => @display,
     :settings => @config)
@@ -35,7 +35,7 @@ class Roller
   def initialize_settings
     filename = "./config/#{@username}.yml"
     unless File.exists?(filename)
-      config = {distance: 200, min_percent: 60, min_age: 18, max_age: 60, days_ago: 4}
+      config = {distance: 200, min_percent: 60, min_age: 18, max_age: 60, days_ago: 4, preferred_state: 'Massachusetts'}
       File.open(filename, "w") do |f|
         f.write(config.to_yaml)
       end

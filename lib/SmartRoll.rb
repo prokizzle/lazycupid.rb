@@ -6,7 +6,7 @@ class SmartRoll
     @db         = args[ :database]
     @blocklist  = args[ :blocklist]
     @harvester  = args[ :harvester]
-    @user       = args[ :user_stats]
+    @user       = args[ :profile_scraper]
     @browser    = args[ :browser]
     @display    = args[ :gui]
     @profiles   = Hash.new(0)
@@ -14,11 +14,21 @@ class SmartRoll
     @days       = 2
     @stats      = Statistics.new
     @selection  = Array.new
+    @verbose    = true #@settings[:verbose]
+    @debug      = true #@settings[:debug]
   end
 
   def sexuality(user)
     result = @database.get_sexuality(user)
     result[0][0].to_s
+  end
+
+  def verbose
+    @verbose
+  end
+
+  def debug
+    @debug
   end
 
   def gender(user)
@@ -62,16 +72,26 @@ class SmartRoll
     sleep 2
   end
 
-  def build_range(min, max)
+  def build_range(min, max, mode)
+
+    case mode
+    when 1
+      location_filter = @settings[:preferred_state].to_s
+    else
+      location_filter = @settings[:distance].to_i
+    end
+
     @selection = @db.range_smart_query(
                   days_ago(@settings[:days_ago].to_i),
                   min,
                   max,
-                  @settings[:distance].to_i,
+                  location_filter,
                   @settings[:min_age].to_i,
                   @settings[:max_age].to_i,
-                  @settings[:min_percent].to_i)
+                  @settings[:min_percent].to_i,
+                  "distance")
   end
+
 
   def autodiscover_new_users
     @harvester.scrape_from_user
@@ -95,17 +115,6 @@ class SmartRoll
     @browser.body.match(/.badge..\d+<\/span>/)[2].to_i
   end
 
-  def visit_user(user)
-    @browser.go_to("http://www.okcupid.com/profile/#{user}/")
-    if inactive_account
-      remove_match(user)
-    else
-      user_ob_debug
-      @tally += 1
-      @db.log2(@user)
-      autodiscover_new_users if @user.gender == "F"
-    end
-  end
 
 
   def unix_time
@@ -120,14 +129,6 @@ class SmartRoll
     @db.delete_user(user)
   end
 
-  def pre_roll_actions
-    @display.progress(@selection.size)
-    @tally = 0
-    @total_visitors = 0
-    @total_visits = 0
-    @start_time = Time.now.to_i
-    check_visitors
-  end
 
 
   def event_time
@@ -151,25 +152,50 @@ class SmartRoll
     @total_visitors += viz
     @total_visits += @tally
     # @display.update_progress(@total_visits)
-    @display.dashboard(@total_visits, @total_visitors, @start_time, @tally)
+    @display.dashboard(@total_visits, @total_visitors, @start_time, @tally, @current_state)
     # puts "Ratio: #{(viz/@tally).to_f}"
     @event_time = Chronic.parse('5 minutes from now').to_i
     @tally = 0
+    puts ""
   end
 
   def summary
     check_visitors
+    puts ""
     puts "Results: "
     puts "Visited:  #{@total_visits} people"
     puts "Visitors: #{@total_visitors}"
     sleep 4
   end
 
+  def pre_roll_actions
+    @display.progress(@selection.size)
+    @tally = 0
+    @total_visitors = 0
+    @total_visits = 0
+    @start_time = Time.now.to_i
+    check_visitors
+  end
+
+  def visit_user(user)
+    @browser.go_to("http://www.okcupid.com/profile/#{user}/", user)
+    if inactive_account
+      remove_match(user)
+    else
+      user_ob_debug if debug
+      @display.console_out(@user) if verbose
+      @tally += 1
+      @db.log2(@user)
+      @current_state = @user.state
+      autodiscover_new_users if @user.gender == "F"
+    end
+  end
+
   def roll
     begin
       # @bar = ProgressBar.new(@selection.size)
       pre_roll_actions
-      @selection.reverse_each do |user, counts, state|
+      @selection.each do |user, counts, state|
         visit_user(user)
         sleep 6
         check_visitors if unix_time >= event_time
@@ -185,7 +211,7 @@ class SmartRoll
   end
 
   def run_range(min, max)
-    build_range(min, max)
+    build_range(min, max, @settings[:filter_by_state].to_i)
     roll
   end
 

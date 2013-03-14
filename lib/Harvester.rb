@@ -8,7 +8,7 @@ class Harvester
   def initialize(args)
     @browser = args[ :browser]
     @database = args[ :database]
-    @user = args[ :user_stats]
+    @user = args[ :profile_scraper]
     @settings = args[ :settings]
   end
 
@@ -40,6 +40,10 @@ class Harvester
     @settings[:distance].to_i
   end
 
+  def preferred_state
+    @settings[:preferred_state].to_s
+  end
+
   def scrape_from_user
     self.leftbar_scrape
     self.similar_user_scrape
@@ -47,7 +51,7 @@ class Harvester
 
   def meets_preferences?
     ((@user.match_percentage >= min_match_percentage) &&
-      (@user.relative_distance <= max_distance) &&
+      (@user.state == preferred_state) &&
       (@user.age <= max_age) &&
       (@user.age >= min_age))
   end

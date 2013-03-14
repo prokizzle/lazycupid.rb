@@ -38,7 +38,7 @@ class Lookup
   def last_visited(match_name)
     result = @importer.get_my_last_visit_date(match_name)
     if result >1
-      Time.at(result).ago_in_words
+      Time.at(result).ago.to_words
     else
       "never"
     end

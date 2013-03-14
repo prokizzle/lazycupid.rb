@@ -1,6 +1,6 @@
 class Session
-  attr_accessor :go_to, :agent, :body, :current_user
-  attr_reader :go_to, :agent, :body, :current_user
+  attr_accessor :go_to, :agent, :body, :current_user, :handle
+  attr_reader :go_to, :agent, :body, :current_user, :handle
 
 
   def initialize(args)
@@ -41,7 +41,8 @@ class Session
     /logged_out/.match(@body)
   end
 
-  def go_to(url)
+  def go_to(url, handle=nil)
+    @handle = handle
     begin
       @current_user = @agent.get(url)
       @body = @current_user.parser.xpath("//body").to_html
@@ -59,6 +60,10 @@ class Session
 
   def body
     @body
+  end
+
+  def handle
+    @handle
   end
 
 

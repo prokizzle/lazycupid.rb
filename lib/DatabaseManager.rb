@@ -4,12 +4,17 @@ class DatabaseManager
     @login = args[ :login_name]
     open_db
     db_migrations
-
+    @verbose = true #@settings[:verbose]
+    @debug = true #@settings[:debug]
   end
 
   def db
     @db
   end
+
+def verbose
+  @verbose
+end
 
   def db_migrations
     begin
@@ -66,12 +71,13 @@ class DatabaseManager
       set_time_added(:username => username)
       @db.commit
     else
-      puts "User already in db: #{username}"
+      puts "User already in db: #{username}" if verbose
     end
   end
 
   def delete_user(username)
     if existsCheck(username)
+      puts "Deleting user: #{username}" if verbose
       @db.transaction
       @db.execute( "delete from matches where name=?", username)
       @db.commit
@@ -128,11 +134,11 @@ class DatabaseManager
       max_age,
       min_percent,
       mode,
-      desired_gender="F")
+    desired_gender="F")
 
-      if mode == "state"
-    preferred_state_alt = "#{location_filter} "
-    @db.execute("select name, visit_count from matches
+    if mode == "state"
+      preferred_state_alt = "#{location_filter} "
+      result = @db.execute("select name, counts from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
@@ -140,18 +146,19 @@ class DatabaseManager
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)
-        order by visit_count desc", min_time, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
-  else
-   @db.execute("select name, visit_count from matches
+        order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
+    else
+     result = @db.execute("select name, counts from matches
        where (last_visit <= ? or last_visit is null)
        and counts between ? and ?
-       and (state = ? or state = ? or state is null)
+       and (distance <= ? or distance is null)
        and ignored is not 'true'
        and (age between ? and ? or age is null)
        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
        and (gender is null or gender=?)
-       order by visit_count desc", min_time, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
- end
+       order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
+    end
+    result
   end
 
   def range_smart_query_by_state(
@@ -230,7 +237,7 @@ class DatabaseManager
   end
 
   def set_body_type(user, value)
-	   @db.execute("update matches set body_type=? where name=?", value, user)
+    @db.execute("update matches set body_type=? where name=?", value, user)
   end
 
   def get_body_type(user)

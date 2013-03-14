@@ -35,7 +35,16 @@ class Roller
   def initialize_settings
     filename = "./config/#{@username}.yml"
     unless File.exists?(filename)
-      config = {distance: 200, min_percent: 60, min_age: 18, max_age: 60, days_ago: 4, preferred_state: 'Massachusetts'}
+      config = {distance: 200,
+                min_percent: 60,
+                min_age: 18,
+                max_age: 60,
+                days_ago: 4,
+                preferred_state: 'Massachusetts',
+                max_followup: 15,
+                debug: true,
+                verbose: true
+                }
       File.open(filename, "w") do |f|
         f.write(config.to_yaml)
       end
@@ -151,6 +160,10 @@ class Roller
 
   def logout
     @browser.logout
+  end
+
+  def config
+    @config
   end
 
   def logged_in
@@ -291,7 +304,7 @@ until quit
   when "m"
     application.check_visitors_loop
   when "f"
-    application.range_roll(:min_value => 1, :max_value => 10)
+    application.range_roll(:min_value => 1, :max_value => application.config[:max_followup].to_i)
   when "h"
     application.harvest_home_page
   when "6"

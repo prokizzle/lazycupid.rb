@@ -5,10 +5,15 @@ class Users
   def initialize(args)
     @db = args[ :database]
     @browser = args[ :browser]
+    @verbose = true
   end
 
   def body
     @browser.body
+  end
+
+  def verbose
+    @verbose
   end
 
   def intended_handle
@@ -23,10 +28,7 @@ class Users
     result = body.match(/username.>([-_\w\d]+)</)[1]
     unless result == intended_handle
       @db.delete_user(intended_handle)
-      puts "A-list bug detected..."
-      puts "Intended: #{intended_handle}"
-      puts "Actual:   #{result}"
-      # wait = gets.chomp
+      puts "A-list bug: #{intended_handle} is now #{result}" if verbose
     end
     result
   end
@@ -56,11 +58,11 @@ class Users
   end
 
   def height
-    /&Prime. \(([\w\d\.]+)m\)/.match(body)[1].to_f
+    /height.>.+\(([\d\.]+)m/.match(body)[1].to_f
   end
 
   def body_type
-    /bodytype.>(\w+)/.match(body)[1].to_s
+    /bodytype.>([\w\s]+)/.match(body)[1].to_s
   end
 
   def smoking
@@ -72,11 +74,11 @@ class Users
   end
 
   def drugs
-    /drugs.>([&;\w\s]+)/.match(body)[1].to_s
+    /drugs.>(.+)<\/dd/.match(body)[1].to_s
   end
 
   def kids
-    /children.>([&;\w\s]+)/.match(body)[1].to_s
+    /children.>(.+)<\/dd/.match(body)[1].to_s
   end
 
   def count

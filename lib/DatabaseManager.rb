@@ -12,14 +12,14 @@ class DatabaseManager
     @db
   end
 
-def verbose
-  @verbose
-end
+  def verbose
+    @verbose
+  end
 
   def db_migrations
     begin
-      @db.execute("alter table matches add column age integer")
-      @db.execute("alter table matches add column city text")
+      @db.execute("alter table matches add column r_msg_count integer")
+      @db.execute("alter table matches add column last_msg_time integer")
     rescue
     end
   end
@@ -148,7 +148,7 @@ end
         and (gender is null or gender=?)
         order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
     else
-     result = @db.execute("select name, counts from matches
+      result = @db.execute("select name, counts from matches
        where (last_visit <= ? or last_visit is null)
        and counts between ? and ?
        and (distance <= ? or distance is null)
@@ -374,6 +374,26 @@ end
     @db.execute( "update matches set visit_count=? where name=?", number, visitor)
   end
 
+  def set_received_messages_count(user, number)
+    puts "Recieved msg count updated: #{user}" if verbose
+    @db.execute("update matches set r_msg_count=? where name=?", number, user)
+  end
+
+  def get_received_messages_count(user)
+    result = @db.execute("select r_msg_count from matches where name=?", user)
+    result[0][0].to_i
+  end
+
+  def set_last_received_message_date(user, date)
+    puts "Last Msg date updated: #{user}" if verbose
+    @db.execute("update matches set last_msg_time=? where name=?", date, user)
+  end
+
+  def get_last_received_message_date(user)
+    result = @db.execute("select last_msg_time from matches where name=?", user)
+    result[0][0].to_i
+  end
+
   def get_visitor_count(visitor)
     result = @db.execute( "select visit_count from matches where name=?", visitor)
     begin
@@ -460,7 +480,15 @@ end
   end
 
   def ignore_user(username)
-    @db.execute( "update matches set ignored='true' where name=?", username)
+    unless existsCheck(username)
+      add_user(username)
+    end
+    unless is_ignored(username)
+      puts "Added to ignore list: #{username}" if verbose
+      @db.execute( "update matches set ignored='true' where name=?", username)
+    else
+      puts "User already ignored: #{username}" if verbose
+    end
   end
 
   def unignore_user(username)

@@ -26,6 +26,10 @@ class Harvester
     @browser.body
   end
 
+  def current_user
+    @browser.current_user
+  end
+
   def verbose
     @verbose
   end
@@ -57,9 +61,9 @@ class Harvester
 
   def meets_preferences?
     ((@user.match_percentage >= min_match_percentage || @user.match_percentage == 0 ) &&
-      (@user.state == preferred_state) &&
-      (@user.age <= max_age) &&
-      (@user.age >= min_age))
+     (@user.state == preferred_state) &&
+     (@user.age <= max_age) &&
+     (@user.age >= min_age))
   end
 
   def leftbar_scrape
@@ -75,12 +79,12 @@ class Harvester
     if meets_preferences?
       users = body.scan(/\/([\w\d _-]+)....profile_similar/)
       users.each do |user|
-          if @user.gender == "F"
-            @database.add_user(user[0])
-            @database.set_state(:username => user[0], :state => @user.state)
-            @database.set_gender(:username => user[0], :gender => @user.gender)
-            @database.set_distance(:username => user[0], :distance => @user.relative_distance)
-          end
+        if @user.gender == "F"
+          @database.add_user(user[0])
+          @database.set_state(:username => user[0], :state => @user.state)
+          @database.set_gender(:username => user[0], :gender => @user.gender)
+          @database.set_distance(:username => user[0], :distance => @user.relative_distance)
+        end
       end
     else
       puts "Not scraped: #{@user.handle}" if verbose
@@ -92,6 +96,13 @@ class Harvester
     new_counter   = original + 1
 
     @database.set_visitor_counter(visitor, new_counter)
+  end
+
+  def increment_message_counter(user)
+    original = @database.get_received_messages_count(user)
+    new_counter = original + 1
+
+    @database.set_received_messages_count(user, new_counter)
   end
 
   def visitors
@@ -170,4 +181,55 @@ class Harvester
       # @database.set_city(:username => handle, :city => city)
     end
   end
+
+
+  def scrape_inbox
+    @browser.go_to("http://www.okcupid.com/messages")
+
+    all_lows    = body.scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
+    highest     = 0
+
+    all_lows.each do |item|
+      highest   = item[0].to_i if item[0].to_i > highest.to_i
+    end
+
+    total       = highest
+    bar         = ProgressBar.new(total, :counter) unless verbose
+    bar.increment! 1 unless verbose
+    track_msg_dates
+    low         = 31
+
+    until low >= total
+      bar.increment! 30 unless verbose
+      @browser.go_to("http://www.okcupid.com/messages?low=#{low}&folder=1")
+      track_msg_dates
+      low += 30
+      sleep 2
+    end
+
+  end
+
+  def track_msg_dates
+    message_list = body.scan(/"message_(\d+)"/)
+
+    message_list.each do |message_id|
+
+      message_id      = message_id[0]
+      msg_block       = current_user.parser.xpath("//li[@id='message_#{message_id}']").to_html
+      sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
+      timestamp_block = current_user.parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
+      timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
+      sender          = sender.to_s
+      stored_time     = @database.get_last_received_message_date(sender)
+
+      @database.ignore_user(sender)
+
+      unless stored_time == timestamp
+        increment_message_counter(sender)
+        @database.set_last_received_message_date(sender, timestamp)
+      end
+
+    end
+  end
+
 end

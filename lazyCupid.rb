@@ -237,6 +237,18 @@ class Roller
     close_db
   end
 
+  def scrape_inbox
+    open_db
+    @harvester.scrape_inbox
+    close_db
+  end
+
+  def track_msg_dates
+    open_db
+    @harvester.track_msg_dates
+    close_db
+  end
+
   def check_visitors_loop
     open_db
     puts "Monitoring visitors"
@@ -312,12 +324,13 @@ until quit
     user = gets.chomp
     application.scrape_similar(user)
   when "7"
-    application.visit_newbs
+    application.track_msg_dates
   when "8"
-    application.test_prefs
+    application.scrape_inbox
   when "e"
     begin
       loop do
+        application.harvest_home_page
         application.new_roll
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)

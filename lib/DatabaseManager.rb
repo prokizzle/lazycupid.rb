@@ -65,6 +65,8 @@ class DatabaseManager
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
       set_time_added(:username => username)
       @db.commit
+    else
+      puts "User already in db: #{username}"
     end
   end
 

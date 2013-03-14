@@ -10,6 +10,8 @@ class Harvester
     @database = args[ :database]
     @user = args[ :profile_scraper]
     @settings = args[ :settings]
+    @verbose = true #@settings[:verbose]
+    @debug = true #@settings[:debug]
   end
 
   def user
@@ -22,6 +24,10 @@ class Harvester
 
   def body
     @browser.body
+  end
+
+  def verbose
+    @verbose
   end
 
   def min_match_percentage
@@ -50,7 +56,7 @@ class Harvester
   end
 
   def meets_preferences?
-    ((@user.match_percentage >= min_match_percentage) &&
+    ((@user.match_percentage >= min_match_percentage || @user.match_percentage == 0 ) &&
       (@user.state == preferred_state) &&
       (@user.age <= max_age) &&
       (@user.age >= min_age))
@@ -58,7 +64,7 @@ class Harvester
 
   def leftbar_scrape
     # @browser.go_to(url)
-    array = body.scan(/href="\/profile\/([\w\d]+)\?leftbar\_match\=1"/)
+    array = body.scan(/\/([\w\d_-]+)\?leftbar_match/)
     array.each { |user| @database.add_user(user[0]) }
   end
 
@@ -67,7 +73,7 @@ class Harvester
     # @database.log(match)
     # @browser.go_to("http://www.okcupid.com/profile/#{match}")
     if meets_preferences?
-      users = body.scan(/href="\/profile\/([\w\d]+)\?cf\=profile\_similar"/)
+      users = body.scan(/\/([\w\d _-]+)....profile_similar/)
       users.each do |user|
           if @user.gender == "F"
             @database.add_user(user[0])
@@ -76,6 +82,8 @@ class Harvester
             @database.set_distance(:username => user[0], :distance => @user.relative_distance)
           end
       end
+    else
+      puts "Not scraped: #{@user.handle}" if verbose
     end
   end
 

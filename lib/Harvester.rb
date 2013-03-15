@@ -6,12 +6,12 @@ class Harvester
   attr_accessor :type
 
   def initialize(args)
-    @browser = args[ :browser]
-    @database = args[ :database]
-    @user = args[ :profile_scraper]
-    @settings = args[ :settings]
-    @verbose = true #@settings[:verbose]
-    @debug = true #@settings[:debug]
+    @browser      = args[ :browser]
+    @database     = args[ :database]
+    @user         = args[ :profile_scraper]
+    @settings     = args[ :settings]
+    @verbose      = @settings[:verbose]
+    @debug        = @settings[:debug]
   end
 
   def user
@@ -182,6 +182,14 @@ class Harvester
     end
   end
 
+  def scrape_activity_feed
+    @browser.go_to("http://www.okcupid.com/home?cf=logo")
+    results = body.scan(/([\w\d_-]+)\?cf=home_orbits.>.</)
+    results.each do |user|
+      handle = user[0]
+      @database.add_user(handle)
+    end
+  end
 
   def scrape_inbox
     @browser.go_to("http://www.okcupid.com/messages")

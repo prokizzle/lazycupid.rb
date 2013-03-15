@@ -14,8 +14,8 @@ class SmartRoll
     @days       = 2
     @stats      = Statistics.new
     @selection  = Array.new
-    @verbose    = true #@settings[:verbose]
-    @debug      = true #@settings[:debug]
+    @verbose    = @settings[:verbose]
+    @debug      = @settings[:debug]
   end
 
   def sexuality(user)
@@ -72,13 +72,17 @@ class SmartRoll
     sleep 2
   end
 
-  def build_range(min, max, mode)
+  def filter_by_state?
+    @settings[:filter_by_state]
+  end
 
-    case mode
-    when 1
+  def build_range(min, max)
+    if filter_by_state?
       location_filter = @settings[:preferred_state].to_s
+      mode = "state"
     else
       location_filter = @settings[:distance].to_i
+      mode ="distance"
     end
 
     @selection = @db.range_smart_query(
@@ -89,7 +93,7 @@ class SmartRoll
                   @settings[:min_age].to_i,
                   @settings[:max_age].to_i,
                   @settings[:min_percent].to_i,
-                  "distance")
+                  mode)
   end
 
 
@@ -211,7 +215,7 @@ class SmartRoll
   end
 
   def run_range(min, max)
-    build_range(min, max, @settings[:filter_by_state].to_i)
+    build_range(min, max)
     roll
   end
 

@@ -1,11 +1,12 @@
 class DatabaseManager
 
   def initialize(args)
-    @login = args[ :login_name]
+    @login    = args[ :login_name]
+    @settings = args[ :settings]
     open_db
     db_migrations
-    @verbose = true #@settings[:verbose]
-    @debug = true #@settings[:debug]
+    @verbose  = @settings[:verbose]
+    @debug    = @settings[:debug]
   end
 
   def db
@@ -64,7 +65,7 @@ class DatabaseManager
 
   def add_user(username, count=0)
     unless existsCheck(username)
-      puts "Adding user: #{username}"
+      puts "Adding user: #{username}" if verbose
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
       set_time_added(:username => username)

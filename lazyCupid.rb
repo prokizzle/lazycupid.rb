@@ -59,12 +59,12 @@ class Roller
       choice = gets.chomp
       case choice
       when "y"
-        DatabaseManager.new(:login_name => @username)
+        DatabaseManager.new(:login_name => @username, :settings => @config)
       else
         ""
       end
     else
-      DatabaseManager.new(:login_name => @username)
+      DatabaseManager.new(:login_name => @username, :settings => @config)
     end
   end
 
@@ -173,6 +173,12 @@ class Roller
   def harvest_home_page
     open_db
     @harvester.scrape_home_page
+    close_db
+  end
+
+  def scrape_activity_feed
+    open_db
+    @harvester.scrape_activity_feed
     close_db
   end
 
@@ -295,6 +301,9 @@ end
 
 until quit
   puts "#{application.check_visitors} new visitors"
+  application.scrape_inbox
+  application.scrape_activity_feed
+  application.harvest_home_page
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
@@ -331,7 +340,9 @@ until quit
     begin
       loop do
         application.harvest_home_page
+        application.scrape_activity_feed
         application.new_roll
+        application.range_roll(:min_value => 1, :max_value => application.config[:max_followup].to_i)
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)
       end

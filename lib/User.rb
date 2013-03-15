@@ -25,12 +25,20 @@ class Users
   end
 
   def handle
-    result = body.match(/username.>([-_\w\d]+)</)[1]
+
+    begin
+      result = body.match(/username.>([-_\w\d]+)</)[1]
+    rescue
+      result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
+    end
+
     unless result == intended_handle
       @db.delete_user(intended_handle)
       puts "A-list bug: #{intended_handle} is now #{result}" if verbose
     end
+
     result
+
   end
 
   def match_percentage

@@ -164,6 +164,7 @@ class Harvester
   end
 
   def scrape_home_page
+    puts "Scraping home page." if verbose
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
     results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
 
@@ -183,6 +184,7 @@ class Harvester
   end
 
   def scrape_activity_feed
+    puts "Scraping activity feed." if verbose
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
     results = body.scan(/([\w\d_-]+)\?cf=home_orbits.>.</)
     results.each do |user|
@@ -192,6 +194,7 @@ class Harvester
   end
 
   def scrape_inbox
+    puts "Scraping inbox" if verbose
     @browser.go_to("http://www.okcupid.com/messages")
 
     all_lows    = body.scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)

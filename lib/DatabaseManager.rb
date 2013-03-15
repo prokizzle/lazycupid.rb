@@ -62,8 +62,7 @@ class DatabaseManager
     end
   end
 
-  def add_user(username)
-    count = 0
+  def add_user(username, count=0)
     unless existsCheck(username)
       puts "Adding user: #{username}"
       @db.transaction
@@ -119,10 +118,11 @@ class DatabaseManager
   end
 
   def new_user_smart_query
-    @db.execute("select name, counts, state from matches
+    @db.execute("select name, counts, time_added from matches
     where (counts = 0 or counts is null)
     and (ignored is 'false' or ignored is null)
-    and (gender is null or gender=?)", "F")
+    and (gender is null or gender=?)
+    order by time_added asc", "F")
   end
 
   def range_smart_query(
@@ -391,7 +391,11 @@ class DatabaseManager
 
   def get_last_received_message_date(user)
     result = @db.execute("select last_msg_time from matches where name=?", user)
-    result[0][0].to_i
+    begin
+      result[0][0].to_i
+    rescue
+      puts result
+    end
   end
 
   def get_visitor_count(visitor)

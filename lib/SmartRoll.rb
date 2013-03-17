@@ -8,14 +8,13 @@ class SmartRoll
     @harvester  = args[ :harvester]
     @user       = args[ :profile_scraper]
     @browser    = args[ :browser]
-    @display    = args[ :gui]
-    @profiles   = Hash.new(0)
+    @console    = args[ :gui]
     @settings   = args[ :settings]
     @days       = 2
     @stats      = Statistics.new
     @selection  = Array.new
-    @verbose    = @settings[:verbose]
-    @debug      = @settings[:debug]
+    @verbose    = @settings.verbose
+    @debug      = @settings.debug
   end
 
   def sexuality(user)
@@ -73,26 +72,34 @@ class SmartRoll
   end
 
   def filter_by_state?
-    @settings[:filter_by_state]
+    @settings.filter_by_state
   end
 
-  def build_range(min, max)
+  def preferred_state
+    @settings.preferred_state
+  end
+
+  def max_distance
+    @settings.max_distance
+  end
+
+  def build_range(min_visits, max_visits)
     if filter_by_state?
-      location_filter = @settings[:preferred_state].to_s
+      location_filter = preferred_state
       mode = "state"
     else
-      location_filter = @settings[:distance].to_i
+      location_filter = max_distance
       mode ="distance"
     end
 
     @selection = @db.range_smart_query(
-                  days_ago(@settings[:days_ago].to_i),
-                  min,
-                  max,
+                  days_ago(@settings.days_ago),
+                  min_visits,
+                  max_visits,
                   location_filter,
-                  @settings[:min_age].to_i,
-                  @settings[:max_age].to_i,
-                  @settings[:min_percent].to_i,
+                  @settings.min_age,
+                  @settings.max_age,
+                  @settings.min_percent,
                   mode)
   end
 
@@ -155,8 +162,8 @@ class SmartRoll
     # puts "************************"
     @total_visitors += viz
     @total_visits += @tally
-    # @display.update_progress(@total_visits)
-    @display.dashboard(@total_visits, @total_visitors, @start_time, @tally, @current_state)
+    # @console.update_progress(@total_visits)
+    @console.dashboard(@total_visits, @total_visitors, @start_time, @tally, @current_state)
     # puts "Ratio: #{(viz/@tally).to_f}"
     @event_time = Chronic.parse('5 minutes from now').to_i
     @tally = 0
@@ -173,7 +180,7 @@ class SmartRoll
   end
 
   def pre_roll_actions
-    @display.progress(@selection.size)
+    @console.progress(@selection.size)
     @tally = 0
     @total_visitors = 0
     @total_visits = 0
@@ -187,7 +194,7 @@ class SmartRoll
       remove_match(user)
     else
       user_ob_debug if debug
-      @display.console_out(@user) if verbose
+      @console.log(@user) if verbose
       @tally += 1
       @db.log2(@user)
       @current_state = @user.state

@@ -1,33 +1,72 @@
-module Settings
-  # again - it's a singleton, thus implemented as a self-extended module
-  extend self
+class Settings
+  attr_reader :max_distance, :min_percent, :min_age, :max_age, :days_ago, :preferred_state, :max_followup, :debug, :verbose
 
-  @_settings = {}
-  attr_reader :_settings
-
-  # This is the main point of entry - we call Settings.load! and provide
-  # a name of the file to read as it's argument. We can also pass in some
-  # options, but at the moment it's being used to allow per-environment
-  # overrides in Rails
-  def load!(filename, options = {})
-    newsets = YAML::load_file(filename).deep_symbolize
-    newsets = newsets[options[:env].to_sym] if \
-                                               options[:env] && \
-                                               newsets[options[:env].to_sym]
-    deep_merge!(@_settings, newsets)
+  def initialize(args)
+    @account  = args[ :username]
+    path      = args[ :path]
+    @filename = "#{path}/#{@account}.yml"
+    unless File.exists?(@filename)
+      config = {distance: 200,
+                min_percent: 60,
+                min_age: 18,
+                max_age: 60,
+                days_ago: 4,
+                preferred_state: 'Massachusetts',
+                filter_by_state: false,
+                max_followup: 15,
+                debug: true,
+                verbose: true
+                }
+      File.open(@filename, "w") do |f|
+        f.write(config.to_yaml)
+      end
+    end
+    @settings = YAML.load_file(@filename)
   end
 
-  # Deep merging of hashes
-  # deep_merge by Stefan Rusterholz, see http://www.ruby-forum.com/topic/142809
-  def deep_merge!(target, data)
-    merger = proc{|key, v1, v2|
-      Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2 }
-    target.merge! data, &merger
+  def reload_settings
+    @settings = YAML.load_file(@filename)
   end
 
-  def method_missing(name, *args, &block)
-    @_settings[name.to_sym] ||
-    fail(NoMethodError, "unknown configuration root #{name}", caller)
+  def max_distance
+    @settings[:distance].to_i
   end
+
+  def min_percent
+    @settings[:min_percent].to_i
+  end
+
+  def min_age
+    @settings[:min_age].to_i
+  end
+
+  def max_age
+    @settings[:max_age].to_i
+  end
+
+  def days_ago
+    @settings[:days_ago].to_i
+  end
+
+  def preferred_state
+    @settings[:preferred_state].to_s
+  end
+
+  def max_followup
+    @settings[:max_followup].to_i
+  end
+
+  def filter_by_state
+    @settings[:filter_by_state]
+  end
+
+  def debug
+    @settings[:debug] == true
+  end
+
+  def verbose
+    @settings[:verbose] == true
+  end
+
 
 end

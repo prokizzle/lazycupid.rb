@@ -5,8 +5,8 @@ class DatabaseManager
     @settings = args[ :settings]
     open_db
     db_migrations
-    @verbose  = @settings[:verbose]
-    @debug    = @settings[:debug]
+    @verbose  = @settings.verbose
+    @debug    = @settings.debug
   end
 
   def db
@@ -64,8 +64,8 @@ class DatabaseManager
   end
 
   def add_user(username, count=0)
-    unless existsCheck(username)
-      puts "Adding user: #{username}" if verbose
+    unless existsCheck(username) || username == "pictures"
+      puts "Adding user:        #{username}" if verbose
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
       set_time_added(:username => username)
@@ -77,7 +77,7 @@ class DatabaseManager
 
   def delete_user(username)
     if existsCheck(username)
-      puts "Deleting user: #{username}" if verbose
+      puts "Deleting user:      #{username}" if verbose
       @db.transaction
       @db.execute( "delete from matches where name=?", username)
       @db.commit
@@ -471,6 +471,7 @@ class DatabaseManager
 
 
   def is_ignored(username)
+    add_user(username) unless existsCheck(username)
     result = @db.execute( "select ignored from matches where name=?", username)
     # to_boolean(result[0][0].to_s)
     begin
@@ -500,13 +501,13 @@ class DatabaseManager
     @db.execute( "update matches set ignored='false' where name=?", username)
   end
 
-  def existsCheck(id)
+  def existsCheck(username)
     # begin
     temp = @db.execute( "select 1 where exists(
           select 1
           from matches
           where name = ?
-      ) ", id).any?
+      ) ", username).any?
   end
 
   def to_boolean(str)

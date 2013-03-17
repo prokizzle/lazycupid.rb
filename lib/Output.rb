@@ -34,7 +34,7 @@ class Output
     puts "to quit press ctrl-c"
   end
 
-  def console_out(user)
+  def log(user)
     puts "#{@username}: #{user.handle}; #{user.match_percentage}%; #{user.state}; #{user.relative_distance}; #{@you.visited(user.handle)}"
   end
 

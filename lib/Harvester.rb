@@ -10,8 +10,8 @@ class Harvester
     @database     = args[ :database]
     @user         = args[ :profile_scraper]
     @settings     = args[ :settings]
-    @verbose      = @settings[:verbose]
-    @debug        = @settings[:debug]
+    @verbose      = @settings.verbose
+    @debug        = @settings.debug
   end
 
   def user
@@ -35,23 +35,27 @@ class Harvester
   end
 
   def min_match_percentage
-    @settings[:min_percent].to_i
+    @settings.min_percent
   end
 
   def min_age
-    @settings[:min_age].to_i
+    @settings.min_age
   end
 
   def max_age
-    @settings[:max_age].to_i
+    @settings.max_age
   end
 
   def max_distance
-    @settings[:distance].to_i
+    @settings.max_distance.to_i
   end
 
   def preferred_state
-    @settings[:preferred_state].to_s
+    @settings.preferred_state
+  end
+
+  def filter_by_state?
+    @settings.filter_by_state == true
   end
 
   def scrape_from_user
@@ -59,25 +63,50 @@ class Harvester
     self.similar_user_scrape
   end
 
+  def distance_criteria_met?
+    # puts "by state:     #{filter_by_state?}" if verbose
+    # puts "Max dist:     #{max_distance}" if verbose
+    # puts "Rel dist:     #{@user.relative_distance}" if verbose
+    unless filter_by_state?
+      @user.relative_distance <= max_distance
+    else
+      @user.state == preferred_state
+    end
+  end
+
+  def match_percent_criteria_met?
+    (@user.match_percentage >= min_match_percentage || (@user.match_percentage == 0 && @user.friend_percentage == 0))
+  end
+
+  def age_criteria_met?
+    @user.age.between?(min_age, max_age)
+  end
+
+
   def meets_preferences?
-    ((@user.match_percentage >= min_match_percentage || @user.match_percentage == 0 ) &&
-     (@user.state == preferred_state) &&
-     (@user.age <= max_age) &&
-     (@user.age >= min_age))
+    puts "Match met:    #{match_percent_criteria_met?}" if verbose
+    puts "Distance met: #{distance_criteria_met?}" if verbose
+    puts "Age met:      #{age_criteria_met?}" if verbose
+    match_percent_criteria_met? &&
+      distance_criteria_met? &&
+      age_criteria_met?
   end
 
   def leftbar_scrape
+    puts "Scraping: leftbar" if verbose
     # @browser.go_to(url)
     array = body.scan(/\/([\w\d_-]+)\?leftbar_match/)
     array.each { |user| @database.add_user(user[0]) }
   end
 
   def similar_user_scrape
+    puts "Scraping: similar users" if verbose
     # @found = Array.new
     # @database.log(match)
     # @browser.go_to("http://www.okcupid.com/profile/#{match}")
     if meets_preferences?
       users = body.scan(/\/([\w\d _-]+)....profile_similar/)
+      users = users.to_set
       users.each do |user|
         if @user.gender == "F"
           @database.add_user(user[0])
@@ -195,6 +224,18 @@ class Harvester
 
   def scrape_inbox
     puts "Scraping inbox" if verbose
+    items_per_page = 30
+
+    # page_turner(
+    #   :page_links => "<a href=.\/messages\?low=(\d+)&amp.folder.\d.>",
+    #   :pre_var_url => "http://www.okcupid.com/messages?low=",
+    #   :post_var_url => "&folder=1",
+    #   :items_per_page => 30,
+    #   :initial_page => "http://www.okcupid.com/messages",
+    #   :scraper_object => @browser
+    #   )
+
+
     @browser.go_to("http://www.okcupid.com/messages")
 
     all_lows    = body.scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
@@ -205,19 +246,64 @@ class Harvester
     end
 
     total       = highest
-    bar         = ProgressBar.new(total, :counter) unless verbose
-    bar.increment! 1 unless verbose
-    track_msg_dates
-    low         = 31
+    puts "Total messages: #{total}" if verbose
+    @bar         = ProgressBar.new(total, :counter) unless verbose
+    @bar.increment! 1 unless verbose
+    do_page_action("http://www.okcupid.com/messages")
+    low         = items_per_page + 1
 
     until low >= total
-      bar.increment! 30 unless verbose
+      @bar.increment! 30 unless verbose
+      # do_page_action
+      low += items_per_page
       @browser.go_to("http://www.okcupid.com/messages?low=#{low}&folder=1")
       track_msg_dates
-      low += 30
       sleep 2
     end
 
+  end
+
+  def page_turner(args)
+    page_links      = Regexp.quote(args[ :page_links].to_s)
+    pre_var_url     = args[ :pre_var_url].to_s
+    post_var_url    = args[ :post_var_url].to_s
+    @ITEMS_PER_PAGE  = args[ :items_per_page].to_i
+    initial_page    = args[ :initial_page].to_s
+    @scraper        = args[ :scraper_object]
+    @last_page       = 0
+
+
+    @scraper.go_to(initial_page)
+
+    page_numbers = body.scan(/#{Regexp.quote(page_links)}/)
+
+    puts page_numbers
+
+    page_numbers.each do |page|
+      page_number = page[0].to_i
+      @last_page = page_number if page_number > @last_page.to_i
+    end
+
+    puts @last_page
+
+    @page = @ITEMS_PER_PAGE + 1
+
+    do_page_action(initial_page)
+
+
+    until @page >= @last_page
+      do_page_action("#{pre_var_url}#{@page}#{post_var_url}")
+      @page += @ITEMS_PER_PAGE
+    end
+
+  end
+
+
+  def do_page_action(url)
+    puts "","Scraping: #{url}" if verbose
+    @browser.go_to(url)
+    track_msg_dates
+    sleep 2
   end
 
   def track_msg_dates

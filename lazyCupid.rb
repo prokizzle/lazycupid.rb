@@ -6,18 +6,18 @@ class Roller
 
 
   def initialize(args)
-    @username   = args[ :username]
-    @password   = args[ :password]
-    @speed      = speed
-    @config     = initialize_settings
-    @browser    = Session.new(:username => username, :password => password)
-    @db         = initialize_db
-    # @prefs    = Preferences.new(:browser => @browser)
-    @blocklist  = BlockList.new(:database => db, :browser => @browser)
-    @search     = Lookup.new(:database => db)
-    @display    = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
-    @user       = Users.new(:database => db, :browser => @browser)
-    @harvester  = Harvester.new(
+    @username     = args[ :username]
+    @password     = args[ :password]
+    path          = File.dirname($0) + '/config/'
+    @config       = Settings.new(:username => username, :path => path)
+    @browser      = Session.new(:username => username, :password => password)
+    @db           = initialize_db
+    # @prefs      = Preferences.new(:browser => @browser)
+    @blocklist    = BlockList.new(:database => db, :browser => @browser)
+    @search       = Lookup.new(:database => db)
+    @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
+    @user         = Users.new(:database => db, :browser => @browser)
+    @harvester    = Harvester.new(
       :browser => @browser,
       :database => db,
       :profile_scraper => @user,
@@ -30,26 +30,6 @@ class Roller
       :browser => @browser,
       :gui => @display,
     :settings => @config)
-  end
-
-  def initialize_settings
-    filename = "./config/#{@username}.yml"
-    unless File.exists?(filename)
-      config = {distance: 200,
-                min_percent: 60,
-                min_age: 18,
-                max_age: 60,
-                days_ago: 4,
-                preferred_state: 'Massachusetts',
-                max_followup: 15,
-                debug: true,
-                verbose: true
-                }
-      File.open(filename, "w") do |f|
-        f.write(config.to_yaml)
-      end
-    end
-    YAML.load_file(filename)
   end
 
   def initialize_db
@@ -91,7 +71,7 @@ class Roller
   end
 
   def max_match_distance
-    @config[:distance]
+    @config.max_distance
   end
 
   def min_match_percent
@@ -110,7 +90,7 @@ class Roller
   end
 
   def test_prefs
-    puts @config[:distance]
+    puts @config.max_distance
     wait = gets.chomp
   end
 
@@ -174,6 +154,10 @@ class Roller
     open_db
     @harvester.scrape_home_page
     close_db
+  end
+
+  def reload_settings
+    @config.reload_settings
   end
 
   def scrape_activity_feed
@@ -261,7 +245,7 @@ class Roller
     begin
       loop do
         puts "#{@harvester.visitors} new visitors"
-        sleep 60
+        sleep 240
       end
     rescue SystemExit, Interrupt
     end
@@ -325,7 +309,7 @@ until quit
   when "m"
     application.check_visitors_loop
   when "f"
-    application.range_roll(:min_value => 1, :max_value => application.config[:max_followup].to_i)
+    application.range_roll(:min_value => 1, :max_value => application.config.max_followup)
   when "h"
     application.harvest_home_page
   when "6"
@@ -342,7 +326,7 @@ until quit
         application.harvest_home_page
         application.scrape_activity_feed
         application.new_roll
-        application.range_roll(:min_value => 1, :max_value => application.config[:max_followup].to_i)
+        application.range_roll(:min_value => 1, :max_value => application.config.max_followup)
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)
       end
@@ -361,7 +345,7 @@ until quit
     puts "(2) Lookup visit counts"
     puts "(3) Block user"
     puts "(4) Auto import hidden users to blocklist"
-    puts "(5) Populate blank genders"
+    puts "(5) Reload settings file"
     choice = gets.chomp
     case choice
     when "1"
@@ -382,7 +366,7 @@ until quit
     when "4"
       application.ignore_hidden_users
     when "5"
-      application.gender_fix(5)
+      application.reload_settings
     end
   when "q"
     quit = true

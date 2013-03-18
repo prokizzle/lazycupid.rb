@@ -95,9 +95,18 @@ class Roller
     # @config['max_age']
   end
 
-  def test_prefs
-    puts @config.max_distance
-    wait = gets.chomp
+  def get_new_user_counts
+    open_db
+    result = db.count_new_user_smart_query
+    close_db
+    result.to_i
+  end
+
+  def get_follow_up_counts
+    open_db
+    result = db.get_counts_of_follow_up
+    close_db
+    result
   end
 
   def db
@@ -126,6 +135,7 @@ class Roller
     open_db
     db.reset_ignored_list
     close_db
+  end
 
   def close_db
     # puts "Debug: Closing database."
@@ -187,11 +197,9 @@ class Roller
     close_db
   end
 
-  def range_roll(args)
+  def range_roll
     open_db
-    min = args[ :min_value]
-    max = args[ :max_value]
-    @smarty.run_range(min, max)
+    @smarty.run_range(1, @config.max_followup)
     close_db
   end
 
@@ -208,24 +216,6 @@ class Roller
     result
   end
 
-  def test_user_object(user)
-    @browser.go_to("http://www.okcupid.com/profile/#{user}/")
-    puts @user.handle
-    puts @user.age
-    puts @user.sexuality
-    puts @user.handle
-    puts @user.city
-    puts @user.state
-    puts @user.gender
-    puts @user.relationship_status
-    puts @user.match_percentage
-  end
-
-  def test_bug
-    open_db
-    @smarty.test_bug
-    close_db
-  end
 
   # def test_prefs
   #   @prefs.get_match_preferences
@@ -302,9 +292,9 @@ until quit
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
-  puts "(n) Visit new users"
+  puts "(n) Visit new users (#{application.get_new_user_counts})" if application.get_new_user_counts >= 100
   puts "(m) Monitor Visitors"
-  puts "(f) Follow up"
+  puts "(f) Follow up (#{application.get_follow_up_counts})" if application.get_follow_up_counts >= 50
   puts "(s) Scrape matches"
   puts "(e) Endless mode"
   puts "(a) Admin menu"
@@ -313,14 +303,12 @@ until quit
   mode = gets.chomp
 
   case mode
-  when "1"
-    puts "Deprecated"
   when "n"
     application.new_roll
   when "m"
     application.check_visitors_loop
   when "f"
-    application.range_roll(:min_value => 1, :max_value => application.config.max_followup)
+    application.range_roll
   when "s"
     application.scrape_matches_page
   when "6"
@@ -333,9 +321,13 @@ until quit
     begin
       loop do
         application.harvest_home_page
+        sleep 10
         application.scrape_activity_feed
-        application.new_roll
-        application.range_roll(:min_value => 1, :max_value => application.config.max_followup)
+        sleep 10
+        application.scrape_matches_page
+        sleep 10
+        application.new_roll if application.get_new_user_counts >= 100
+        application.range_roll if application.get_follow_up_counts >= 100
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)
       end

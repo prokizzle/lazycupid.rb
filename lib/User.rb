@@ -4,8 +4,9 @@ class Users
 
   def initialize(args)
     @db = args[ :database]
-    @browser = args[ :browser]
-    @verbose = true
+    @browser  = args[ :browser]
+    @verbose  = true
+    @debug    = true
   end
 
   def body
@@ -14,6 +15,16 @@ class Users
 
   def verbose
     @verbose
+  end
+
+  def debug
+    @debug
+  end
+
+  def display_code
+    puts body
+    puts "","Press any key..."
+    wait = gets.chomp
   end
 
   def intended_handle
@@ -66,27 +77,28 @@ class Users
   end
 
   def height
-    /height.>.+\(([\d\.]+)m/.match(body)[1].to_f
+    /height.>.+\(*([\d\.]*)m*/.match(body)[1].to_f
   end
 
   def body_type
-    /bodytype.>([\w\s]+)/.match(body)[1].to_s
+    /bodytype.>(.+)<.dd>/.match(body)[1].to_s
   end
 
   def smoking
-    /smoking.>([\w\s]+)/.match(body)[1].to_s
+    # display_code if debug
+    /smoking.>(.+)<.dd>/.match(body)[1].to_s
   end
 
   def drinking
-    /drinking.>([\w\s]+)/.match(body)[1].to_s
+    /drinking.>(.+)<.dd>/.match(body)[1].to_s
   end
 
   def drugs
-    /drugs.>(.+)<\/dd/.match(body)[1].to_s
+    /drugs.>(.+)<\/dd>/.match(body)[1].to_s
   end
 
   def kids
-    /children.>(.+)<\/dd/.match(body)[1].to_s
+    /children.>(.+)<\/dd>/.match(body)[1].to_s
   end
 
   def count

@@ -130,6 +130,15 @@ class DatabaseManager
     order by time_added asc", @settings.gender)
   end
 
+  def count_new_user_smart_query
+    result = @db.execute("select count(name) as 'new_matches' from matches
+    where (counts = 0 or counts is null)
+    and (ignored is 'false' or ignored is null)
+    and (gender is null or gender=?)
+    order by time_added asc", @settings.gender)
+    result[0][0].to_i
+  end
+
   def range_smart_query(
       min_time,
       min_counts,
@@ -138,12 +147,11 @@ class DatabaseManager
       min_age,
       max_age,
       min_percent,
-      mode,
     desired_gender=@settings.gender)
 
-    if mode == "state"
+    if @settings.filter_by_state
       preferred_state_alt = "#{location_filter} "
-      result = @db.execute("select name, counts from matches
+      stmt = @db.prepare("select name, counts from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
@@ -153,7 +161,7 @@ class DatabaseManager
         and (gender is null or gender=?)
         order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
     else
-      result = @db.execute("select name, counts from matches
+      stmt = @db.prepare("select name, counts from matches
        where (last_visit <= ? or last_visit is null)
        and counts between ? and ?
        and (distance <= ? or distance is null)
@@ -163,7 +171,46 @@ class DatabaseManager
        and (gender is null or gender=?)
        order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
     end
+    result = stmt.execute
     result
+  end
+
+  def get_counts_of_follow_up
+
+      min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+      desired_gender  = @settings.gender
+      min_age         = @settings.min_age
+      max_age         = @settings.max_age
+      min_counts      = 1
+      max_counts      = @settings.max_followup
+      min_percent     = @settings.min_percent
+
+        if @settings.filter_by_state
+          location_filter = "#{@settings.preferred_state}"
+      preferred_state_alt = "#{@settings.preferred_state} "
+      result = @db.execute("select count(name) as 'follow_ups'
+        from matches
+        where (last_visit <= ? or last_visit is null)
+        and counts between ? and ?
+        and (state = ? or state = ? or state is null)
+        and ignored is not 'true'
+        and (age between ? and ? or age is null)
+        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+        and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
+    else
+      location_filter = "#{@settings.max_distance}"
+      result = @db.execute("select count(name) as 'follow_ups'
+        from matches
+        where (last_visit <= ? or last_visit is null)
+        and counts between ? and ?
+        and (distance <= ? or distance is null)
+        and ignored is not 'true'
+        and (age between ? and ? or age is null)
+        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+        and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
+    end
+    # result.close
+    result[0][0].to_i
   end
 
   def range_smart_query_by_state(

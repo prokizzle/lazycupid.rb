@@ -83,24 +83,9 @@ class SmartRoll
     @settings.max_distance
   end
 
-  def build_range(min_visits, max_visits)
-    if filter_by_state?
-      location_filter = preferred_state
-      mode = "state"
-    else
-      location_filter = max_distance
-      mode ="distance"
-    end
+  def build_range
 
-    @selection = @db.range_smart_query(
-                  days_ago(@settings.days_ago),
-                  min_visits,
-                  max_visits,
-                  location_filter,
-                  @settings.min_age,
-                  @settings.max_age,
-                  @settings.min_percent,
-                  mode)
+    @selection = @db.followup_query
   end
 
 
@@ -221,8 +206,8 @@ class SmartRoll
     roll
   end
 
-  def run_range(min, max)
-    build_range(min, max)
+  def run_range
+    build_range
     roll
   end
 

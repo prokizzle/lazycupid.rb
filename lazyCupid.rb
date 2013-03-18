@@ -199,7 +199,7 @@ class Roller
 
   def range_roll
     open_db
-    @smarty.run_range(1, @config.max_followup)
+    @smarty.run_range
     close_db
   end
 

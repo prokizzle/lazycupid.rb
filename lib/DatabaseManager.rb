@@ -139,15 +139,15 @@ class DatabaseManager
     result[0][0].to_i
   end
 
-  def range_smart_query(
-      min_time,
-      min_counts,
-      max_counts,
-      location_filter,
-      min_age,
-      max_age,
-      min_percent,
-    desired_gender=@settings.gender)
+  def followup_query
+
+      min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+      desired_gender  = @settings.gender
+      min_age         = @settings.min_age
+      max_age         = @settings.max_age
+      min_counts      = 1
+      max_counts      = @settings.max_followup
+      min_percent     = @settings.min_percent
 
     if @settings.filter_by_state
       preferred_state_alt = "#{location_filter} "

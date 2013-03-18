@@ -1,5 +1,5 @@
 class Settings
-  attr_reader :max_distance, :min_percent, :min_age, :max_age, :days_ago, :preferred_state, :max_followup, :debug, :verbose
+  attr_reader :max_distance, :min_percent, :min_age, :max_age, :days_ago, :preferred_state, :max_followup, :debug, :verbose, :gender
 
   def initialize(args)
     @account  = args[ :username]
@@ -30,6 +30,10 @@ class Settings
 
   def max_distance
     @settings[:distance].to_i
+  end
+
+  def gender
+    @settings[:gender].to_s
   end
 
   def min_percent

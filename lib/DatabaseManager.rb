@@ -19,8 +19,11 @@ class DatabaseManager
 
   def db_migrations
     begin
-      @db.execute("alter table matches add column r_msg_count integer")
-      @db.execute("alter table matches add column last_msg_time integer")
+      @db.execute("alter table matches add column smoking text")
+      @db.execute("alter table matches add column drinking text")
+      @db.execute("alter table matches add column drugs text")
+      @db.execute("alter table matches add column height text")
+      @db.execute("alter table matches add column body_type text")
     rescue
     end
   end
@@ -111,6 +114,7 @@ class DatabaseManager
   # end
 
   def update_visit_count(match_name, number)
+    puts "Updating visit count: #{match_name}" if verbose
     @db.execute( "update matches set counts=? where name=?", number.to_i, match_name )
   end
 
@@ -123,7 +127,7 @@ class DatabaseManager
     where (counts = 0 or counts is null)
     and (ignored is 'false' or ignored is null)
     and (gender is null or gender=?)
-    order by time_added asc", "F")
+    order by time_added asc", @settings.gender)
   end
 
   def range_smart_query(
@@ -135,7 +139,7 @@ class DatabaseManager
       max_age,
       min_percent,
       mode,
-    desired_gender="F")
+    desired_gender=@settings.gender)
 
     if mode == "state"
       preferred_state_alt = "#{location_filter} "
@@ -170,7 +174,7 @@ class DatabaseManager
       min_age,
       max_age,
       min_percent,
-    desired_gender="F")
+    desired_gender=@settings.gender)
     preferred_state_alt = "#{preferred_state} "
     @db.execute("select name, visit_count from matches
         where (last_visit <= ? or last_visit is null)
@@ -392,6 +396,7 @@ class DatabaseManager
   end
 
   def set_visitor_timestamp(visitor, timestamp)
+    puts "Updating last visit time: #{visitor}" if verbose
     @db.execute( "update matches set zindex=? where name=?", timestamp, visitor)
   end
 
@@ -436,9 +441,18 @@ class DatabaseManager
       set_distance(:username => user.handle, :distance => user.relative_distance)
       set_age(user.handle, user.age)
       set_city(user.handle, user.city)
+      set_smoking(user.handle, user.smoking)
+      set_body_type(user.handle, user.body_type)
+      set_drugs(user.handle, user.drugs)
+      set_drinking(user.handle, user.drinking)
+      set_height(user.handle, user.height)
     end
   end
 
+  def reset_ignored_list
+    @db.execute("update matches set ignored='false' where ignored='true'")
+    @db.execute("update matches set ignored='true' where gender='M'")
+  end
 
   def is_ignored(username)
     add_user(username) unless existsCheck(username)

@@ -62,6 +62,12 @@ class Roller
     @username
   end
 
+  def scrape_matches_page
+    open_db
+    @harvester.scrape_matches_page
+    close_db
+  end
+
   def clear
     @display.clear_screen
   end
@@ -115,6 +121,11 @@ class Roller
     @smarty.gender_fix(d)
     close_db
   end
+
+  def reset_ignored_list
+    open_db
+    db.reset_ignored_list
+    close_db
 
   def close_db
     # puts "Debug: Closing database."
@@ -294,7 +305,7 @@ until quit
   puts "(n) Visit new users"
   puts "(m) Monitor Visitors"
   puts "(f) Follow up"
-  puts "(h) Scrape home page"
+  puts "(s) Scrape matches"
   puts "(e) Endless mode"
   puts "(a) Admin menu"
   puts "(Q) Quit",""
@@ -310,16 +321,14 @@ until quit
     application.check_visitors_loop
   when "f"
     application.range_roll(:min_value => 1, :max_value => application.config.max_followup)
-  when "h"
-    application.harvest_home_page
+  when "s"
+    application.scrape_matches_page
   when "6"
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
   when "7"
-    application.track_msg_dates
-  when "8"
-    application.scrape_inbox
+    application.scrape_matches_page
   when "e"
     begin
       loop do
@@ -346,6 +355,7 @@ until quit
     puts "(3) Block user"
     puts "(4) Auto import hidden users to blocklist"
     puts "(5) Reload settings file"
+    puts "(6) Reset ignored list"
     choice = gets.chomp
     case choice
     when "1"
@@ -367,6 +377,8 @@ until quit
       application.ignore_hidden_users
     when "5"
       application.reload_settings
+    when "6"
+      application.reset_ignored_list
     end
   when "q"
     quit = true

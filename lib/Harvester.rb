@@ -34,6 +34,10 @@ class Harvester
     @verbose
   end
 
+  def debug
+    @debug
+  end
+
   def min_match_percentage
     @settings.min_percent
   end
@@ -108,7 +112,7 @@ class Harvester
       users = body.scan(/\/([\w\d _-]+)....profile_similar/)
       users = users.to_set
       users.each do |user|
-        if @user.gender == "F"
+        if @user.gender == @settings.gender
           @database.add_user(user[0])
           @database.set_state(:username => user[0], :state => @user.state)
           @database.set_gender(:username => user[0], :gender => @user.gender)
@@ -140,8 +144,10 @@ class Harvester
     @visitors_page      = @current_user.parser.xpath("//div[@id='main_column']").to_html
     @details    = @visitors_page.scan(/>([\w\d]+).+(\d{2}) \/ (F|M)\s\/\s(\w+)\s\/\s[\w\s]+.+"location".([\w\s]+)..([\w\s]+)/)
 
+    puts @visitors_page if debug
+    wait = gets.chomp if debug
 
-    @gender     = Hash.new(0)
+    @gender     = Hash.new("F")
     @age        = Hash.new(0)
     @sexuality  = Hash.new(0)
     @state      = Hash.new(0)
@@ -174,13 +180,19 @@ class Harvester
         @count += 1
         self.increment_visitor_counter(visitor)
 
-        if @gender[visitor] == "M"
-          @database.ignore_user(visitor)
-          @database.set_gender(:username => visitor, :gender => "M")
-        else
+        puts visitor if verbose
+
+        puts "Scraped gender: #{@gender[visitor]}" if verbose
+        puts "Setting gender: #{@settings.gender}" if verbose
+
+
+        if @gender[visitor] == @settings.gender
           @database.add_user(visitor)
           @database.set_gender(:username => visitor, :gender => "F")
           @database.set_state(:username => visitor, :state => @state[visitor])
+        else
+          @database.ignore_user(visitor)
+          @database.set_gender(:username => visitor, :gender => "M")
         end
 
       end
@@ -190,6 +202,49 @@ class Harvester
     end
 
     @count.to_i
+  end
+
+  def scrape_matches_page
+    @browser.go_to("http://www.okcupid.com/match")
+    @current_user       = @browser.current_user
+    @matches_page       = @current_user.parser.xpath("//div[@id='match_results']").to_html
+    @details    = @matches_page.scan(/\/([\w\s_-]+)\?cf=regular".+<p class="aso" style="display:"> (\d{2})<span>&nbsp;\/&nbsp;<\/span> (M|F)<span>&nbsp;\/&nbsp;<\/span>(\w)+<span>&nbsp;\/&nbsp;<\/span>\w+ <\/p> <p class="location">([\w\s-]+), ([\w\s]+)<\/p>/)
+
+
+    @gender     = Hash.new(0)
+    @age        = Hash.new(0)
+    @sexuality  = Hash.new(0)
+    @state      = Hash.new(0)
+    @city       = Hash.new(0)
+
+    @details.each do |user|
+      handle              = user[0]
+      age                 = user[1]
+      gender              = user[2]
+      sexuality           = user[3]
+      city                = user[4]
+      state               = user[5]
+      @gender[handle]     = gender
+      @state[handle]      = state
+      @city[handle]       = city
+      @state[handle]      = state
+      @sexuality[handle]  = sexuality
+      @age[handle]        = age
+    end
+
+    matches_list   = @matches_page.scan(/"usr-([\w\d]+)"/)
+    @count  = 0
+    matches_list.each do |username, zindex|
+
+          @database.add_user(username)
+          @database.set_gender(:username => username, :gender => "F")
+          @database.set_age(username, @age[username])
+          @database.set_city(username, @city[username])
+          @database.set_sexuality(username, @sexuality[username])
+          @database.set_state(:username => username, :state => @state[username])
+
+    end
+
   end
 
   def scrape_home_page
@@ -211,6 +266,19 @@ class Harvester
       # @database.set_city(:username => handle, :city => city)
     end
   end
+
+  def scrape_matches
+    puts "Scraping matches" if verbose
+
+    @browser.go_to("http://www.okcupid.com/match")
+    results = body.scan(/\/([\w\d _-]+)....regular/)
+
+    results.each do |user|
+      @payload
+    end
+
+  end
+
 
   def scrape_activity_feed
     puts "Scraping activity feed." if verbose

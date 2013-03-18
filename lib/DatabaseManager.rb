@@ -281,33 +281,18 @@ class DatabaseManager
   def set_distance(args)
     user = args[ :username]
     dist = args[ :distance]
-    begin
       @db.execute("update matches set distance=? where name=?", dist, user)
-    rescue
-      @db.execute("alter table matches add column distance integer")
-      @db.execute("update matches set distance=? where name=?", dist, user)
-    end
   end
 
   def get_distance(args)
     user = args[ :username]
-    begin
       @db.execute("select distance from matches where name=?", user)
-    rescue
-      @db.execute("alter table matches add column distance integer")
-      nil
-    end
   end
 
   def set_state(args)
     user = args[ :username]
     state = args[ :state]
-    begin
       @db.execute("update matches set state=? where name=?", state, user)
-    rescue
-      @db.execute("alter table matches add column state text")
-      @db.execute("update matches set state=? where name=?", state, user)
-    end
   end
 
   def set_age(user, age)
@@ -321,12 +306,7 @@ class DatabaseManager
 
   def set_time_added(args)
     user = args[ :username]
-    begin
       @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
-    rescue
-      @db.execute("alter table matches add column time_added integer")
-      @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
-    end
   end
 
   def set_city(user, city)
@@ -341,12 +321,7 @@ class DatabaseManager
   def set_gender(args)
     user = args[ :username]
     gender = args[ :gender]
-    begin
       @db.execute("update matches set gender=? where name=?", gender, user)
-    rescue
-      @db.execute("alter table matches add column gender text")
-      @db.execute("update matches set gender=? where name=?", gender, user)
-    end
   end
 
   def get_gender(user)
@@ -354,12 +329,7 @@ class DatabaseManager
   end
 
   def set_sexuality(user, sexuality)
-    begin
       @db.execute("update matches set sexuality=? where name=?", sexuality, user)
-    rescue
-      @db.execute("alter table matches add column sexuality text")
-      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
-    end
   end
 
   def get_sexuality(user)

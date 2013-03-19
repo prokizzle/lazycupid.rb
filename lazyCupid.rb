@@ -1,8 +1,8 @@
 require './includes'
 
 class Roller
-  attr_accessor :username, :password, :speed
-  attr_reader :username, :password, :speed
+  attr_accessor :username, :password, :speed, :first_login
+  attr_reader :username, :password, :speed, :first_login
 
 
   def initialize(args)
@@ -30,6 +30,7 @@ class Roller
       :browser => @browser,
       :gui => @display,
     :settings => @config)
+    @first_login = false
   end
 
   def initialize_db
@@ -39,13 +40,15 @@ class Roller
       choice = gets.chomp
       case choice
       when "y"
-        DatabaseManager.new(:login_name => @username, :settings => @config)
+        tmp = DatabaseManager.new(:login_name => @username, :settings => @config)
+        tmp.import
+        tmp.close
+        @first_login = true
       else
         ""
       end
-    else
-      DatabaseManager.new(:login_name => @username, :settings => @config)
     end
+      DatabaseManager.new(:login_name => @username, :settings => @config)
   end
 
   def fix_dates
@@ -65,6 +68,12 @@ class Roller
   def scrape_matches_page
     open_db
     @harvester.scrape_matches_page
+    close_db
+  end
+
+  def test_more_matches
+    open_db
+    @harvester.test_more_matches
     close_db
   end
 
@@ -209,6 +218,22 @@ class Roller
     close_db
   end
 
+  def first_login
+    @first_login
+  end
+
+  def welcome
+    first_login = false
+    puts "Welcome to Lazy Cupid, the easiest way to get noticed"
+    puts "on OKCupid. Using this will give you an unparalleled"
+    puts "advantage on this site. Be prepared for lots of new"
+    puts "attention."
+    puts "","Press enter to begin..."
+    wait = gets.chomp
+    ignore_hidden_users
+    new_roll
+  end
+
   def check_visitors
     open_db
     result = @harvester.visitors
@@ -283,12 +308,12 @@ rescue SystemExit, Interrupt
   logout = false
   puts "","","Goodbye."
 end
-
 until quit
-  puts "#{application.check_visitors} new visitors"
-  application.scrape_inbox
-  application.scrape_activity_feed
-  application.harvest_home_page
+  # puts "#{application.check_visitors} new visitors"
+  # application.scrape_inbox
+  # application.scrape_activity_feed
+  # application.harvest_home_page
+      application.welcome if application.first_login
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
@@ -316,7 +341,7 @@ until quit
     user = gets.chomp
     application.scrape_similar(user)
   when "7"
-    application.scrape_matches_page
+    application.test_more_matches
   when "e"
     begin
       loop do

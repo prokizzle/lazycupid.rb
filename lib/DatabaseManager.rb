@@ -59,6 +59,19 @@ class DatabaseManager
         match_percentage integer,
         state text,
         city text,
+      time_added text,
+      smoking text,
+      drinking text,
+      kids text,
+      drugs text,
+      height text,
+      body_type text,
+      distance integer,
+      match_percent integer,
+      friend_percent integer,
+      enemy_percent integer,
+      last_msg_time integer,
+      r_msg_count integer,
         PRIMARY KEY(name)
         )")
     rescue Exception => e
@@ -150,8 +163,9 @@ class DatabaseManager
       min_percent     = @settings.min_percent
 
     if @settings.filter_by_state
+      location_filter     = "#{@settings.preferred_state}"
       preferred_state_alt = "#{location_filter} "
-      stmt = @db.prepare("select name, counts from matches
+      result = @db.execute("select name, counts from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
@@ -161,7 +175,8 @@ class DatabaseManager
         and (gender is null or gender=?)
         order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
     else
-      stmt = @db.prepare("select name, counts from matches
+      location_filter = @settings.max_distance
+      result = @db.execute("select name, counts from matches
        where (last_visit <= ? or last_visit is null)
        and counts between ? and ?
        and (distance <= ? or distance is null)
@@ -171,7 +186,6 @@ class DatabaseManager
        and (gender is null or gender=?)
        order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
     end
-    result = stmt.execute
     result
   end
 

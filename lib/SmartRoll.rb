@@ -155,8 +155,18 @@ class SmartRoll
     puts ""
   end
 
-  def summary
+  def payload
+    @db.open
+    @harvester.test_more_matches
+    @harvester.scrape_activity_feed
+    @harvester.scrape_inbox
+    @harvester.scrape_home_page
     check_visitors
+    @db.close
+  end
+
+  def summary
+    payload
     puts ""
     puts "Results: "
     puts "Visited:  #{@total_visits} people"
@@ -170,10 +180,11 @@ class SmartRoll
     @total_visitors = 0
     @total_visits = 0
     @start_time = Time.now.to_i
-    check_visitors
+    payload
   end
 
   def visit_user(user)
+    @db.open
     @browser.go_to("http://www.okcupid.com/profile/#{user}/", user)
     if inactive_account
       remove_match(user)
@@ -185,6 +196,7 @@ class SmartRoll
       @current_state = @user.state
       autodiscover_new_users if @user.gender == "F"
     end
+    @db.close
   end
 
   def roll
@@ -194,7 +206,7 @@ class SmartRoll
       @selection.each do |user, counts, state|
         visit_user(user)
         sleep 6
-        check_visitors if unix_time >= event_time
+        payload if unix_time >= event_time
       end
     rescue Interrupt
     end

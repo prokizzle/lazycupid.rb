@@ -204,8 +204,23 @@ class Harvester
     @count.to_i
   end
 
-  def scrape_matches_page
-    @browser.go_to("http://www.okcupid.com/match")
+  def test_more_matches
+    10.times do
+      @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
+      parsed = JSON.parse(@browser.current_user.content).to_hash
+      html = parsed["html"]
+      @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
+
+      # @database.open
+      @details.each {|i| @database.add_user(i[0])}
+      # @database.close
+      sleep 2
+    end
+
+  end
+
+  def scrape_matches_page(url="http://www.okcupid.com/match")
+    @browser.go_to(url)
     @current_user       = @browser.current_user
     @matches_page       = @current_user.parser.xpath("//div[@id='match_results']").to_html
     @details    = @matches_page.scan(/\/([\w\s_-]+)\?cf=regular".+<p class="aso" style="display:"> (\d{2})<span>&nbsp;\/&nbsp;<\/span> (M|F)<span>&nbsp;\/&nbsp;<\/span>(\w)+<span>&nbsp;\/&nbsp;<\/span>\w+ <\/p> <p class="location">([\w\s-]+), ([\w\s]+)<\/p>/)

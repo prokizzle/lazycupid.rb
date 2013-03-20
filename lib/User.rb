@@ -86,7 +86,7 @@ class Users
 
   def smoking
     # display_code if debug
-    /smoking.>(.+)<.dd>/.match(body)[1].to_s
+    /smoking.>(.*)<.dd>/.match(body)[1].to_s
   end
 
   def drinking
@@ -99,6 +99,15 @@ class Users
 
   def kids
     /children.>(.+)<\/dd>/.match(body)[1].to_s
+  end
+
+  def last_online
+    begin
+    result = /(\d{10}),..JOURNAL_FORMAT./.match(body)[1].to_i
+    result
+  rescue
+   Time.now.to_i if body.match(/Online now\!/)
+  end
   end
 
   def count

@@ -9,12 +9,13 @@ class Settings
       config = {distance: 200,
                 min_percent: 60,
                 min_age: 18,
+                gender: 'F',
                 max_age: 60,
                 days_ago: 4,
                 preferred_state: 'Massachusetts',
                 filter_by_state: false,
                 max_followup: 15,
-                debug: true,
+                debug: false,
                 verbose: true
                 }
       File.open(@filename, "w") do |f|

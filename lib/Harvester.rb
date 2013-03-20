@@ -147,7 +147,7 @@ class Harvester
     puts @visitors_page if debug
     wait = gets.chomp if debug
 
-    @gender     = Hash.new("F")
+    @gender     = Hash.new("Q")
     @age        = Hash.new(0)
     @sexuality  = Hash.new(0)
     @state      = Hash.new(0)
@@ -178,7 +178,6 @@ class Harvester
 
       unless @stored_timestamp == @timestamp
         @count += 1
-        self.increment_visitor_counter(visitor)
 
         puts visitor if verbose
 
@@ -186,33 +185,61 @@ class Harvester
         puts "Setting gender: #{@settings.gender}" if verbose
 
 
-        if @gender[visitor] == @settings.gender
-          @database.add_user(visitor)
-          @database.set_gender(:username => visitor, :gender => "F")
-          @database.set_state(:username => visitor, :state => @state[visitor])
-        else
-          @database.ignore_user(visitor)
-          @database.set_gender(:username => visitor, :gender => "M")
-        end
+        @database.add_user(visitor)
+
+        @database.ignore_user(visitor) unless @gender[visitor] == @settings.gender
+
+        @database.set_gender(:username => visitor, :gender => @gender[visitor])
+        @database.set_state(:username => visitor, :state => @state[visitor])
 
       end
 
       @database.set_visitor_timestamp(visitor, @timestamp.to_i)
-
+      increment_visitor_counter(visitor)
     end
 
     @count.to_i
   end
 
+  def log_this(item)
+    File.open("scraped.log", "w") do |f|
+      f.write(item)
+    end
+    wait = gets.chomp
+  end
+
   def test_more_matches
-    10.times do
+    5.times do
       @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
       parsed = JSON.parse(@browser.current_user.content).to_hash
       html = parsed["html"]
       @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
-
+      html_doc = Nokogiri::HTML(html)
       # @database.open
-      @details.each {|i| @database.add_user(i[0])}
+
+      @gender     = Hash.new("Q")
+      @age        = Hash.new(0)
+      # @sexuality  = Hash.new(0)
+      @state      = Hash.new(0)
+      @city       = Hash.new(0)
+
+      @details.each do |user|
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+
+        age = "#{result.match(/(\d{2})/)}".to_i
+        gender = "#{result.match(/(M|F)</)[1]}"
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
+        city = /location.>(.+),\s(.+)</.match(result)[1].to_s
+        state = /location.>(.+),\s(.+)</.match(result)[2].to_s
+        # puts city, state
+        username = user[0].to_s
+        @database.add_user(username)
+        @database.set_gender(:username => username, :gender => gender)
+        @database.set_age(username, age)
+        @database.set_city(username, city)
+        @database.set_state(:username => username, :state => state)
+      end
+
       # @database.close
       sleep 2
     end
@@ -251,12 +278,12 @@ class Harvester
     @count  = 0
     matches_list.each do |username, zindex|
 
-          @database.add_user(username)
-          @database.set_gender(:username => username, :gender => "F")
-          @database.set_age(username, @age[username])
-          @database.set_city(username, @city[username])
-          @database.set_sexuality(username, @sexuality[username])
-          @database.set_state(:username => username, :state => @state[username])
+      @database.add_user(username)
+      @database.set_gender(:username => username, :gender => "F")
+      @database.set_age(username, @age[username])
+      @database.set_city(username, @city[username])
+      @database.set_sexuality(username, @sexuality[username])
+      @database.set_state(:username => username, :state => @state[username])
 
     end
 
@@ -298,7 +325,7 @@ class Harvester
   def scrape_activity_feed
     puts "Scraping activity feed." if verbose
     @browser.go_to("http://www.okcupid.com/home?cf=logo")
-    results = body.scan(/([\w\d_-]+)\?cf=home_orbits.>.</)
+    results = body.scan(/\/profile\/([\w\d_-]+)\?cf=home_orbits.>.</)
     results.each do |user|
       handle = user[0]
       @database.add_user(handle)

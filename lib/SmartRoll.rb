@@ -194,7 +194,7 @@ class SmartRoll
       @tally += 1
       @db.log2(@user)
       @current_state = @user.state
-      autodiscover_new_users if @user.gender == "F"
+      autodiscover_new_users if @user.gender == @settings.gender
     end
     @db.close
   end

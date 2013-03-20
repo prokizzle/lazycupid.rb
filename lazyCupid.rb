@@ -134,12 +134,6 @@ class Roller
     close_db
   end
 
-  def gender_fix(d)
-    open_db
-    @smarty.gender_fix(d)
-    close_db
-  end
-
   def reset_ignored_list
     open_db
     db.reset_ignored_list
@@ -351,7 +345,7 @@ until quit
         sleep 10
         application.scrape_matches_page
         sleep 10
-        application.new_roll if application.get_new_user_counts >= 100
+        application.new_roll if application.get_new_user_counts >= 50
         application.range_roll if application.get_follow_up_counts >= 100
         # application.range_rollq
         # (:min_value => 1, :max_value => 10)

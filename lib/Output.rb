@@ -35,7 +35,7 @@ class Output
   end
 
   def log(user)
-    puts "#{@username}: #{user.handle}; #{user.match_percentage}%; #{user.state}; #{user.relative_distance}; #{@you.visited(user.handle)}"
+    puts "#{@username}: #{user.handle}; #{user.match_percentage}%; #{user.state}; #{user.relative_distance}; #{@you.visited(user.handle)}; #{Time.at(user.last_online).ago.to_words}"
   end
 
   def travel_plans(user)

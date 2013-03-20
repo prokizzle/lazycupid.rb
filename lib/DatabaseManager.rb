@@ -19,11 +19,7 @@ class DatabaseManager
 
   def db_migrations
     begin
-      @db.execute("alter table matches add column smoking text")
-      @db.execute("alter table matches add column drinking text")
-      @db.execute("alter table matches add column drugs text")
-      @db.execute("alter table matches add column height text")
-      @db.execute("alter table matches add column body_type text")
+      @db.execute("alter table matches add column last_online integer")
     rescue
     end
   end
@@ -83,8 +79,7 @@ class DatabaseManager
     unless existsCheck(username) || username == "pictures"
       puts "Adding user:        #{username}" if verbose
       @db.transaction
-      @db.execute( "insert into matches(name, counts, ignored) values (?, ?, ?)", username, count, 'false')
-      set_time_added(:username => username)
+      @db.execute( "insert into matches(name, counts, ignored, time_added) values (?, ?, ?, ?)", username, count, 'false', Time.now.to_i)
       @db.commit
     else
       puts "User already in db: #{username}" if verbose
@@ -342,6 +337,14 @@ class DatabaseManager
     @db.execute("select kids from matches where name=?", user)
   end
 
+  def set_last_online(user, date)
+    @db.execute("update matches set last_online=? where name=?", date, user)
+  end
+
+  def get_last_online(user)
+    result = @db.execute("select last_online from matches where name=?", user)
+    result[0][0].to_i
+  end
 
   def set_distance(args)
     user = args[ :username]
@@ -507,6 +510,7 @@ class DatabaseManager
       set_drugs(user.handle, user.drugs)
       set_drinking(user.handle, user.drinking)
       set_height(user.handle, user.height)
+      set_last_online(user.handle, user.last_online)
     end
   end
 

@@ -48,7 +48,7 @@ class Roller
         ""
       end
     end
-      DatabaseManager.new(:login_name => @username, :settings => @config)
+    DatabaseManager.new(:login_name => @username, :settings => @config)
   end
 
   def fix_dates
@@ -307,7 +307,7 @@ until quit
   # application.scrape_inbox
   # application.scrape_activity_feed
   # application.harvest_home_page
-      application.welcome if application.first_login
+  application.welcome if application.first_login
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"

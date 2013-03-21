@@ -6,18 +6,19 @@ class Settings
     path      = args[ :path]
     @filename = "#{path}/#{@account}.yml"
     unless File.exists?(@filename)
-      config = {distance: 200,
-                min_percent: 60,
-                min_age: 18,
-                gender: 'F',
-                max_age: 60,
-                days_ago: 4,
-                preferred_state: 'Massachusetts',
-                filter_by_state: false,
-                max_followup: 15,
-                debug: false,
-                verbose: true
-                }
+      config = {
+        distance: 200,
+        min_percent: 60,
+        min_age: 18,
+        gender: 'F',
+        max_age: 60,
+        days_ago: 4,
+        preferred_state: 'Massachusetts',
+        filter_by_state: false,
+        max_followup: 15,
+        debug: false,
+        verbose: true
+      }
       File.open(@filename, "w") do |f|
         f.write(config.to_yaml)
       end

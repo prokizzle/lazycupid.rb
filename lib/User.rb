@@ -103,11 +103,11 @@ class Users
 
   def last_online
     begin
-    result = /(\d{10}),..JOURNAL_FORMAT./.match(body)[1].to_i
-    result
-  rescue
-   Time.now.to_i if body.match(/Online now\!/)
-  end
+      result = /(\d{10}),..JOURNAL_FORMAT./.match(body)[1].to_i
+      result
+    rescue
+      Time.now.to_i if body.match(/Online now\!/)
+    end
   end
 
   def count

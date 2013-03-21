@@ -149,13 +149,13 @@ class DatabaseManager
 
   def followup_query
 
-      min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-      desired_gender  = @settings.gender
-      min_age         = @settings.min_age
-      max_age         = @settings.max_age
-      min_counts      = 1
-      max_counts      = @settings.max_followup
-      min_percent     = @settings.min_percent
+    min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+    desired_gender  = @settings.gender
+    min_age         = @settings.min_age
+    max_age         = @settings.max_age
+    min_counts      = 1
+    max_counts      = @settings.max_followup
+    min_percent     = @settings.min_percent
 
     if @settings.filter_by_state
       location_filter     = "#{@settings.preferred_state}"
@@ -186,16 +186,16 @@ class DatabaseManager
 
   def get_counts_of_follow_up
 
-      min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-      desired_gender  = @settings.gender
-      min_age         = @settings.min_age
-      max_age         = @settings.max_age
-      min_counts      = 1
-      max_counts      = @settings.max_followup
-      min_percent     = @settings.min_percent
+    min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+    desired_gender  = @settings.gender
+    min_age         = @settings.min_age
+    max_age         = @settings.max_age
+    min_counts      = 1
+    max_counts      = @settings.max_followup
+    min_percent     = @settings.min_percent
 
-        if @settings.filter_by_state
-          location_filter = "#{@settings.preferred_state}"
+    if @settings.filter_by_state
+      location_filter = "#{@settings.preferred_state}"
       preferred_state_alt = "#{@settings.preferred_state} "
       result = @db.execute("select count(name) as 'follow_ups'
         from matches
@@ -349,18 +349,18 @@ class DatabaseManager
   def set_distance(args)
     user = args[ :username]
     dist = args[ :distance]
-      @db.execute("update matches set distance=? where name=?", dist, user)
+    @db.execute("update matches set distance=? where name=?", dist, user)
   end
 
   def get_distance(args)
     user = args[ :username]
-      @db.execute("select distance from matches where name=?", user)
+    @db.execute("select distance from matches where name=?", user)
   end
 
   def set_state(args)
     user = args[ :username]
     state = args[ :state]
-      @db.execute("update matches set state=? where name=?", state, user)
+    @db.execute("update matches set state=? where name=?", state, user)
   end
 
   def set_age(user, age)
@@ -374,7 +374,7 @@ class DatabaseManager
 
   def set_time_added(args)
     user = args[ :username]
-      @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
+    @db.execute("update matches set time_added=? where name=?", Time.now.to_i, user)
   end
 
   def set_city(user, city)
@@ -389,7 +389,7 @@ class DatabaseManager
   def set_gender(args)
     user = args[ :username]
     gender = args[ :gender]
-      @db.execute("update matches set gender=? where name=?", gender, user)
+    @db.execute("update matches set gender=? where name=?", gender, user)
   end
 
   def get_gender(user)
@@ -397,7 +397,7 @@ class DatabaseManager
   end
 
   def set_sexuality(user, sexuality)
-      @db.execute("update matches set sexuality=? where name=?", sexuality, user)
+    @db.execute("update matches set sexuality=? where name=?", sexuality, user)
   end
 
   def get_sexuality(user)

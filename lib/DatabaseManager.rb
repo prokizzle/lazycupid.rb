@@ -19,7 +19,9 @@ class DatabaseManager
 
   def db_migrations
     begin
-      @db.execute("alter table matches add column last_online integer")
+      @db.execute("alter table matches add column ignore_list integer")
+      @db.execute("update matches set ignore_list=0 where ignored='false'")
+      @db.execute("update matches set ignore_list=1 where ignored='true'")
     rescue
     end
   end
@@ -133,7 +135,7 @@ class DatabaseManager
   def new_user_smart_query
     @db.execute("select name, counts, time_added from matches
     where (counts = 0 or counts is null)
-    and (ignored is 'false' or ignored is null)
+    and (ignore_list=0 or ignore_list is null)
     and (gender is null or gender=?)
     order by time_added asc", @settings.gender)
   end
@@ -141,7 +143,7 @@ class DatabaseManager
   def count_new_user_smart_query
     result = @db.execute("select count(name) as 'new_matches' from matches
     where (counts = 0 or counts is null)
-    and (ignored is 'false' or ignored is null)
+    and (ignore_list=0 or ignore_list is null)
     and (gender is null or gender=?)
     order by time_added asc", @settings.gender)
     result[0][0].to_i
@@ -164,7 +166,7 @@ class DatabaseManager
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
-        and ignored is not 'true'
+        and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)
@@ -175,7 +177,7 @@ class DatabaseManager
        where (last_visit <= ? or last_visit is null)
        and counts between ? and ?
        and (distance <= ? or distance is null)
-       and ignored is not 'true'
+       and ignore_list is not 1
        and (age between ? and ? or age is null)
        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
        and (gender is null or gender=?)
@@ -202,7 +204,7 @@ class DatabaseManager
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
-        and ignored is not 'true'
+        and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
@@ -213,7 +215,7 @@ class DatabaseManager
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (distance <= ? or distance is null)
-        and ignored is not 'true'
+        and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
@@ -540,7 +542,7 @@ class DatabaseManager
     end
     unless is_ignored(username)
       puts "Added to ignore list: #{username}" if verbose
-      @db.execute( "update matches set ignored='true' where name=?", username)
+      @db.execute( "update matches set ignore_list=1 where name=?", username)
     else
       puts "User already ignored: #{username}" if verbose
     end

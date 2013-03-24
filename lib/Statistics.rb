@@ -1,6 +1,6 @@
 class Statistics
-  attr_reader :visitors, :start_time, :visited
-  attr_accessor :visitors, :start_time, :visited
+  attr_reader :visitors, :start_time, :visited, :autodiscover_on
+  attr_accessor :visitors, :start_time, :visited, :autodiscover_on
 
   def initialize
 

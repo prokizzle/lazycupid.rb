@@ -1,5 +1,15 @@
 class Settings
-  attr_reader :max_distance, :min_percent, :min_age, :max_age, :days_ago, :preferred_state, :max_followup, :debug, :verbose, :gender
+  attr_reader :max_distance,
+              :min_percent,
+              :min_age,
+              :max_age,
+              :days_ago,
+              :preferred_state,
+              :max_followup,
+              :debug,
+              :verbose,
+              :gender,
+              :autodiscover_on
 
   def initialize(args)
     @account  = args[ :username]
@@ -15,6 +25,7 @@ class Settings
         days_ago: 4,
         preferred_state: 'Massachusetts',
         filter_by_state: false,
+        autodiscover_on: true,
         max_followup: 15,
         debug: false,
         verbose: true
@@ -48,6 +59,10 @@ class Settings
 
   def max_age
     @settings[:max_age].to_i
+  end
+
+  def autodiscover_on
+    @settings[:autodiscover_on] == true
   end
 
   def days_ago

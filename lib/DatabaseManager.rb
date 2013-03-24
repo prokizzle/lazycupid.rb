@@ -19,9 +19,9 @@ class DatabaseManager
 
   def db_migrations
     begin
-      @db.execute("alter table matches add column ignore_list integer")
-      @db.execute("update matches set ignore_list=0 where ignored='false'")
-      @db.execute("update matches set ignore_list=1 where ignored='true'")
+      @db.execute("alter table matches add column last_online integer")
+      # @db.execute("update matches set ignore_list=0 where ignored='false'")
+      # @db.execute("update matches set ignore_list=1 where ignored='true'")
     rescue
     end
   end
@@ -70,6 +70,8 @@ class DatabaseManager
       enemy_percent integer,
       last_msg_time integer,
       r_msg_count integer,
+      last_online integer,
+      ignore_list integer,
         PRIMARY KEY(name)
         )")
     rescue Exception => e
@@ -133,11 +135,11 @@ class DatabaseManager
   end
 
   def new_user_smart_query
-    @db.execute("select name, counts, time_added from matches
+    @db.execute("select name, counts, time_added, last_online from matches
     where (counts = 0 or counts is null)
     and (ignore_list=0 or ignore_list is null)
     and (gender is null or gender=?)
-    order by time_added asc", @settings.gender)
+    order by last_online desc, time_added asc", @settings.gender)
   end
 
   def count_new_user_smart_query

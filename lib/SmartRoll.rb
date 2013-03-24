@@ -90,7 +90,7 @@ class SmartRoll
 
 
   def autodiscover_new_users
-    @harvester.scrape_from_user
+    @harvester.scrape_from_user if @settings.autodiscover_on
   end
 
   def user_ob_debug
@@ -203,7 +203,7 @@ class SmartRoll
     begin
       # @bar = ProgressBar.new(@selection.size)
       pre_roll_actions
-      @selection.each do |user, counts, state|
+      @selection.each do |user, _, _, _|
         visit_user(user)
         sleep 6
         payload if unix_time >= event_time

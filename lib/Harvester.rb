@@ -229,15 +229,18 @@ class Harvester
         age = "#{result.match(/(\d{2})/)}".to_i
         gender = "#{result.match(/(M|F)</)[1]}"
         result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
-        city = /location.>(.+),\s(.+)</.match(result)[1].to_s
-        state = /location.>(.+),\s(.+)</.match(result)[2].to_s
         # puts city, state
         username = user[0].to_s
         @database.add_user(username)
         @database.set_gender(:username => username, :gender => gender)
         @database.set_age(username, age)
+        begin
+        city = /location.>(.+),\s(.+)</.match(result)[1].to_s
+        state = /location.>(.+),\s(.+)</.match(result)[2].to_s
         @database.set_city(username, city)
         @database.set_state(:username => username, :state => state)
+      rescue
+      end
       end
 
       # @database.close

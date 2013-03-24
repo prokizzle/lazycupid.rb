@@ -161,10 +161,12 @@ class DatabaseManager
     max_counts      = @settings.max_followup
     min_percent     = @settings.min_percent
 
-    if @settings.filter_by_state
+    case @settings.distance_filter_type
+    when "state"
       location_filter     = "#{@settings.preferred_state}"
       preferred_state_alt = "#{location_filter} "
-      result = @db.execute("select name, counts from matches
+      result              = @db.execute("
+        select name, counts from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
@@ -172,18 +174,58 @@ class DatabaseManager
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
         and (gender is null or gender=?)
-        order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
-    else
+        order by visit_count desc",
+                                        min_time.to_i,
+                                        min_counts,
+                                        max_counts,
+                                        location_filter,
+                                        preferred_state_alt,
+                                        min_age,
+                                        max_age,
+                                        min_percent,
+                                        desired_gender)
+    when "distance"
       location_filter = @settings.max_distance
-      result = @db.execute("select name, counts from matches
-       where (last_visit <= ? or last_visit is null)
-       and counts between ? and ?
-       and (distance <= ? or distance is null)
-       and ignore_list is not 1
-       and (age between ? and ? or age is null)
-       and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-       and (gender is null or gender=?)
-       order by visit_count desc", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
+      result          = @db.execute("
+        select name, counts from matches
+         where (last_visit <= ? or last_visit is null)
+         and counts between ? and ?
+         and (distance <= ? or distance is null)
+         and ignore_list is not 1
+         and (age between ? and ? or age is null)
+         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+         and (gender is null or gender=?)
+         order by visit_count desc",
+                                    min_time.to_i,
+                                    min_counts,
+                                    max_counts,
+                                    location_filter,
+                                    min_age,
+                                    max_age,
+                                    min_percent,
+                                    desired_gender)
+    when "city"
+      location_filter     = "#{@settings.preferred_city}"
+      preferred_city_alt  = "#{location_filter} "
+      result              = @db.execute("
+        select name, counts from matches
+          where (last_visit <= ? or last_visit is null)
+          and counts between ? and ?
+          and (city = ? or city = ? or city is null)
+          and ignore_list is not 1
+          and (age between ? and ? or age is null)
+          and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+          and (gender is null or gender=?)
+          order by visit_count desc",
+                                        min_time.to_i,
+                                        min_counts,
+                                        max_counts,
+                                        location_filter,
+                                        preferred_city_alt,
+                                        min_age,
+                                        max_age,
+                                        min_percent,
+                                        desired_gender)
     end
     result
   end
@@ -198,10 +240,12 @@ class DatabaseManager
     max_counts      = @settings.max_followup
     min_percent     = @settings.min_percent
 
-    if @settings.filter_by_state
-      location_filter = "#{@settings.preferred_state}"
+    case @settings.distance_filter_type
+    when "state"
+      location_filter     = "#{@settings.preferred_state}"
       preferred_state_alt = "#{@settings.preferred_state} "
-      result = @db.execute("select count(name) as 'follow_ups'
+      result              = @db.execute("
+        select count(name) as 'follow_ups'
         from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
@@ -209,10 +253,42 @@ class DatabaseManager
         and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
-    else
-      location_filter = "#{@settings.max_distance}"
-      result = @db.execute("select count(name) as 'follow_ups'
+        and (gender is null or gender=?)",
+                                        min_time.to_i,
+                                        min_counts,
+                                        max_counts,
+                                        location_filter,
+                                        preferred_state_alt,
+                                        min_age,
+                                        max_age,
+                                        min_percent,
+                                        desired_gender)
+    when "city"
+      location_filter     = "#{@settings.preferred_city}"
+      preferred_city_alt = "#{@settings.preferred_city} "
+      result              = @db.execute("
+        select count(name) as 'follow_ups'
+        from matches
+        where (last_visit <= ? or last_visit is null)
+        and counts between ? and ?
+        and (city = ? or city = ? or city is null)
+        and ignore_list is not 1
+        and (age between ? and ? or age is null)
+        and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+        and (gender is null or gender=?)",
+                                        min_time.to_i,
+                                        min_counts,
+                                        max_counts,
+                                        location_filter,
+                                        preferred_city_alt,
+                                        min_age,
+                                        max_age,
+                                        min_percent,
+                                        desired_gender)
+    when "distance"
+      location_filter     = "#{@settings.max_distance}"
+      result              = @db.execute("
+        select count(name) as 'follow_ups'
         from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
@@ -220,7 +296,16 @@ class DatabaseManager
         and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=?)", min_time.to_i, min_counts, max_counts, location_filter, min_age, max_age, min_percent, desired_gender)
+        and (gender is null or gender=?)",
+                                        min_time.to_i,
+                                        min_counts,
+                                        max_counts,
+                                        location_filter,
+                                        min_age,
+                                        max_age,
+                                        min_percent,
+                                        desired_gender)
+
     end
     # result.close
     result[0][0].to_i

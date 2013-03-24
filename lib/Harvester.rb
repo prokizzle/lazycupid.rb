@@ -58,8 +58,8 @@ class Harvester
     @settings.preferred_state
   end
 
-  def filter_by_state?
-    @settings.filter_by_state == true
+  def preferred_city
+    @settings.preferred_city
   end
 
   def scrape_from_user
@@ -71,10 +71,14 @@ class Harvester
     # puts "by state:     #{filter_by_state?}" if verbose
     # puts "Max dist:     #{max_distance}" if verbose
     # puts "Rel dist:     #{@user.relative_distance}" if verbose
-    unless filter_by_state?
-      @user.relative_distance <= max_distance
-    else
+
+    case @settings.distance_filter_type
+    when "state"
       @user.state == preferred_state
+    when "city"
+      @user.city == preferred_city
+    when "distance"
+      @user.relative_distance <= max_distance
     end
   end
 

@@ -71,23 +71,9 @@ class SmartRoll
     sleep 2
   end
 
-  def filter_by_state?
-    @settings.filter_by_state
-  end
-
-  def preferred_state
-    @settings.preferred_state
-  end
-
-  def max_distance
-    @settings.max_distance
-  end
-
   def build_range
-
     @selection = @db.followup_query
   end
-
 
   def autodiscover_new_users
     @harvester.scrape_from_user if @settings.autodiscover_on
@@ -208,7 +194,7 @@ class SmartRoll
         sleep 6
         payload if unix_time >= event_time
       end
-    rescue Interrupt
+    rescue Interrupt, SystemExit
     end
     summary
   end

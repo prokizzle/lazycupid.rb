@@ -9,27 +9,40 @@ class Settings
               :debug,
               :verbose,
               :gender,
-              :autodiscover_on
+              :autodiscover_on,
+              :distance_filter_type
 
   def initialize(args)
     @account  = args[ :username]
     path      = args[ :path]
     @filename = "#{path}/#{@account}.yml"
     unless File.exists?(@filename)
-      config = {
-        distance: 200,
-        min_percent: 60,
-        min_age: 18,
-        gender: 'F',
-        max_age: 60,
-        days_ago: 4,
-        preferred_state: 'Massachusetts',
-        filter_by_state: false,
-        autodiscover_on: true,
-        max_followup: 15,
-        debug: false,
-        verbose: true
-      }
+      config = {geo: {
+                  :distance_filter_type => "state",
+                  :preferred_state => "California",
+                  :preferred_city => "San Diego",
+                  :distance => 8000
+                          },
+                matching: {
+                  :min_percent => 50,
+                  :friend_percent => 0,
+                  :enemy_percent => 0,
+                  :min_age => 18,
+                  :max_age => 45,
+                  :gender => "F"
+                  },
+                visit_freq: {
+                  :days_ago => 3,
+                  :max_followup => 15
+                  },
+                scraping: {
+                  :autodiscover_on => true
+                  },
+                  development: {
+                    :verbose => true,
+                    :debug => false
+                    }
+                  }
       File.open(@filename, "w") do |f|
         f.write(config.to_yaml)
       end
@@ -41,52 +54,56 @@ class Settings
     @settings = YAML.load_file(@filename)
   end
 
-  def max_distance
-    @settings[:distance].to_i
-  end
-
-  def gender
-    @settings[:gender].to_s
-  end
-
-  def min_percent
-    @settings[:min_percent].to_i
-  end
-
-  def min_age
-    @settings[:min_age].to_i
-  end
-
-  def max_age
-    @settings[:max_age].to_i
-  end
-
-  def autodiscover_on
-    @settings[:autodiscover_on] == true
-  end
-
-  def days_ago
-    @settings[:days_ago].to_i
+  def distance_filter_type
+    @settings[:geo][:distance_filter_type].to_s
   end
 
   def preferred_state
-    @settings[:preferred_state].to_s
+    @settings[:geo][:preferred_state].to_s
+  end
+
+  def preferred_city
+    @settings[:geo][:preferred_city].to_s
+  end
+
+  def max_distance
+    @settings[:geo][:distance].to_i
+  end
+
+  def min_percent
+    @settings[:matching][:min_percent].to_i
+  end
+
+  def gender
+    @settings[:matching][:gender].to_s
+  end
+
+  def min_age
+    @settings[:matching][:min_age].to_i
+  end
+
+  def max_age
+    @settings[:matching][:max_age].to_i
+  end
+
+  def autodiscover_on
+    @settings[:scraping][:autodiscover_on] == true
+  end
+
+  def days_ago
+    @settings[:visit_freq][:days_ago].to_i
   end
 
   def max_followup
-    @settings[:max_followup].to_i
-  end
-
-  def filter_by_state
-    @settings[:filter_by_state]
+    @settings[:visit_freq][:max_followup].to_i
   end
 
   def debug
-    @settings[:debug] == true
+    @settings[:development][:debug] == true
   end
 
   def verbose
-    @settings[:verbose] == true
+    @settings[:development][:verbose] == true
   end
 
 

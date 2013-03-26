@@ -19,7 +19,7 @@ class DatabaseManager
 
   def db_migrations
     begin
-      # @db.execute("alter table matches add column ignore_list integer")
+      @db.execute("alter table matches add column ignore_list integer")
       @db.execute("update matches set ignore_list=0 where ignored='false'")
       @db.execute("update matches set ignore_list=1 where ignored='true'")
     rescue

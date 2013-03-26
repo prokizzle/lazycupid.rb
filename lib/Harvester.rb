@@ -196,10 +196,10 @@ class Harvester
         @database.set_gender(:username => visitor, :gender => @gender[visitor])
         @database.set_state(:username => visitor, :state => @state[visitor])
 
+      increment_visitor_counter(visitor)
       end
 
       @database.set_visitor_timestamp(visitor, @timestamp.to_i)
-      increment_visitor_counter(visitor)
     end
 
     @count.to_i
@@ -213,44 +213,45 @@ class Harvester
   end
 
   def test_more_matches
-    5.times do
-      @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
-      parsed = JSON.parse(@browser.current_user.content).to_hash
-      html = parsed["html"]
-      @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
-      html_doc = Nokogiri::HTML(html)
-      # @database.open
+    Exceptional.rescue do
+      5.times do
+        @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
+        parsed = JSON.parse(@browser.current_user.content).to_hash
+        html = parsed["html"]
+        @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
+        html_doc = Nokogiri::HTML(html)
+        # @database.open
 
-      @gender     = Hash.new("Q")
-      @age        = Hash.new(0)
-      # @sexuality  = Hash.new(0)
-      @state      = Hash.new(0)
-      @city       = Hash.new(0)
+        @gender     = Hash.new("Q")
+        @age        = Hash.new(0)
+        # @sexuality  = Hash.new(0)
+        @state      = Hash.new(0)
+        @city       = Hash.new(0)
 
-      @details.each do |user|
-        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+        @details.each do |user|
+          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
 
-        age = "#{result.match(/(\d{2})/)}".to_i
-        gender = "#{result.match(/(M|F)</)[1]}"
-        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
-        # puts city, state
-        username = user[0].to_s
-        @database.add_user(username)
-        @database.set_gender(:username => username, :gender => gender)
-        @database.set_age(username, age)
-        begin
-        city = /location.>(.+),\s(.+)</.match(result)[1].to_s
-        state = /location.>(.+),\s(.+)</.match(result)[2].to_s
-        @database.set_city(username, city)
-        @database.set_state(:username => username, :state => state)
-      rescue
+          age = "#{result.match(/(\d{2})/)}".to_i
+          gender = "#{result.match(/(M|F)</)[1]}"
+          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
+          # puts city, state
+          username = user[0].to_s
+          @database.add_user(username)
+          @database.set_gender(:username => username, :gender => gender)
+          @database.set_age(username, age)
+          begin
+            city = /location.>(.+),\s(.+)</.match(result)[1].to_s
+            state = /location.>(.+),\s(.+)</.match(result)[2].to_s
+            @database.set_city(username, city)
+            @database.set_state(:username => username, :state => state)
+          rescue
+          end
+        end
+
+        # @database.close
+        sleep 2
       end
-      end
-
-      # @database.close
-      sleep 2
     end
-
   end
 
   def scrape_matches_page(url="http://www.okcupid.com/match")

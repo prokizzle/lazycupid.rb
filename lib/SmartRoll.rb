@@ -186,32 +186,34 @@ class SmartRoll
   end
 
   def roll
-    begin
-      # @bar = ProgressBar.new(@selection.size)
-      pre_roll_actions
-      @selection.each do |user, _, _, _|
-        visit_user(user)
-        sleep 6
-        payload if unix_time >= event_time
+    Exceptional.rescue do
+      begin
+        # @bar = ProgressBar.new(@selection.size)
+        pre_roll_actions
+        @selection.each do |user, _, _, _|
+          visit_user(user)
+          sleep 6
+          payload if unix_time >= event_time
+        end
+      rescue Interrupt, SystemExit
+        puts "","Stopping..."
       end
-    rescue Interrupt, SystemExit
     end
     summary
   end
 
-  def gender_fix(days)
-    build_queue_no_gender(days)
-    roll
-  end
-
   def run_range
-    build_range
-    roll
+    Exceptional.rescue do
+      build_range
+      roll
+    end
   end
 
   def run_new_users_only
-    build_queues_new_users
-    roll
+    Exceptional.rescue do
+      build_queues_new_users
+      roll
+    end
   end
 
   def test_bug

@@ -288,7 +288,9 @@ begin
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
-    application = Roller.new(:username => username, :password => password)
+    Exceptional.rescue do
+      application = Roller.new(:username => username, :password => password)
+    end
     if application.login
       logged_in = true
       login_message = "Success. Initializing."

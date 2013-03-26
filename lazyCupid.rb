@@ -8,31 +8,33 @@ class Roller
 
 
   def initialize(args)
-    @username     = args[ :username]
-    @password     = args[ :password]
-    path          = File.dirname($0) + '/config/'
-    @config       = Settings.new(:username => username, :path => path)
-    @browser      = Session.new(:username => username, :password => password)
-    @db           = initialize_db
-    # @prefs      = Preferences.new(:browser => @browser)
-    @blocklist    = BlockList.new(:database => db, :browser => @browser)
-    @search       = Lookup.new(:database => db)
-    @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
-    @user         = Users.new(:database => db, :browser => @browser)
-    @harvester    = Harvester.new(
-      :browser => @browser,
-      :database => db,
-      :profile_scraper => @user,
-    :settings => @config)
-    @smarty     = SmartRoll.new(
-      :database => db,
-      :blocklist => blocklist,
-      :harvester => @harvester,
-      :profile_scraper => @user,
-      :browser => @browser,
-      :gui => @display,
-    :settings => @config)
-    @first_login = false
+    Exceptional.rescue do
+      @username     = args[ :username]
+      @password     = args[ :password]
+      path          = File.dirname($0) + '/config/'
+      @config       = Settings.new(:username => username, :path => path)
+      @browser      = Session.new(:username => username, :password => password)
+      @db           = initialize_db
+      # @prefs      = Preferences.new(:browser => @browser)
+      @blocklist    = BlockList.new(:database => db, :browser => @browser)
+      @search       = Lookup.new(:database => db)
+      @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
+      @user         = Users.new(:database => db, :browser => @browser)
+      @harvester    = Harvester.new(
+        :browser => @browser,
+        :database => db,
+        :profile_scraper => @user,
+      :settings => @config)
+      @smarty     = SmartRoll.new(
+        :database => db,
+        :blocklist => blocklist,
+        :harvester => @harvester,
+        :profile_scraper => @user,
+        :browser => @browser,
+        :gui => @display,
+      :settings => @config)
+      @first_login = false
+    end
   end
 
   def initialize_db
@@ -288,9 +290,9 @@ begin
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
-    Exceptional.rescue do
-      application = Roller.new(:username => username, :password => password)
-    end
+    # Exceptional.rescue do
+    application = Roller.new(:username => username, :password => password)
+    # end
     if application.login
       logged_in = true
       login_message = "Success. Initializing."

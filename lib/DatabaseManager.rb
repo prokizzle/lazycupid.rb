@@ -18,12 +18,11 @@ class DatabaseManager
   end
 
   def db_migrations
-    begin
-      @db.execute("alter table matches add column ignore_list integer")
-      @db.execute("update matches set ignore_list=0 where ignored='false'")
-      @db.execute("update matches set ignore_list=1 where ignored='true'")
-    rescue
-    end
+    # Exceptional.rescue do
+    #   @db.execute("alter table matches add column ignore_list integer")
+    #   @db.execute("update matches set ignore_list=0 where ignored='false'")
+    #   @db.execute("update matches set ignore_list=1 where ignored='true'")
+    # end
   end
 
   def action(stmt)
@@ -57,21 +56,21 @@ class DatabaseManager
         match_percentage integer,
         state text,
         city text,
-      time_added text,
-      smoking text,
-      drinking text,
-      kids text,
-      drugs text,
-      height text,
-      body_type text,
-      distance integer,
-      match_percent integer,
-      friend_percent integer,
-      enemy_percent integer,
-      last_msg_time integer,
-      r_msg_count integer,
-      last_online integer,
-      ignore_list integer,
+        time_added text,
+        smoking text,
+        drinking text,
+        kids text,
+        drugs text,
+        height text,
+        body_type text,
+        distance integer,
+        match_percent integer,
+        friend_percent integer,
+        enemy_percent integer,
+        last_msg_time integer,
+        r_msg_count integer,
+        last_online integer,
+        ignore_list integer,
         PRIMARY KEY(name)
         )")
     rescue Exception => e

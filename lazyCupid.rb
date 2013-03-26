@@ -329,10 +329,12 @@ until quit
 
   case mode
   when "n"
+    puts "Starting..."
     application.new_roll
   when "m"
     application.check_visitors_loop
   when "f"
+    puts "Starting..."
     application.range_roll
   when "s"
     application.scrape_matches_page
@@ -363,8 +365,6 @@ until quit
     end
   when "10"
     application.test_prefs
-  when "b"
-    application.test_bug
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"

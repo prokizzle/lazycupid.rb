@@ -196,7 +196,7 @@ class Harvester
         @database.set_gender(:username => visitor, :gender => @gender[visitor])
         @database.set_state(:username => visitor, :state => @state[visitor])
 
-      increment_visitor_counter(visitor)
+        increment_visitor_counter(visitor)
       end
 
       @database.set_visitor_timestamp(visitor, @timestamp.to_i)
@@ -213,7 +213,7 @@ class Harvester
   end
 
   def test_more_matches
-    Exceptional.rescue do
+    begin
       5.times do
         @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
         parsed = JSON.parse(@browser.current_user.content).to_hash
@@ -240,17 +240,22 @@ class Harvester
           @database.set_gender(:username => username, :gender => gender)
           @database.set_age(username, age)
           begin
-            city = /location.>(.+),\s(.+)</.match(result)[1].to_s
-            state = /location.>(.+),\s(.+)</.match(result)[2].to_s
+            city = ""
+            state = ""
+            city = /location.>(.+),\s(.+)</.match(result)[1].to_s if /location.>(.+),\s(.+)</.match(result)
+            state = /location.>(.+),\s(.+)</.match(result)[2].to_s if /location.>(.+),\s(.+)</.match(result)
             @database.set_city(username, city)
             @database.set_state(:username => username, :state => state)
-          rescue
+          rescue Exception => e
+            Exceptional.handle(e, 'Location reg ex')
           end
         end
 
         # @database.close
         sleep 2
       end
+    rescue Exception => e
+      Exceptional.handle(e, 'More matches scraper')
     end
   end
 
@@ -365,13 +370,13 @@ class Harvester
 
     total       = highest
     puts "Total messages: #{total}" if verbose
-    @bar         = ProgressBar.new(total, :counter) unless verbose
-    @bar.increment! 1 unless verbose
+    # @bar         = ProgressBar.new(total, :counter) unless verbose
+    # @bar.increment! 1 unless verbose
     do_page_action("http://www.okcupid.com/messages")
     low         = items_per_page + 1
 
     until low >= total
-      @bar.increment! 30 unless verbose
+      # @bar.increment! 30 unless verbose
       # do_page_action
       low += items_per_page
       @browser.go_to("http://www.okcupid.com/messages?low=#{low}&folder=1")

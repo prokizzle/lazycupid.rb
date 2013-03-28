@@ -29,7 +29,8 @@ class Application
         :gui => @display,
       :settings => @config)
       @first_login = false
-      @scrape_event_time = Time.now.to_i
+      @scrape_event_time = 0
+      @quit_event_time = Chronic.parse('3 days from now')
     end
   end
 
@@ -154,19 +155,19 @@ class Application
   end
 
   def multi_scrape
+    @scrape_event_time = Chronic.parse('30 minutes from now')
     harvest_home_page
     scrape_activity_feed
     scrape_inbox
     check_visitors
-    @scrape_event_time = Chronic.parse('30 minutes from now').to_i
   end
 
   def check_if_should_quit
-    false
+    Time.now.to_i >= @quit_event_time.to_i
   end
 
   def check_scrape_event
-    multi_scrape if @scrape_event_time <= Time.now.to_i
+    multi_scrape if @scrape_event_time.to_i <= Time.now.to_i
   end
 
   def check_if_should_visit_new_users
@@ -205,16 +206,24 @@ begin
       login_message = "Incorrect password. Try again."
     end
   end
+rescue Exception => e
+  Exceptional.handle(e, 'Login workflow')
 rescue SystemExit, Interrupt
   quit = true
   logout = false
   puts "","","Goodbye."
 end
 
-
-until quit
-  app.check_scrape_event
-  app.check_if_should_visit_new_users
-  app.check_if_should_follow_up
-  quit = app.check_if_should_quit
+begin
+  until quit
+    app.check_scrape_event
+    app.check_if_should_visit_new_users
+    app.check_if_should_follow_up
+    quit = app.check_if_should_quit
+    puts "Idle" # until #{Time.at(@scrape_event_time)}
+  end
+rescue Exception => e
+  Exceptional.handle(e, 'Main loop')
+rescue SystemExit, Interrupt
+  puts "Goodbye"
 end

@@ -3,7 +3,6 @@ require './includes'
 class Application
 
   def initialize(args)
-    Exceptional.rescue do
       @username     = args[ :username]
       @password     = args[ :password]
       path          = File.dirname($0) + '/config/'
@@ -16,22 +15,23 @@ class Application
       @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
       @user         = Users.new(:database => db, :browser => @browser)
       @harvester    = Harvester.new(
-        :browser => @browser,
-        :database => db,
+        :browser    => @browser,
+        :database   => db,
         :profile_scraper => @user,
-      :settings => @config)
-      @smarty     = SmartRoll.new(
-        :database => db,
-        :blocklist => blocklist,
-        :harvester => @harvester,
+      :settings     => @config)
+      @smarty       = SmartRoll.new(
+        :database   => db,
+        :blocklist  => blocklist,
+        :harvester  => @harvester,
         :profile_scraper => @user,
-        :browser => @browser,
-        :gui => @display,
-      :settings => @config)
-      @first_login = false
-      @scrape_event_time = 0
-      @quit_event_time = Chronic.parse('3 days from now')
-    end
+        :browser    => @browser,
+        :gui        => @display,
+      :settings     => @config)
+      @first_login        = false
+      @scrape_event_time  = 0
+      @quit_event_time    = Chronic.parse('3 days from now')
+      is_idle             = false
+
   end
 
   def initialize_db
@@ -69,14 +69,23 @@ class Application
     @db
   end
 
+  def is_idle
+    @is_idle
+  end
+
   def close_db
     # puts "Debug: Closing database."
+    # db.close
+  end
+
+  def exit_db
     db.close
   end
 
+
   def open_db
     # puts "Debug: Opening database"
-    db.open
+    # db.open
   end
 
   def blocklist
@@ -84,29 +93,21 @@ class Application
   end
 
   def test_more_matches
-    open_db
     @harvester.test_more_matches
-    close_db
   end
 
   def get_new_user_counts
-    open_db
     result = db.count_new_user_smart_query
-    close_db
     result.to_i
   end
 
   def get_follow_up_counts
-    open_db
     result = db.get_counts_of_follow_up
-    close_db
     result
   end
 
   def ignore_hidden_users
-    open_db
     @blocklist.import_hidden_users
-    close_db
   end
 
   def logout
@@ -114,27 +115,19 @@ class Application
   end
 
   def harvest_home_page
-    open_db
     @harvester.scrape_home_page
-    close_db
   end
 
   def scrape_activity_feed
-    open_db
     @harvester.scrape_activity_feed
-    close_db
   end
 
   def scrape_inbox
-    open_db
     @harvester.scrape_inbox
-    close_db
   end
 
   def check_visitors
-    open_db
     result = @harvester.visitors
-    close_db
     result
   end
 
@@ -143,15 +136,11 @@ class Application
   end
 
   def range_roll
-    open_db
     @smarty.run_range
-    close_db
   end
 
   def new_roll
-    open_db
     @smarty.run_new_users_only
-    close_db
   end
 
   def multi_scrape
@@ -226,4 +215,5 @@ rescue Exception => e
   Exceptional.handle(e, 'Main loop')
 rescue SystemExit, Interrupt
   puts "Goodbye"
+  app.exit_db
 end

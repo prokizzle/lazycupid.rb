@@ -138,6 +138,7 @@ class Harvester
   def increment_message_counter(user)
     original = @database.get_received_messages_count(user)
     new_counter = original + 1
+    @database.stats_add_new_messages(1)
 
     @database.set_received_messages_count(user, new_counter)
   end
@@ -202,6 +203,7 @@ class Harvester
       @database.set_visitor_timestamp(visitor, @timestamp.to_i)
     end
 
+    @database.stats_add_visitors(@count.to_i)
     @count.to_i
   end
 

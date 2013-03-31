@@ -7,6 +7,7 @@ class DatabaseManager
     db_migrations
     @verbose  = @settings.verbose
     @debug    = @settings.debug
+    @did_migrate = false
   end
 
   def db
@@ -23,6 +24,8 @@ class DatabaseManager
     #   @db.execute("update matches set ignore_list=0 where ignored='false'")
     #   @db.execute("update matches set ignore_list=1 where ignored='true'")
     # end
+    # @db.execute("alter table stats add column total_messages integer")
+    # @db.execute("update stats set total_messages=0 where id=1")
   end
 
   def action(stmt)
@@ -33,7 +36,7 @@ class DatabaseManager
 
   def open_db
     @db = SQLite3::Database.new( "./db/#{@login}.db" )
-    # import
+    import unless @did_migrate
   end
 
   def open
@@ -74,8 +77,68 @@ class DatabaseManager
         PRIMARY KEY(name)
         )")
     rescue Exception => e
+      # puts e.message
+      puts e.message
+      # Exceptional.handle(e, 'Database')
+    end
+
+    begin
+      @db.execute("
+        create table stats(
+          total_visits integer,
+          total_visitors integer,
+          new_users integer,
+          total_messages integer,
+          id integer,
+          PRIMARY KEY(id)
+          )
+        ")
+      @db.execute("insert into stats(id, total_visitors, total_visits, new_users, total_messages) values (?, ?, ?, ?, ?)", 1, 0, 0, 0, 0)
+    rescue Exception => e
+      # Exceptional.handle(e, 'Database')
       puts e.message
     end
+    @did_migrate = true
+  end
+
+  def stats_add_visitors(number)
+    updated = stats_get_visitor_count + number.to_i
+    @db.execute("update stats set total_visitors=?", updated)
+  end
+
+  def stats_add_visit
+    updated = stats_get_visits_count + 1
+    @db.execute("update stats set total_visits=?", updated)
+  end
+
+  def stats_add_new_user
+    updated = stats_get_new_users_count + 1
+    @db.execute("update stats set new_users=?", updated)
+  end
+
+  def stats_add_new_messages(number)
+    updated = stats_get_total_messages + number.to_i
+    @db.execute("update stats set total_messages=?", updated)
+  end
+
+  def stats_get_visitor_count
+    result = @db.execute("select total_visitors from stats where id = 1")
+    result[0][0].to_i
+  end
+
+  def stats_get_visits_count
+    result = @db.execute("select total_visits from stats where id = 1")
+    result[0][0].to_i
+  end
+
+  def stats_get_new_users_count
+    result = @db.execute("select new_users from stats where id = 1")
+    result[0][0].to_i
+  end
+
+  def stats_get_total_messages
+    result = @db.execute("select total_messages from stats where id = 1")
+    result[0][0].to_i
   end
 
   def add_user(username, count=0)
@@ -84,6 +147,7 @@ class DatabaseManager
       @db.transaction
       @db.execute( "insert into matches(name, counts, ignored, time_added) values (?, ?, ?, ?)", username, count, 'false', Time.now.to_i)
       @db.commit
+      stats_add_new_user
     else
       puts "User already in db: #{username}" if verbose
     end
@@ -600,6 +664,7 @@ class DatabaseManager
       set_height(user.handle, user.height)
       set_last_online(user.handle, user.last_online)
     end
+    stats_add_visit
   end
 
   def reset_ignored_list
@@ -653,8 +718,14 @@ class DatabaseManager
 
   def close
     # @db.commit
+    # @db.close
+    puts "you missed one."
+  end
+
+  def exit_db
     @db.close
   end
+
 
   def commit
     @db.commit

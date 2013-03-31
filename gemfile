@@ -7,3 +7,4 @@ gem "chronic"
 gem "time-lord"
 gem "airbrake"
 gem 'exceptional'
+gem 'beaneater'

@@ -142,13 +142,11 @@ class SmartRoll
   end
 
   def payload
-    @db.open
     @harvester.test_more_matches
     @harvester.scrape_activity_feed
     @harvester.scrape_inbox
     @harvester.scrape_home_page
     check_visitors
-    @db.close
   end
 
   def summary
@@ -170,7 +168,6 @@ class SmartRoll
   end
 
   def visit_user(user)
-    @db.open
     @browser.go_to("http://www.okcupid.com/profile/#{user}/", user)
     if inactive_account
       remove_match(user)
@@ -182,7 +179,6 @@ class SmartRoll
       @current_state = @user.state
       autodiscover_new_users if @user.gender == @settings.gender
     end
-    @db.close
   end
 
   def roll

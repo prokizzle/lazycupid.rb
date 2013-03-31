@@ -146,7 +146,7 @@ class Roller
 
   def close_db
     # puts "Debug: Closing database."
-    db.close
+    # db.close
   end
 
   def open_db

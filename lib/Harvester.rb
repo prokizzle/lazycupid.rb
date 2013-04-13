@@ -171,6 +171,8 @@ class Harvester
       @state[handle]      = state
       @sexuality[handle]  = sexuality
       @age[handle]        = age
+
+      puts user if debug && gender == "Q"
     end
 
     visitor_list   = @visitors_page.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
@@ -190,7 +192,7 @@ class Harvester
         puts "Setting gender: #{@settings.gender}" if verbose
 
 
-        @database.add_user(visitor)
+        @database.add_user(visitor) unless @gender[visitor] == "Q"
 
         @database.ignore_user(visitor) unless @gender[visitor] == @settings.gender
 
@@ -249,7 +251,8 @@ class Harvester
             @database.set_city(username, city)
             @database.set_state(:username => username, :state => state)
           rescue Exception => e
-            Exceptional.handle(e, 'Location reg ex')
+            puts e.message
+            # Exceptional.handle(e, 'Location reg ex')
           end
         end
 
@@ -257,7 +260,8 @@ class Harvester
         sleep 2
       end
     rescue Exception => e
-      Exceptional.handle(e, 'More matches scraper')
+      puts e.message
+      # Exceptional.handle(e, 'More matches scraper')
     end
   end
 

@@ -26,6 +26,7 @@ class DatabaseManager
     # end
     # @db.execute("alter table stats add column total_messages integer")
     # @db.execute("update stats set total_messages=0 where id=1")
+    @db.execute("delete from matches where gender=?", "Q")
   end
 
   def action(stmt)
@@ -78,7 +79,7 @@ class DatabaseManager
         )")
     rescue Exception => e
       # puts e.message
-      puts e.message
+      puts e.message if verbose
       # Exceptional.handle(e, 'Database')
     end
 
@@ -96,8 +97,9 @@ class DatabaseManager
       @db.execute("insert into stats(id, total_visitors, total_visits, new_users, total_messages) values (?, ?, ?, ?, ?)", 1, 0, 0, 0, 0)
     rescue Exception => e
       # Exceptional.handle(e, 'Database')
-      puts e.message
+      puts e.message if verbose
     end
+    db_migrations
     @did_migrate = true
   end
 
@@ -117,8 +119,7 @@ class DatabaseManager
   end
 
   def stats_add_new_messages(number)
-    updated = stats_get_total_messages + number.to_i
-    @db.execute("update stats set total_messages=?", updated)
+    @db.execute("update stats set total_messages=? where id = 1", get_total_received_message_count)
   end
 
   def stats_get_visitor_count
@@ -515,6 +516,11 @@ class DatabaseManager
     @db.execute("update matches set state=? where name=?", state, user)
   end
 
+  def get_state(user)
+    result = @db.execute("select state from matches where name=?", user)
+    result[0][0].to_s
+  end
+
   def set_age(user, age)
     @db.execute("update matches set age=? where name=?", age.to_i, user)
   end
@@ -627,6 +633,15 @@ class DatabaseManager
     end
   end
 
+  def get_total_received_message_count
+    result = @db.execute("select count(name) as 'senders' from matches where r_msg_count is not null")
+    result[0][0].to_i
+  end
+
+  def get_all_message_senders
+    @db.execute("select name, city, state from matches where r_msg_count is not null")
+  end
+
   def log(match_name, match_percent=0)
     if existsCheck(match_name)
       count = get_visit_count(match_name) + 1
@@ -674,13 +689,13 @@ class DatabaseManager
 
   def is_ignored(username)
     add_user(username) unless existsCheck(username)
-    result = @db.execute( "select ignored from matches where name=?", username)
+    result = @db.execute( "select ignore_list from matches where name=?", username)
     # to_boolean(result[0][0].to_s)
-    begin
-      (result[0][0].to_s == "true")
-    rescue
-      false
-    end
+    # begin
+      result[0][0].to_i == 1
+    # rescue
+      # false
+    # end
   end
 
   def send_command(command)
@@ -700,11 +715,10 @@ class DatabaseManager
   end
 
   def unignore_user(username)
-    @db.execute( "update matches set ignored='false' where name=?", username)
+    @db.execute( "update matches set ignore_list=0 where name=?", username)
   end
 
   def existsCheck(username)
-    # begin
     temp = @db.execute( "select 1 where exists(
           select 1
           from matches

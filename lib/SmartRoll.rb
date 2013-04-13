@@ -182,7 +182,7 @@ class SmartRoll
   end
 
   def roll
-    Exceptional.rescue do
+    # Exceptional.rescue do
       begin
         # @bar = ProgressBar.new(@selection.size)
         pre_roll_actions
@@ -194,22 +194,22 @@ class SmartRoll
       rescue Interrupt, SystemExit
         puts "","Stopping..."
       end
-    end
+    # end
     summary
   end
 
   def run_range
-    Exceptional.rescue do
+    # Exceptional.rescue do
       build_range
       roll
-    end
+    # end
   end
 
   def run_new_users_only
-    Exceptional.rescue do
+    # Exceptional.rescue do
       build_queues_new_users
       roll
-    end
+    # end
   end
 
   def test_bug

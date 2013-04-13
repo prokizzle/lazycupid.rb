@@ -8,7 +8,7 @@ class Roller
 
 
   def initialize(args)
-    Exceptional.rescue do
+    # Exceptional.rescue do
       @username     = args[ :username]
       @password     = args[ :password]
       path          = File.dirname($0) + '/config/'
@@ -34,7 +34,7 @@ class Roller
         :gui => @display,
       :settings => @config)
       @first_login = false
-    end
+    # end
   end
 
   def initialize_db

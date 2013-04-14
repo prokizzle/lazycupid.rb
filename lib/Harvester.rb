@@ -10,6 +10,7 @@ class Harvester
     @database     = args[ :database]
     @user         = args[ :profile_scraper]
     @settings     = args[ :settings]
+    @events       = args[ :events]
     @verbose      = @settings.verbose
     @debug        = @settings.debug
   end
@@ -207,6 +208,50 @@ class Harvester
 
     @database.stats_add_visitors(@count.to_i)
     @count.to_i
+  end
+
+  def location_array(location)
+    result = location.scan(/,/)
+    if result.size == 2
+      city = location.match(/(.+), (.+), (.+)/)[1]
+      state = location.match(/(.+), (.+), (.+)/)[2]
+      country = location.match(/(.+), (.+), (.+)/)[3]
+    elsif result.size == 1
+      city = location.match(/(.+), (.+)/)[1]
+      state = location.match(/(.+), (.+)/)[2]
+    end
+    {:city => city, :state => state}
+  end
+
+
+  def visitor_event
+    response = @events.visitor_event
+    unless response == nil
+      visitor     = response[:handle]
+      timestamp   = response[:time].to_i
+      gender      = response[:gender]
+      distance    = response[:distance]
+      match       = response[:match]
+      sexuality   = response[:sexuality]
+      location    = response[:location]
+      city        = location_array(location)[:city]
+      state       = location_array(location)[:state]
+
+      @stored_timestamp = @database.get_visitor_timestamp(visitor).to_i
+
+      unless @stored_timestamp == timestamp
+
+        @database.add_user(visitor)
+        @database.ignore_user(visitor) unless gender == @settings.gender
+        @database.set_gender(:username => visitor, :gender => gender)
+        @database.set_state(:username => visitor, :state => state)
+
+        increment_visitor_counter(visitor)
+      end
+      @database.set_visitor_timestamp(visitor, timestamp)
+    @database.stats_add_visitors(1)
+
+    end
   end
 
   def log_this(item)

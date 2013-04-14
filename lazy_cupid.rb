@@ -14,13 +14,14 @@ class Application
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
     @user         = Users.new(:database => db, :browser => @browser)
-    @scheduler     = Rufus::Scheduler.start_new
-
+    @scheduler    = Rufus::Scheduler.start_new
+    @events       = EventWatcher.new(:browser => @browser)
     @harvester    = Harvester.new(
-      :browser    => @browser,
-      :database   => db,
+      :browser         => @browser,
+      :database        => db,
       :profile_scraper => @user,
-    :settings     => @config)
+      :settings        => @config,
+      :events          => @events)
     @smarty       = SmartRoll.new(
       :database   => db,
       :blocklist  => blocklist,
@@ -164,19 +165,19 @@ class Application
 
   def multi_scrape
     @scrape_event_time = Chronic.parse('30 minutes from now')
-    begin
+    # begin
       harvest_home_page
       scrape_activity_feed
       scrape_inbox
       check_visitors
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace
-    rescue SystemExit, Interrupt
-      puts "Goodbye"
-      quit = true
-      app.exit_db
-    end
+    # rescue Exception => e
+      # puts e.message
+      # puts e.backtrace
+    # rescue SystemExit, Interrupt
+      # puts "Goodbye"
+      # quit = true
+      # app.exit_db
+    # end
   end
 
   def check_if_should_quit
@@ -206,6 +207,18 @@ class Application
         @idle = Chronic.parse('10 min from now').to_i
       end
     end
+  end
+
+  def visitor_event
+    @harvester.visitor_event
+  end
+
+  def roll
+    @smarty.roll
+  end
+
+  def pre_roll_actions
+    @smarty.pre_roll_actions
   end
 
 
@@ -245,25 +258,35 @@ rescue SystemExit, Interrupt
   puts "","","Goodbye."
 end
 
+app.pre_roll_actions
+
 app.scheduler.every '30m' do
   app.multi_scrape
 end
 
+app.scheduler.every '5s' do
+  app.visitor_event
+end
+
+app.scheduler.every '6s' do
+  app.roll
+end
+
 # app.import_hidden_users
 
-begin
-  until quit
-    app.check_what_to_do
-    quit = app.check_if_should_quit
-  end
-rescue Exception => e
+# begin
+  # until quit
+    # app.check_what_to_do
+    # quit = app.check_if_should_quit
+  # end
+# rescue Exception => e
   # Exceptional.handle(e)
-  puts e.message
-rescue SystemExit, Interrupt
-  puts "Goodbye"
-  quit = true
-  app.exit_db
-end
+  # puts e.message
+# rescue SystemExit, Interrupt
+  # puts "Goodbye"
+  # quit = true
+  # app.exit_db
+# end
 
 # app.scheduler.every '30min' do
 #   app.check_scrape_event
@@ -279,4 +302,4 @@ end
 #   puts "Idle"
 # end
 
-# app.scheduler.join
+app.scheduler.join

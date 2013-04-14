@@ -82,6 +82,16 @@ class EventWatcher
     # end
   end
 
+  def visitor_event
+    begin
+      if check_events[0][:type] == "stalk"
+        check_events[0]
+      end
+    rescue
+      nil
+    end
+  end
+
   def new_mail
     poll_response['num_unread'].to_i
   end

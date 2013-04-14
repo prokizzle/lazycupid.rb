@@ -65,6 +65,26 @@ class SmartRoll
     @selection = @db.new_user_smart_query
   end
 
+  def reload
+    result = @db.new_user_smart_query
+    if result.size <= 40
+      result = @db.followup_query
+    end
+    result
+  end
+
+  def cache
+    if @selection.size == 0
+      @selection = reload
+    else
+      @selection
+    end
+  end
+
+  def next_user
+    cache.shift
+  end
+
   def build_queue_no_gender(days)
     @selection = @db.no_gender(days_ago(days))
     puts "#{@selection.size} users queued up."
@@ -181,21 +201,26 @@ class SmartRoll
     end
   end
 
+  # def roll
+  #   # Exceptional.rescue do
+  #     begin
+  #       # @bar = ProgressBar.new(@selection.size)
+  #       pre_roll_actions
+  #       @selection.each do |user, _, _, _|
+  #         visit_user(user)
+  #         sleep 6
+  #         payload if unix_time >= event_time
+  #       end
+  #     rescue Interrupt, SystemExit
+  #       puts "","Stopping..."
+  #     end
+  #   # end
+  #   summary
+  # end
+
+
   def roll
-    # Exceptional.rescue do
-      begin
-        # @bar = ProgressBar.new(@selection.size)
-        pre_roll_actions
-        @selection.each do |user, _, _, _|
-          visit_user(user)
-          sleep 6
-          payload if unix_time >= event_time
-        end
-      rescue Interrupt, SystemExit
-        puts "","Stopping..."
-      end
-    # end
-    summary
+    visit_user(next_user[0])
   end
 
   def run_range

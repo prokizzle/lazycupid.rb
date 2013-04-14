@@ -249,7 +249,7 @@ app.scheduler.every '30m' do
   app.multi_scrape
 end
 
-app.import_hidden_users
+# app.import_hidden_users
 
 begin
   until quit

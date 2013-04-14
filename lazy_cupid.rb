@@ -115,7 +115,7 @@ class Application
     result
   end
 
-  def ignore_hidden_users
+  def import_hidden_users
     @blocklist.import_hidden_users
   end
 
@@ -248,6 +248,8 @@ end
 app.scheduler.every '30m' do
   app.multi_scrape
 end
+
+app.import_hidden_users
 
 begin
   until quit

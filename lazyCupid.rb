@@ -1,26 +1,64 @@
+#!/usr/bin/ruby
+
 require './includes'
 
 class Roller
-  attr_accessor :username, :password, :speed
-  attr_reader :username, :password, :speed
+  attr_accessor :username, :password, :speed, :first_login
+  attr_reader :username, :password, :speed, :first_login
 
 
   def initialize(args)
-    @username = args[ :username]
-    @password = args[ :password]
-    @speed = speed
-    @browser = Session.new(:username => self.username, :password => self.password)
-    @db = DatabaseManager.new(:login_name => self.username)
-    @blocklist = BlockList.new(:database => self.db, :browser => @browser)
-    @search = Lookup.new(:database => self.db)
-    @display = Output.new(:stats => @search, :username => self.username)
-    @user = Users.new(:database => self.db, :browser => @browser)
-    @harvester = Harvester.new(:browser => @browser, :database => self.db, :user_stats => @user)
-    @smarty = SmartRoll.new(:database => self.db, :blocklist => self.blocklist, :harvester => @harvester, :user_stats => @user, :browser => @browser, :gui => @display)
+    # Exceptional.rescue do
+      @username     = args[ :username]
+      @password     = args[ :password]
+      path          = File.dirname($0) + '/config/'
+      @config       = Settings.new(:username => username, :path => path)
+      @browser      = Session.new(:username => username, :password => password)
+      @db           = initialize_db
+      # @prefs      = Preferences.new(:browser => @browser)
+      @blocklist    = BlockList.new(:database => db, :browser => @browser)
+      @search       = Lookup.new(:database => db)
+      @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
+      @user         = Users.new(:database => db, :browser => @browser)
+      @harvester    = Harvester.new(
+        :browser => @browser,
+        :database => db,
+        :profile_scraper => @user,
+      :settings => @config)
+      @smarty     = SmartRoll.new(
+        :database => db,
+        :blocklist => blocklist,
+        :harvester => @harvester,
+        :profile_scraper => @user,
+        :browser => @browser,
+        :gui => @display,
+      :settings => @config)
+      @first_login = false
+    # end
+  end
+
+  def initialize_db
+    filename = "./db/#{@username}.db"
+    unless File.exists?(filename)
+      puts "Create new db for #{@username}?"
+      choice = gets.chomp
+      case choice
+      when "y"
+        tmp = DatabaseManager.new(:login_name => @username, :settings => @config)
+        tmp.import
+        tmp.close
+        @first_login = true
+      else
+        ""
+      end
+    end
+    DatabaseManager.new(:login_name => @username, :settings => @config)
   end
 
   def fix_dates
+    open_db
     @smarty.fix_blank_dates
+    close_db
   end
 
   def blocklist
@@ -31,12 +69,57 @@ class Roller
     @username
   end
 
+  def scrape_matches_page
+    open_db
+    @harvester.scrape_matches_page
+    close_db
+  end
+
+  def test_more_matches
+    open_db
+    @harvester.test_more_matches
+    close_db
+  end
+
   def clear
-    @display.clear
+    @display.clear_screen
   end
 
   def password
     @password
+  end
+
+  def max_match_distance
+    @config.max_distance
+  end
+
+  def min_match_percent
+    # Settings.match_preferences[:min_percent]
+    # @config['min_percent']
+  end
+
+  def min_match_age
+    # Settings.match_preferences[:min_age]
+    # @config['min_age']
+  end
+
+  def max_match_age
+    # Settings.match_preferences[:max_age]
+    # @config['max_age']
+  end
+
+  def get_new_user_counts
+    open_db
+    result = db.count_new_user_smart_query
+    close_db
+    result.to_i
+  end
+
+  def get_follow_up_counts
+    open_db
+    result = db.get_counts_of_follow_up
+    close_db
+    result
   end
 
   def db
@@ -44,32 +127,51 @@ class Roller
   end
 
   def visit_newbs
+    open_db
     @smarty.run2
+    close_db
   end
 
   def ignore_user(user)
+    open_db
     @blocklist.add(user)
+    close_db
   end
 
-  def gender_fix(d)
-    @smarty.gender_fix(d)
+  def reset_ignored_list
+    open_db
+    db.reset_ignored_list
+    close_db
   end
 
-  def smart_roller(max)
-    @smarty.max = max
-    @smarty.run
+  def close_db
+    # puts "Debug: Closing database."
+    # db.close
+  end
+
+  def open_db
+    # puts "Debug: Opening database"
+    db.open
   end
 
   def ignore_hidden_users
+    open_db
     @blocklist.import_hidden_users
+    close_db
   end
 
   def search(user)
+    open_db
     @search.byUser(user)
+    close_db
   end
 
   def logout
     @browser.logout
+  end
+
+  def config
+    @config
   end
 
   def logged_in
@@ -77,7 +179,19 @@ class Roller
   end
 
   def harvest_home_page
+    open_db
     @harvester.scrape_home_page
+    close_db
+  end
+
+  def reload_settings
+    @config.reload_settings
+  end
+
+  def scrape_activity_feed
+    open_db
+    @harvester.scrape_activity_feed
+    close_db
   end
 
   def login
@@ -85,68 +199,108 @@ class Roller
   end
 
   def add(user)
-    @db.add_new_match(user)
-    @db.save
+    open_db
+    @db.add_user(user)
+    close_db
   end
 
-  def range_roll(min, max)
-    @smarty.run_range(min, max)
+  def range_roll
+    open_db
+    @smarty.run_range
+    close_db
   end
 
   def new_roll
+    open_db
     @smarty.run_new_users_only
+    close_db
+  end
+
+  def first_login
+    @first_login
+  end
+
+  def welcome
+    first_login = false
+    puts "Welcome to Lazy Cupid, the easiest way to get noticed"
+    puts "on OKCupid. Using this will give you an unparalleled"
+    puts "advantage on this site. Be prepared for lots of new"
+    puts "attention."
+    puts "","Press enter to begin..."
+    wait = gets.chomp
+    ignore_hidden_users
+    new_roll
   end
 
   def check_visitors
-    @harvester.visitors
+    open_db
+    result = @harvester.visitors
+    close_db
+    result
   end
 
-  def test_user_object(user)
-    @browser.go_to("http://www.okcupid.com/profile/#{user}/")
-    puts @user.handle
-    puts @user.age
-    puts @user.sexuality
-    puts @user.handle
-    puts @user.city
-    puts @user.state
-    puts @user.gender
-    puts @user.relationship_status
-    puts @user.match_percentage
-  end
+
+  # def test_prefs
+  #   @prefs.get_match_preferences
+  # end
 
 
   def scrape_similar(user)
+    open_db
     @harvester.similar_user_scrape(user)
+    close_db
+  end
+
+  def scrape_inbox
+    open_db
+    @harvester.scrape_inbox
+    close_db
+  end
+
+  def track_msg_dates
+    open_db
+    @harvester.track_msg_dates
+    close_db
   end
 
   def check_visitors_loop
+    open_db
     puts "Monitoring visitors"
     begin
       loop do
-        @harvester.visitors
-        sleep 60
+        puts "#{@harvester.visitors} new visitors"
+        sleep 240
       end
     rescue SystemExit, Interrupt
     end
+    close_db
   end
 end
 
-puts "LazyCupid Main Menu","--------------------",""
-puts "Please login.",""
 
-quit = false
-logged_in = false
+login_message = "Please login."
+quit          = false
+logged_in     = false
 
 begin
-  while logged_in == false
+  until logged_in
+    print "\e[2J\e[f"
+    puts "LazyCupid Main Menu","--------------------",""
+    puts "#{login_message}",""
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
+    # Exceptional.rescue do
     application = Roller.new(:username => username, :password => password)
+    # end
     if application.login
       logged_in = true
+      login_message = "Success. Initializing."
+      print "\e[2J\e[f"
+      puts "LazyCupid Main Menu","--------------------",""
+      puts "#{login_message}",""
     else
-      puts "Incorrect password. Try again.",""
+      login_message = "Incorrect password. Try again."
     end
   end
 rescue SystemExit, Interrupt
@@ -154,56 +308,77 @@ rescue SystemExit, Interrupt
   logout = false
   puts "","","Goodbye."
 end
-
-while quit == false
-  application.check_visitors
+until quit
+  # puts "#{application.check_visitors} new visitors"
+  # application.scrape_inbox
+  # application.scrape_activity_feed
+  # application.harvest_home_page
+  application.welcome if application.first_login
   application.clear
   puts "LazyCupid Main Menu","--------------------","#{username}",""
   puts "Choose Mode:"
-  puts "(1) Smart Mode"
-  puts "(2) Visit new users"
-  puts "(3) Monitor Visitors"
-  puts "(4) Follow up"
-  puts "(5) Scrape home page"
+  puts "(n) Visit new users (#{application.get_new_user_counts})" if application.get_new_user_counts >= 100
+  puts "(m) Monitor Visitors"
+  puts "(f) Follow up (#{application.get_follow_up_counts})" if application.get_follow_up_counts >= 50
+  puts "(s) Scrape matches"
+  puts "(e) Endless mode"
   puts "(a) Admin menu"
   puts "(Q) Quit",""
   print "Mode: "
   mode = gets.chomp
 
   case mode
-  when "1"
-    print "Max: "
-    max = gets.chomp
-    # print "MPH: "
-    # mph = gets.chomp
-    application.smart_roller(max.to_i)
-  when "2"
+  when "n"
+    puts "Starting..."
     application.new_roll
-  when "3"
+  when "m"
     application.check_visitors_loop
-  when "4"
-    application.range_roll(2, 10)
-  when "5"
-    application.harvest_home_page
-  when "7"
-    application.visit_newbs
+  when "f"
+    puts "Starting..."
+    application.range_roll
+  when "s"
+    application.scrape_matches_page
   when "6"
     puts "User: "
     user = gets.chomp
     application.scrape_similar(user)
+  when "7"
+    application.test_more_matches
+  when "e"
+    begin
+      loop do
+        application.harvest_home_page
+        sleep 10
+        application.scrape_activity_feed
+        sleep 10
+        application.scrape_matches_page
+        sleep 10
+        application.new_roll if application.get_new_user_counts >= 50
+        application.range_roll if application.get_follow_up_counts >= 100
+        # application.range_rollq
+        # (:min_value => 1, :max_value => 10)
+      end
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    rescue SystemExit, Interrupt
+    end
+  when "10"
+    application.test_prefs
   when "a"
     puts "Admin Menu","-----"
     puts "(1) Add User"
     puts "(2) Lookup visit counts"
     puts "(3) Block user"
     puts "(4) Auto import hidden users to blocklist"
-    puts "(5) Populate blank genders"
+    puts "(5) Reload settings file"
+    puts "(6) Reset ignored list"
     choice = gets.chomp
     case choice
     when "1"
       print "User to add: "
       user = gets.chomp
-      application.add_user(user)
+      application.add(user)
     when "2"
       puts ""
       print "User: "
@@ -218,18 +393,29 @@ while quit == false
     when "4"
       application.ignore_hidden_users
     when "5"
-      application.gender_fix(5)
+      application.reload_settings
+    when "6"
+      application.reset_ignored_list
     end
   when "q"
     quit = true
+    @logout = true
+    application.close_db
   when "Q"
     quit = true
+    @logout = true
+    application.close_db
   else
     puts "Invalid selection."
   end
 end
-if logout == true
+if @logout
+  login_message = "Logging out."
+  print "\e[2J\e[f"
+  puts "LazyCupid Main Menu","--------------------",""
+  puts "#{login_message}",""
   application.logout
   application.clear
+  application.close_db
 end
 puts ""

@@ -8,11 +8,11 @@ class Lookup
     # @importer.import if manual_import
   end
 
-  def byUser(user)
+  def visited(user)
     @importer.get_visit_count(user)
   end
 
-  def visits(user)
+  def were_visited(user)
     @importer.get_visitor_count(user)
   end
 
@@ -35,21 +35,23 @@ class Lookup
   #   puts @date
   # end
 
-    def lastVisited(match_name)
-        @do = @match.select {|k,v| k == match_name}
-            @do.each do |k,v|
-                puts v
-            end
+  def last_visited(match_name)
+    result = @importer.get_my_last_visit_date(match_name)
+    if result >1
+      Time.at(result).ago.to_words
+    else
+      "never"
     end
+  end
 end
 
-  # if ARGV
-  #   puts "Your username: "
-  #   @account = gets.chomp
-  #   search = Lookup.new(@account)
-  #   puts "Their username: "
-  #   @username = gets.chomp
+# if ARGV
+#   puts "Your username: "
+#   @account = gets.chomp
+#   search = Lookup.new(@account)
+#   puts "Their username: "
+#   @username = gets.chomp
 
-  #   print "You have visited #{@username} " #if ARGV[0].to_s.match(/[A-z]+/)==true
-  #   puts search.byUser(username).to_s + " times." #if ARGV[0].to_s.match(/[A-z]+/)==true
-  # end
+#   print "You have visited #{@username} " #if ARGV[0].to_s.match(/[A-z]+/)==true
+#   puts search.byUser(username).to_s + " times." #if ARGV[0].to_s.match(/[A-z]+/)==true
+# end

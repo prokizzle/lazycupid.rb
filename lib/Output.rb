@@ -4,45 +4,85 @@ class Output
 
   def initialize(args)
     @username = args[ :username]
-    @search = args[ :stats]
+    @you      = args[ :stats]
+    @smarty   = args[ :smart_roller]
+    @distance_traveled = 0
+    @total_visited = 0
+    @total_visitors = 0
   end
 
-  def clear
+  def clear_screen
     print "\e[2J\e[f"
   end
 
-  def output(user, speed, mode="normal")
-    case mode
-    when "normal"
-      mode_name = "AutoRoller"
-    when "smart"
-      mode_name = "SmartRoller"
-    else
-      mode_name = "Funyon Monkey"
-    end
+  def output(user)
 
-    clear
+
+    clear_screen
     puts "",""
     puts "LazyCupid Ruby","========================="
-    puts "#{mode_name} @ #{speed} MPH","----------------------"
     puts "  For: #{@username}",""
     puts "  Visiting:    #{user.handle}"
     puts "  Match:       #{user.match_percentage}%"
     puts "  Gender:      #{user.gender}"
     puts "  Sexuality:   #{user.sexuality}"
     puts "  State:       #{user.state}"
-    puts "  Visits:      #{@search.byUser(user.handle)}"
-    puts "  Visited You: #{@search.visits(user.handle)}",""
+    puts "  Distance:    #{user.relative_distance}"
+    puts "  Visits:      #{@you.visited(user.handle)}"
+    puts "  Last visit:  #{@you.last_visited(user.handle)}"
+    puts "  Visited You: #{@you.were_visited(user.handle)}",""
     puts "to quit press ctrl-c"
   end
 
+  def log(user)
+    puts "#{@username}: #{user.handle}; #{user.match_percentage}%; #{user.city}, #{user.state}; #{user.relative_distance}; #{@you.visited(user.handle)}; #{Time.at(user.last_online).ago.to_words}"
+  end
+
+  def travel_plans(user)
+    puts "*******************"
+    @distance_traveled += (@last_destination.to_f - user.relative_distance.to_f).abs
+    puts "#{@username} is visting #{user.state},","#{user.relative_distance} miles away."
+    puts "Trip total: #{@distance_traveled}"
+    @last_destination = user.relative_distance.to_f
+  end
+
+  def dashboard(visited, visitors, start_time, progress_amount, current_state)
+
+    # messages = args[ :messages]
+    clear_screen
+    puts "LazyCupid Dashboard"
+    puts "--------------------","",""
+    puts "Started:   #{Time.at(start_time).ago.to_words}"
+    puts "Updated:   #{Time.now.hour}:#{Time.now.min}"
+    puts "Account:   #{@username}"
+    puts "Visited:   #{visited}"
+    puts "Visitors:  #{visitors}"
+    puts "State:     #{current_state}.",""
+
+    @bar.increment! progress_amount
+
+  end
+
+
   def progress(total_matches)
-
+    @bar = ProgressBar.new(total_matches, :counter, :eta)
   end
 
-  def update_progress
+  # def update_progress(amount)
+  #   @progress_amount = amount
+  # end
 
-  end
+  # def users_visited
+  #   @smarty.stats(:item => "visited")
+  # end
+
+  # def visitors_tally
+  #   @smarty.stats(:item => "visitors")
+  # end
+
+  # def roll_start_time
+  #   @smarty.stats(:item => "start_time")
+  # end
 
   def state_abbr(state)
     @state_abbr[state]

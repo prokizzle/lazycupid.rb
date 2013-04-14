@@ -1,0 +1,21 @@
+---
+:geo:
+  :distance_filter_type: state
+  :preferred_state: California
+  :preferred_city: San Diego
+  :distance: 8000
+:matching:
+  :min_percent: 50
+  :friend_percent: 0
+  :enemy_percent: 0
+  :min_age: 18
+  :max_age: 45
+  :gender: F
+:visit_freq:
+  :days_ago: 3
+  :max_followup: 15
+:scraping:
+  :autodiscover_on: true
+:development:
+  :verbose: true
+  :debug: false

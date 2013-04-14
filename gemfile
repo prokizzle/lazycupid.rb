@@ -3,3 +3,8 @@ gem "mechanize"
 gem "progress_bar"
 gem "highline"
 gem "sqlite3"
+gem "chronic"
+gem "time-lord"
+gem "airbrake"
+gem 'exceptional'
+gem 'beaneater'

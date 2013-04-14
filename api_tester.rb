@@ -2,7 +2,7 @@ require './includes'
 
 
 foo = Array.new
-browser = Session.new(:username => "danceyrselfcln", :password => "123457")
+browser = Session.new(:username => ARGV[0], :password => ARGV[1])
 app = EventWatcher.new(:browser => browser)
 puts "Logging in..."
 app.login

@@ -6,6 +6,7 @@ class Users
   def initialize(args)
     @db = args[ :database]
     @browser  = args[ :browser]
+    @log      = args[ :log]
     @verbose  = true
     @debug    = true
   end
@@ -29,7 +30,15 @@ class Users
   end
 
   def intended_handle
-    /\/profile\/(.+)/.match(@browser.url)[1]
+    temp_url = @browser.url
+    begin
+      /\/profile\/(.+)/.match(temp_url)[1]
+    rescue Exception => e
+      @log.debug "#{temp_url}"
+      @log.debug body
+      @log.debug "#{e.message}"
+      @log.debug "#{e.backtrace}"
+    end
   end
 
   def asl
@@ -91,14 +100,14 @@ class Users
   def smoking
     # display_code if debug
     # /smoking.>(.*)<.dd>/.match(body)[1].to_s
-   @browser.current_user.parser.xpath("//dd[@id='ajax_smoking']").text
+    @browser.current_user.parser.xpath("//dd[@id='ajax_smoking']").text
 
   end
 
   def drinking
     # /drinking.>(.+)<.dd>/.match(body)[1].to_s
     @browser.current_user.parser.xpath("//dd[@id='ajax_drinking']").text
-end
+  end
 
   def drugs
     /drugs.>(.+)<\/dd>/.match(body)[1].to_s

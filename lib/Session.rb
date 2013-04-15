@@ -8,7 +8,7 @@ class Session
     @password = args[ :password]
     path      = args[ :path]
     @agent = Mechanize.new
-    @log      = Logger.new("#{path}/#{Time.now}.txt")
+    @log      = args[ :log]
   end
 
   def login

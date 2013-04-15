@@ -7,14 +7,15 @@ class Application
     @password     = args[ :password]
     config_path          = File.dirname($0) + '/config/'
     log_path      = File.dirname($0) + '/logs/'
+    @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
-    @browser      = Session.new(:username => username, :password => password, :path => log_path)
+    @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @db           = initialize_db
     # @prefs      = Preferences.new(:browser => @browser)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
-    @user         = Users.new(:database => db, :browser => @browser)
+    @user         = Users.new(:database => db, :browser => @browser, :log => @log)
     @scheduler    = Rufus::Scheduler.start_new
     @events       = EventWatcher.new(:browser => @browser)
     @harvester    = Harvester.new(
@@ -138,8 +139,7 @@ class Application
   end
 
   def check_visitors
-    result = @harvester.visitors
-    result
+    @harvester.visitors
   end
 
   def login
@@ -165,20 +165,9 @@ class Application
   end
 
   def multi_scrape
-    @scrape_event_time = Chronic.parse('30 minutes from now')
-    # begin
     harvest_home_page
     scrape_activity_feed
     scrape_inbox
-    check_visitors
-    # rescue Exception => e
-    # puts e.message
-    # puts e.backtrace
-    # rescue SystemExit, Interrupt
-    # puts "Goodbye"
-    # quit = true
-    # app.exit_db
-    # end
   end
 
   def check_if_should_quit
@@ -263,6 +252,10 @@ app.pre_roll_actions
 
 app.scheduler.every '30m' do
   app.multi_scrape
+end
+
+app.scheduler.every '3h' do
+  app.check_visitors
 end
 
 app.scheduler.every '5s' do

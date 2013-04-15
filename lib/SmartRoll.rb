@@ -1,6 +1,4 @@
 class SmartRoll
-  attr_reader :max, :delete, :mode, :days
-  attr_accessor :max, :delete, :mode, :days
 
   def initialize(args)
     @db         = args[ :database]
@@ -103,7 +101,6 @@ class SmartRoll
         @console.log(@user) if verbose
         @tally += 1
         @db.log2(@user)
-        @current_state = @user.state
         autodiscover_new_users if @user.gender == @settings.gender
       end
     end

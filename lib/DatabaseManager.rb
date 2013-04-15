@@ -194,6 +194,10 @@ class DatabaseManager
     @db.execute( "update matches set counts=? where name=?", number.to_i, match_name )
   end
 
+  def rename_alist_user(old_name, new_name)
+    @db.execute("update matches set name=? where name=?", old_name, new_name)
+  end
+
   def no_gender(days)
     @db.execute( "select name from matches where gender is null and last_visit<?", days )
   end

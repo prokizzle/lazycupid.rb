@@ -211,14 +211,14 @@ class Harvester
   end
 
   def location_array(location)
-    result = location.scan(/,/)
+    result    = location.scan(/,/)
     if result.size == 2
-      city = location.match(/(.+), (.+), (.+)/)[1]
-      state = location.match(/(.+), (.+), (.+)/)[2]
+      city    = location.match(/(.+), (.+), (.+)/)[1]
+      state   = location.match(/(.+), (.+), (.+)/)[2]
       country = location.match(/(.+), (.+), (.+)/)[3]
     elsif result.size == 1
-      city = location.match(/(.+), (.+)/)[1]
-      state = location.match(/(.+), (.+)/)[2]
+      city    = location.match(/(.+), (.+)/)[1]
+      state   = location.match(/(.+), (.+)/)[2]
     end
     {:city => city, :state => state}
   end
@@ -249,7 +249,7 @@ class Harvester
         increment_visitor_counter(visitor)
       end
       @database.set_visitor_timestamp(visitor, timestamp)
-    @database.stats_add_visitors(1)
+      @database.stats_add_visitors(1)
 
     end
   end

@@ -39,13 +39,17 @@ class Users
   def handle
 
     begin
-      result = body.match(/username.>([-_\w\d]+)</)[1]
+      # result = body.match(/username.>([-_\w\d]+)</)[1]
+      result = @browser.current_user.parser.xpath("//span[@id='basic_info_sn']").to_html
+      new_result = />(.*)</.match(result)[1]
+      result = new_result.to_s
     rescue
-      result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
+      puts @browser.handle
+      # result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
     end
 
     unless result == intended_handle
-      @db.delete_user(intended_handle)
+      @db.rename_alist_user(intended_handle, result)
       puts "A-list bug: #{intended_handle} is now #{result}" if verbose
     end
 
@@ -54,7 +58,9 @@ class Users
   end
 
   def match_percentage
-    />(\d+). Match.*/.match(body)[1].to_i
+    result = @browser.current_user.parser.xpath("//span[@class='match']").to_html
+    new_result = /(\d+)% Match/.match(result)[1]
+    new_result.to_i
   end
 
   def friend_percentage
@@ -162,13 +168,13 @@ class Users
 
   def sexuality
     result = @browser.current_user.parser.xpath("//span[@id='ajax_orientation']").to_html
-    sexuality = />(Straight|Bisexual|Gay)</.match(result)[1]
+    sexuality = />(.*)</.match(result)[1]
     sexuality.to_s
   end
 
   def gender
     result = @browser.current_user.parser.xpath("//span[@id='ajax_gender']").to_html
-    gender = />(M|F)</.match(result)[1]
+    gender = />(.*)</.match(result)[1]
     gender.to_s
   end
 

@@ -1,12 +1,14 @@
 class Session
-  attr_accessor :go_to, :agent, :body, :current_user, :handle
-  attr_reader :go_to, :agent, :body, :current_user, :handle
+  attr_accessor :go_to, :agent, :body, :current_user, :handle, :url
+  attr_reader :go_to, :agent, :body, :current_user, :handle, :url
 
 
   def initialize(args)
     @username = args[ :username]
     @password = args[ :password]
+    path      = args[ :path]
     @agent = Mechanize.new
+    @log      = Logger.new("#{path}/#{Time.now}.txt")
   end
 
   def login
@@ -41,13 +43,18 @@ class Session
     /logged_out/.match(@body)
   end
 
-  def go_to(url, handle=nil)
-    @handle = handle
-    begin
-      @current_user = @agent.get(url)
+  def go_to(link)
+    @url = link
+    # begin
+      @current_user = @agent.get(link)
+      @log.debug "#{@username}: #{@url}"
       @body = @current_user.parser.xpath("//body").to_html
-    rescue
-    end
+    # rescue
+    # end
+  end
+
+  def handle
+    /\/profile\/(.+)/.match(@url)[1]
   end
 
   def logout
@@ -60,31 +67,6 @@ class Session
 
   def body
     @body
-  end
-
-  def handle
-    @handle
-  end
-
-
-  def scrape_user_name
-    begin
-      @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
-    rescue
-      "N/A"
-    end
-  end
-
-  def scrape_match_percentage
-    begin
-      @match_per = @body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
-    rescue
-      begin
-        @match_per = @body.match(/<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
-      rescue
-        @match_per = "N/A"
-      end
-    end
   end
 
   def account_deleted

@@ -11,6 +11,7 @@ class SmartRoll
     @days       = 2
     @stats      = Statistics.new
     @selection  = Array.new
+    @selection  = reload
     @verbose    = @settings.verbose
     @debug      = @settings.debug
   end
@@ -24,10 +25,11 @@ class SmartRoll
   end
 
   def reload
-    result = @db.new_user_smart_query
-    if result.size <= 40
-      result = @db.followup_query
+    result = @db.new_user_smart_query.to_set
+    if result.size == 0
+      result = @db.followup_query.to_set
     end
+    result = result.to_a
     result
   end
 
@@ -40,7 +42,7 @@ class SmartRoll
   end
 
   def next_user
-    cache.shift
+    cache.shift[0]
   end
 
   def autodiscover_new_users
@@ -49,11 +51,11 @@ class SmartRoll
 
   def user_ob_debug
     begin
-    test = [@user.gender, @user.handle, @user.match_percentage, @user.city, @user.state]
+      test = [@user.gender, @user.handle, @user.match_percentage, @user.city, @user.state]
     rescue
-    puts @browser.body
-    puts "Scraping ERROR!"
-    user = gets.chomp
+      puts @browser.body
+      puts "Scraping ERROR!"
+      user = gets.chomp
     end
   end
 
@@ -93,7 +95,8 @@ class SmartRoll
 
   def visit_user(user)
     unless user == nil
-      @browser.go_to("http://www.okcupid.com/profile/#{user}/", user)
+      puts user.to_s
+      @browser.go_to("http://www.okcupid.com/profile/#{user}")
       if inactive_account
         remove_match(user)
       else
@@ -103,13 +106,21 @@ class SmartRoll
         @db.log2(@user)
         autodiscover_new_users if @user.gender == @settings.gender
       end
+    else
+      puts "User is nil"
+      puts user
     end
   end
 
   def roll
-    temp = nil
-    temp = next_user[0] unless cache.size == 0
-    visit_user(temp)
+    temp = next_user
+    unless temp == nil
+      visit_user(temp)
+      @already_idle == false
+    else
+      puts "Idle..." unless @already_idle
+      @already_idle = true
+    end
   end
 
 end

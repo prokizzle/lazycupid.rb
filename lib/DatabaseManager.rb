@@ -167,10 +167,6 @@ class DatabaseManager
     @db.execute("alter table matches add column ? ?", name, type)
   end
 
-  def delete_men
-    results = @db.execute("delete from matches where gender=?", "M")
-  end
-
   def get_match_names
     @db.execute( "select name from matches" )
   end
@@ -195,7 +191,24 @@ class DatabaseManager
   end
 
   def rename_alist_user(old_name, new_name)
-    @db.execute("update matches set name=? where name=?", old_name, new_name)
+    if existsCheck(new_name)
+      update_visit_count(new_name, get_visit_count(old_name) + get_visit_count(new_name) + 1)
+    else
+      add_user(new_name)
+      update_visit_count(new_name, get_visit_count(old_name))
+      set_gender(:username => new_name, :gender => get_gender(old_name))
+      # set_age(new_name, get_age(old_name))
+      set_city(new_name, get_city(old_name))
+      set_state(new_name, get_state(old_name))
+      set_visitor_counter(new_name, get_visitor_count(old_name))
+      set_visitor_timestamp(new_name, get_visitor_timestamp(old_name))
+      set_distance(new_name, get_distance(old_name))
+      set_match_percentage(new_name, get_match_percentage(old_name))
+      set_my_last_visit_date(new_name, get_my_last_visit_date(old_name))
+      set_received_messages_count(new_name, get_received_messages_count(old_name))
+      set_last_received_message_date(new_name, get_last_received_message_date(old_name))
+    end
+    delete_user(old_name)
   end
 
   def no_gender(days)
@@ -203,7 +216,7 @@ class DatabaseManager
   end
 
   def new_user_smart_query
-    @db.execute("select name, counts, time_added, last_online from matches
+    @db.execute("select name from matches
     where (counts = 0 or counts is null)
     and (ignore_list=0 or ignore_list is null)
     and (gender is null or gender=?)
@@ -234,15 +247,14 @@ class DatabaseManager
       location_filter     = "#{@settings.preferred_state}"
       preferred_state_alt = "#{location_filter} "
       result              = @db.execute("
-        select name, counts from matches
+        select name from matches
         where (last_visit <= ? or last_visit is null)
         and counts between ? and ?
         and (state = ? or state = ? or state is null)
         and ignore_list is not 1
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=?)
-        order by visit_count desc",
+        and (gender is null or gender=?)",
                                         min_time.to_i,
                                         min_counts,
                                         max_counts,
@@ -255,15 +267,14 @@ class DatabaseManager
     when "distance"
       location_filter = @settings.max_distance
       result          = @db.execute("
-        select name, counts from matches
+        select name from matches
          where (last_visit <= ? or last_visit is null)
          and counts between ? and ?
          and (distance <= ? or distance is null)
          and ignore_list is not 1
          and (age between ? and ? or age is null)
          and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-         and (gender is null or gender=?)
-         order by visit_count desc",
+         and (gender is null or gender=?)",
                                     min_time.to_i,
                                     min_counts,
                                     max_counts,
@@ -276,7 +287,7 @@ class DatabaseManager
       location_filter     = "#{@settings.preferred_city}"
       preferred_city_alt  = "#{location_filter} "
       result              = @db.execute("
-        select name, counts from matches
+        select name from matches
           where (last_visit <= ? or last_visit is null)
           and counts between ? and ?
           and (city = ? or city = ? or city is null)
@@ -284,7 +295,7 @@ class DatabaseManager
           and (age between ? and ? or age is null)
           and (match_percent between ? and 100 or match_percent is null or match_percent=0)
           and (gender is null or gender=?)
-          order by visit_count desc",
+",
                                         min_time.to_i,
                                         min_counts,
                                         max_counts,
@@ -396,8 +407,7 @@ class DatabaseManager
         and ignored is not 'true'
         and (age between ? and ? or age is null)
         and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=?)
-        order by visit_count desc", min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
+        and (gender is null or gender=?)", min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender)
   end
 
   def user_record_exists(user)
@@ -544,7 +554,7 @@ class DatabaseManager
   end
 
   def get_city(user)
-    result = @db.execute("select city from matches where user=?", user)
+    result = @db.execute("select city from matches where name=?", user)
     result[0][0].to_s
   end
 
@@ -696,9 +706,9 @@ class DatabaseManager
     result = @db.execute( "select ignore_list from matches where name=?", username)
     # to_boolean(result[0][0].to_s)
     # begin
-      result[0][0].to_i == 1
+    result[0][0].to_i == 1
     # rescue
-      # false
+    # false
     # end
   end
 
@@ -723,7 +733,7 @@ class DatabaseManager
   end
 
   def existsCheck(username)
-    temp = @db.execute( "select 1 where exists(
+    @db.execute( "select 1 where exists(
           select 1
           from matches
           where name = ?

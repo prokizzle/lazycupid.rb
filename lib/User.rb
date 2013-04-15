@@ -29,7 +29,7 @@ class Users
   end
 
   def intended_handle
-    @browser.handle
+    /\/profile\/(.+)/.match(@browser.url)[1]
   end
 
   def asl
@@ -40,12 +40,9 @@ class Users
 
     begin
       # result = body.match(/username.>([-_\w\d]+)</)[1]
-      result = @browser.current_user.parser.xpath("//span[@id='basic_info_sn']").to_html
-      new_result = />(.*)</.match(result)[1]
-      result = new_result.to_s
+      result = @browser.current_user.parser.xpath("//span[@id='basic_info_sn']").text
     rescue
-      puts @browser.handle
-      # result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
+      result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
     end
 
     unless result == intended_handle
@@ -58,7 +55,7 @@ class Users
   end
 
   def match_percentage
-    result = @browser.current_user.parser.xpath("//span[@class='match']").to_html
+    result = @browser.current_user.parser.xpath("//span[@class='match']").text
     new_result = /(\d+)% Match/.match(result)[1]
     new_result.to_i
   end
@@ -76,9 +73,7 @@ class Users
   end
 
   def age
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_age']").to_html
-    age = />(\d{2})</.match(result)[1]
-    age.to_i
+    result = @browser.current_user.parser.xpath("//span[@id='ajax_age']").text.to_i
   end
 
   def ethnicity
@@ -96,18 +91,14 @@ class Users
   def smoking
     # display_code if debug
     # /smoking.>(.*)<.dd>/.match(body)[1].to_s
-    result = @browser.current_user.parser.xpath("//dd[@id='ajax_smoking']").to_html
-    smoking = />(.*)</.match(result)[1]
-    smoking.to_s
+   @browser.current_user.parser.xpath("//dd[@id='ajax_smoking']").text
 
   end
 
   def drinking
     # /drinking.>(.+)<.dd>/.match(body)[1].to_s
-    result = @browser.current_user.parser.xpath("//dd[@id='ajax_drinking']").to_html
-    new_result = />(.*)</.match(result)[1]
-    new_result.to_s
-  end
+    @browser.current_user.parser.xpath("//dd[@id='ajax_drinking']").text
+end
 
   def drugs
     /drugs.>(.+)<\/dd>/.match(body)[1].to_s
@@ -131,9 +122,7 @@ class Users
   end
 
   def location
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_location']").to_html
-    location = />(.*)</.match(result)[1]
-    location.to_s
+    @browser.current_user.parser.xpath("//span[@id='ajax_location']").text
   end
 
   def city
@@ -167,15 +156,11 @@ class Users
 
 
   def sexuality
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_orientation']").to_html
-    sexuality = />(.*)</.match(result)[1]
-    sexuality.to_s
+    @browser.current_user.parser.xpath("//span[@id='ajax_orientation']").text
   end
 
   def gender
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_gender']").to_html
-    gender = />(.*)</.match(result)[1]
-    gender.to_s
+    @browser.current_user.parser.xpath("//span[@id='ajax_gender']").text
   end
 
   def relative_distance
@@ -187,9 +172,7 @@ class Users
   end
 
   def relationship_status
-        result = @browser.current_user.parser.xpath("//span[@id='ajax_status']").to_html
-        new_result = />(.*)</.match(result)[1]
-        new_result.to_s
+    @browser.current_user.parser.xpath("//span[@id='ajax_status']").text
   end
 
   def is_blocked

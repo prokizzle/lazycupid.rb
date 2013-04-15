@@ -5,9 +5,10 @@ class Application
   def initialize(args)
     @username     = args[ :username]
     @password     = args[ :password]
-    path          = File.dirname($0) + '/config/'
-    @config       = Settings.new(:username => username, :path => path)
-    @browser      = Session.new(:username => username, :password => password)
+    config_path          = File.dirname($0) + '/config/'
+    log_path      = File.dirname($0) + '/logs/'
+    @config       = Settings.new(:username => username, :path => config_path)
+    @browser      = Session.new(:username => username, :password => password, :path => log_path)
     @db           = initialize_db
     # @prefs      = Preferences.new(:browser => @browser)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
@@ -21,7 +22,7 @@ class Application
       :database        => db,
       :profile_scraper => @user,
       :settings        => @config,
-      :events          => @events)
+    :events          => @events)
     @smarty       = SmartRoll.new(
       :database   => db,
       :blocklist  => blocklist,
@@ -166,17 +167,17 @@ class Application
   def multi_scrape
     @scrape_event_time = Chronic.parse('30 minutes from now')
     # begin
-      harvest_home_page
-      scrape_activity_feed
-      scrape_inbox
-      check_visitors
+    harvest_home_page
+    scrape_activity_feed
+    scrape_inbox
+    check_visitors
     # rescue Exception => e
-      # puts e.message
-      # puts e.backtrace
+    # puts e.message
+    # puts e.backtrace
     # rescue SystemExit, Interrupt
-      # puts "Goodbye"
-      # quit = true
-      # app.exit_db
+    # puts "Goodbye"
+    # quit = true
+    # app.exit_db
     # end
   end
 
@@ -268,6 +269,10 @@ app.scheduler.every '5s' do
   app.visitor_event
 end
 
+app.scheduler.every '5m' do
+  app.test_more_matches
+end
+
 app.scheduler.every '6s' do
   app.roll
 end
@@ -275,17 +280,17 @@ end
 # app.import_hidden_users
 
 # begin
-  # until quit
-    # app.check_what_to_do
-    # quit = app.check_if_should_quit
-  # end
+# until quit
+# app.check_what_to_do
+# quit = app.check_if_should_quit
+# end
 # rescue Exception => e
-  # Exceptional.handle(e)
-  # puts e.message
+# Exceptional.handle(e)
+# puts e.message
 # rescue SystemExit, Interrupt
-  # puts "Goodbye"
-  # quit = true
-  # app.exit_db
+# puts "Goodbye"
+# quit = true
+# app.exit_db
 # end
 
 # app.scheduler.every '30min' do

@@ -223,34 +223,51 @@ class Harvester
     {:city => city, :state => state}
   end
 
+  def track_visitor(person)
+    visitor   = person[:visitor]
+    timestamp = person[:timestamp]
+    gender    = person[:gender]
+    distance  = person[:distance]
+    match     = person[:match]
+    sexuality = person[:sexuality]
+    location  = person[:location]
+    city      = person[:city]
+    state     = person[:state]
+
+    @stored_timestamp = @database.get_visitor_timestamp(visitor).to_i
+
+    unless @stored_timestamp == timestamp
+      puts "*****************","New visitor: #{visitor}","*****************"
+
+
+      @database.add_user(visitor)
+      @database.ignore_user(visitor) unless gender == @settings.gender
+      @database.set_gender(:username => visitor, :gender => gender)
+      @database.set_state(:username => visitor, :state => state)
+
+      increment_visitor_counter(visitor)
+    end
+    @database.set_visitor_timestamp(visitor, timestamp)
+    @database.stats_add_visitors(1)
+  end
+
 
   def visitor_event
-    response = @events.visitor_event
+    response = @events.check_events
     unless response == nil
-      visitor     = response[:handle]
-      timestamp   = response[:time].to_i
-      gender      = response[:gender]
-      distance    = response[:distance]
-      match       = response[:match]
-      sexuality   = response[:sexuality]
-      location    = response[:location]
-      city        = location_array(location)[:city]
-      state       = location_array(location)[:state]
+      person = {
+        :visitor     => response[:handle],
+        :timestamp   => response[:time].to_i,
+        :gender      => response[:gender],
+        :distance    => response[:distance],
+        :match       => response[:match],
+        :sexuality   => response[:sexuality],
+        :location    => response[:location],
+        :city        => location_array(location)[:city],
+        :state       => location_array(location)[:state]
+      }
 
-      @stored_timestamp = @database.get_visitor_timestamp(visitor).to_i
-
-      unless @stored_timestamp == timestamp
-
-        @database.add_user(visitor)
-        @database.ignore_user(visitor) unless gender == @settings.gender
-        @database.set_gender(:username => visitor, :gender => gender)
-        @database.set_state(:username => visitor, :state => state)
-
-        increment_visitor_counter(visitor)
-      end
-      @database.set_visitor_timestamp(visitor, timestamp)
-      @database.stats_add_visitors(1)
-
+      track_visitor(person)
     end
   end
 

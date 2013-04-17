@@ -17,7 +17,8 @@ class Application
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
     @user         = Users.new(:database => db, :browser => @browser, :log => @log)
     @scheduler    = Rufus::Scheduler.start_new
-    @events       = EventWatcher.new(:browser => @browser)
+    @tracker      = EventTracker.new(:browser => @browser, :database => @db, :settings => @config)
+    @events       = EventWatcher.new(:browser => @browser, :tracker => @tracker)
     @harvester    = Harvester.new(
       :browser         => @browser,
       :database        => db,
@@ -203,6 +204,10 @@ class Application
     @harvester.visitor_event
   end
 
+  def check_events
+    @events.check_events
+  end
+
   def roll
     @smarty.roll
   end
@@ -259,14 +264,14 @@ app.scheduler.every '3h' do
 end
 
 app.scheduler.every '5s' do
-  app.visitor_event
+  app.check_events
 end
 
 app.scheduler.every '5m' do
   app.test_more_matches
 end
 
-app.scheduler.every '6s' do
+app.scheduler.every '12s' do
   app.roll
 end
 

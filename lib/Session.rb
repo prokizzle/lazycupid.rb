@@ -6,7 +6,6 @@ class Session
   def initialize(args)
     @username = args[ :username]
     @password = args[ :password]
-    path      = args[ :path]
     @agent = Mechanize.new
     @log      = args[ :log]
   end

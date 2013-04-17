@@ -36,47 +36,57 @@ class DatabaseManager
   end
 
   def open_db
-    @db = SQLite3::Database.new( "./db/#{@login}.db" )
+    DB = Sequel.connect("sqlite://localhost/db/#{@login}.db"
+    # @db = SQLite3::Database.new( "./db/#{@login}.db" )
     import unless @did_migrate
+    @matches = DB[:matches]
   end
 
   def open
     open_db
   end
 
+  def matches
+    @matches
+  end
+
+  def stats
+    @stats
+  end
+
   def import
     begin
-      @db.execute("CREATE TABLE matches(
-        name text,
-        counts integer,
-        ignored text,
-        zindex integer,
-        visit_count integer,
-        last_visit integer,
-        gender text,
-        sexuality text,
-        age integer,
-        relationship_status text,
-        match_percentage integer,
-        state text,
-        city text,
-        time_added text,
-        smoking text,
-        drinking text,
-        kids text,
-        drugs text,
-        height text,
-        body_type text,
-        distance integer,
-        match_percent integer,
-        friend_percent integer,
-        enemy_percent integer,
-        last_msg_time integer,
-        r_msg_count integer,
-        last_online integer,
-        ignore_list integer,
-        PRIMARY KEY(name)
-        )")
+      DB.create_table :matches do
+        text :name
+        integer :counts
+        text :ignored
+        integer :zindex
+        integer :visit_count
+        integer :last_visit
+        text :gender
+        text :sexuality
+        integer :age
+        text :relationship_status
+        integer :match_percentage
+        text :state
+        text :city
+        text :time_added
+        text :smoking
+        text :drinking
+        text :kids
+        text :drugs
+        text :height
+        text :body_type
+        integer :distance
+        integer :match_percent
+        integer :friend_percent
+        integer :enemy_percent
+        integer :last_msg_time
+        integer :r_msg_count
+        integer :last_online
+        integer :ignore_list
+        primary_key :name
+        end
     rescue Exception => e
       # puts e.message
       puts e.message if verbose
@@ -84,17 +94,15 @@ class DatabaseManager
     end
 
     begin
-      @db.execute("
-        create table stats(
-          total_visits integer,
-          total_visitors integer,
-          new_users integer,
-          total_messages integer,
-          id integer,
-          PRIMARY KEY(id)
-          )
-        ")
-      @db.execute("insert into stats(id, total_visitors, total_visits, new_users, total_messages) values (?, ?, ?, ?, ?)", 1, 0, 0, 0, 0)
+      DB.create_table :stats do
+          integer :total_visits
+          integer :total_visitors
+          integer :new_users
+          integer :total_messages
+          integer :id
+          primary_key :id
+         end
+      stats.insert(:id => 1, :total_visitors => 0, :total_visits => 0, :new_users => 0, :total_messages => 0)
     rescue Exception => e
       # Exceptional.handle(e, 'Database')
       puts e.message if verbose
@@ -105,41 +113,40 @@ class DatabaseManager
 
   def stats_add_visitors(number)
     updated = stats_get_visitor_count + number.to_i
-    @db.execute("update stats set total_visitors=?", updated)
+    stats.update(:total_visitors => updated)
   end
 
   def stats_add_visit
     updated = stats_get_visits_count + 1
-    @db.execute("update stats set total_visits=?", updated)
+    stats.update(:total_visits => updated)
   end
 
   def stats_add_new_user
     updated = stats_get_new_users_count + 1
-    @db.execute("update stats set new_users=?", updated)
+    stats.update(:new_users => updated)
   end
 
   def stats_add_new_messages(number)
-    @db.execute("update stats set total_messages=? where id = 1", get_total_received_message_count)
+    stats.update(:total_messages => get_total_received_message_count).where(:id => 1)
+    # @db.execute("update stats set total_messages=? where id = 1", get_total_received_message_count)
   end
 
   def stats_get_visitor_count
-    result = @db.execute("select total_visitors from stats where id = 1")
-    result[0][0].to_i
+    stats.select(:total_visitors).where(:id => 1).all
+    # stats.select(:total_visitors).where(:id => 1)
+    # result[0][0].to_i
   end
 
   def stats_get_visits_count
-    result = @db.execute("select total_visits from stats where id = 1")
-    result[0][0].to_i
+    stats.select(:total_visits).where(:id => 1)
   end
 
   def stats_get_new_users_count
-    result = @db.execute("select new_users from stats where id = 1")
-    result[0][0].to_i
+    stats.select(:new_users).where(:id => 1)
   end
 
   def stats_get_total_messages
-    result = @db.execute("select total_messages from stats where id = 1")
-    result[0][0].to_i
+    stats.select(:total_messages).where(:id => 1)
   end
 
   def add_user(username, count=0)
@@ -155,7 +162,10 @@ class DatabaseManager
   end
 
   def delete_user(username)
-      @db.execute("delete from matches where name=?", username)
+    # if existsCheck(username)
+      # puts "Deleting user:      #{username}" if verbose
+      @db.execute( "delete from matches where name=?", username)
+    # end
   end
 
   def add_column(name, type)
@@ -203,7 +213,6 @@ class DatabaseManager
       # set_received_messages_count(new_name, get_received_messages_count(old_name))
       # set_last_received_message_date(new_name, get_last_received_message_date(old_name))
     # end
-    ignore_user(old_name)
     delete_user(old_name)
   end
 

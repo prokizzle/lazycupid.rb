@@ -736,6 +736,10 @@ class DatabaseManager
       ) ", username).any?
   end
 
+  def remove_unknown_gender
+    @db.execute("delete from matches where gender=?", "Q")
+  end
+
   def to_boolean(str)
     str == 'true'
   end

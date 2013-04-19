@@ -28,38 +28,42 @@ class EventWatcher
     "http://api.okcupid.com/instantevents?random=#{rand}"
   end
 
+  def this_event_time
+    @event["server_gmt"].to_i
+  end
+
   def content
-  (/(\{.+\})/.match(long_poll_result)[1])
-end
+    (/(\{.+\})/.match(long_poll_result)[1])
+  end
 
   def poll_response
     JSON.parse(content.gsub('\"', '"')).to_hash
   end
 
   def msg_notify
-    unless @event["server_gmt"].to_i == @last_event_time
+    unless this_event_time == @m_last_event_time
       puts "New message from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
-      @tracker.register_message(@event["screenname"], @event["server_gmt"])
+      @tracker.register_message(@event["screenname"], this_event_time)
     end
-    @last_event_time = @event["server_gmt"].to_i
+    @m_last_event_time = this_event_time
     @event
   end
 
   def im
-    unless @event["server_gmt"].to_i == @last_event_time
+    unless this_event_time == @i_last_event_time
       puts "New IM from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
       # @tracker.register_message(@event["screenname"], @event["server_gmt"])
     end
-    @last_event_time = @event["server_gmt"].to_i
+    @i_last_event_time = this_event_time
     @event
   end
 
   def stalk
-    unless @event["server_gmt"].to_i == @last_event_time
+    unless this_event_time == @s_last_event_time
       puts "New visit from #{@event['screenname']}"
       @tracker.register_visit(@event)
     end
-    @last_event_time = @event["server_gmt"].to_i
+    @s_last_event_time = this_event_time
     @event
   end
 

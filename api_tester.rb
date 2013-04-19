@@ -52,4 +52,7 @@ begin
   end
 rescue Interrupt, SystemExit
   app.logout
+rescue Exception => e
+  puts e.message
+  puts e.backtrace
 end

@@ -59,13 +59,13 @@ class Users
       puts "A-list bug: #{intended_handle} is now #{result}" if verbose
     end
 
-    result
+    result.to_s
 
   end
 
   def match_percentage
     result = @browser.current_user.parser.xpath("//span[@class='match']").text
-    new_result = /(\d+)% Match/.match(result)[1]
+    new_result = /(\d+)/.match(result)[1]
     new_result.to_i
   end
 

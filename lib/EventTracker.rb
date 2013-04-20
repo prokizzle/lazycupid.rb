@@ -1,9 +1,12 @@
 class EventTracker
 
+  attr_reader :verbose, :debug
+
   def initialize(args)
     @browser = args[ :browser]
     @db = args[:database]
     @settings = args[ :settings]
+    @regex = RegEx.new
   end
 
   def body
@@ -13,16 +16,6 @@ class EventTracker
   def current_user
     @browser.current_user
   end
-
-  def verbose
-    @verbose
-  end
-
-  def debug
-    @debug
-  end
-
-
 
   def increment_visitor_counter(visitor)
     original      = @db.get_visitor_count(visitor)
@@ -40,7 +33,7 @@ class EventTracker
   end
 
   def parse_visitors_page
-    @database.remove_unknown_gender
+    @db.remove_unknown_gender
     @visitors = Array.new
     @final_visitors = Array.new
 
@@ -57,8 +50,8 @@ class EventTracker
       sexuality = aso.match(/#{age} \/ #{gender} \/ (\w+) \//)[1]
       status = aso.match(/#{age} \/ #{gender} \/ #{sexuality} \/ ([\w\s]+)/)[1]
       location = block.match(/location.+>(.+)/)[1]
-      city = location_array(location)[:city]
-      state = location_array(location)[:state]
+      city = @regex.location_array(location)[:city]
+      state = @regex.location_array(location)[:state]
       @visitors.push({handle: handle, age: age, gender: gender, sexuality: sexuality, status: status, city: city, state: state})
     end
 
@@ -77,34 +70,21 @@ class EventTracker
     until @final_visitors.size == 0
 
       user = @final_visitors.shift
-      @stored_timestamp = @database.get_visitor_timestamp(user[:handle]).to_i
+      @stored_timestamp = @db.get_visitor_timestamp(user[:handle]).to_i
 
       unless @stored_timestamp == user[:timestamp]
         @count += 1
-        @database.add_user(user[:handle])
-        @database.ignore_user(user[:handle]) unless user[:gender] == @settings.gender
-        @database.set_gender(:username => user[:handle], :gender => user[:gender])
-        @database.set_state(:username => user[:handle], :state => user[:state])
+        @db.add_user(user[:handle])
+        @db.ignore_user(user[:handle]) unless user[:gender] == @settings.gender
+        @db.set_gender(:username => user[:handle], :gender => user[:gender])
+        @db.set_state(:username => user[:handle], :state => user[:state])
 
         increment_visitor_counter(user[:handle])
-        @database.set_visitor_timestamp(user[:handle], user[:timestamp])
+        @db.set_visitor_timestamp(user[:handle], user[:timestamp])
       end
     end
-    @database.stats_add_visitors(@count.to_i)
+    @db.stats_add_visitors(@count.to_i)
     @count.to_i
-  end
-
-  def parsed_location(location)
-    result    = location.scan(/,/)
-    if result.size == 2
-      city    = location.match(/(.+), (.+), (.+)/)[1]
-      state   = location.match(/(.+), (.+), (.+)/)[2]
-      country = location.match(/(.+), (.+), (.+)/)[3]
-    elsif result.size == 1
-      city    = location.match(/(.+), (.+)/)[1]
-      state   = location.match(/(.+), (.+)/)[2]
-    end
-    {:city => city, :state => state}
   end
 
   def translate_sexuality(orientation)
@@ -146,7 +126,7 @@ class EventTracker
     @db.stats_add_visitors(1)
   end
 
-  def prepare_visit
+  def visitor_event
     response = @events.check_events
     unless response == nil
       person = {
@@ -157,8 +137,8 @@ class EventTracker
         :match       => response[:match],
         :sexuality   => response[:sexuality],
         :location    => response[:location],
-        :city        => location_array(location)[:city],
-        :state       => location_array(location)[:state]
+        :city        => @regex.location_array(location)[:city],
+        :state       => @regex.location_array(location)[:state]
       }
 
       track_visitor(person)
@@ -199,4 +179,83 @@ class EventTracker
       @db.set_last_received_message_date(sender, timestamp)
     end
   end
+
+
+  def test_more_matches
+    begin
+      @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
+      parsed = JSON.parse(@browser.current_user.content).to_hash
+      html = parsed["html"]
+      @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
+      html_doc = Nokogiri::HTML(html)
+      # @db.open
+
+      @gender     = Hash.new("Q")
+      @age        = Hash.new(0)
+      # @sexuality  = Hash.new(0)
+      @state      = Hash.new(0)
+      @city       = Hash.new(0)
+
+      @details.each do |user|
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+
+        age = "#{result.match(/(\d{2})/)}".to_i
+        gender = "#{result.match(/(M|F)</)[1]}"
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
+        # puts city, state
+        username = user[0].to_s
+        @db.add_user(username)
+        @db.set_gender(:username => username, :gender => gender)
+        @db.set_age(username, age)
+        begin
+          city = ""
+          state = ""
+          city = /location.>(.+),\s(.+)</.match(result)[1].to_s if /location.>(.+),\s(.+)</.match(result)
+          state = /location.>(.+),\s(.+)</.match(result)[2].to_s if /location.>(.+),\s(.+)</.match(result)
+          @db.set_city(username, city)
+          @db.set_state(:username => username, :state => state)
+        rescue Exception => e
+          puts e.message
+          # Exceptional.handle(e, 'Location reg ex')
+        end
+      end
+
+      # @db.close
+    rescue Exception => e
+      puts e.message
+      # Exceptional.handle(e, 'More matches scraper')
+    end
+  end
+
+  def scrape_inbox
+    puts "Scraping inbox" if verbose
+    items_per_page = 30
+
+    @browser.go_to("http://www.okcupid.com/messages")
+
+    all_lows    = body.scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
+    highest     = 0
+
+    all_lows.each do |item|
+      highest   = item[0].to_i if item[0].to_i > highest.to_i
+    end
+
+    total       = highest
+    puts "Total messages: #{total}" if verbose
+    # @bar         = ProgressBar.new(total, :counter) unless verbose
+    # @bar.increment! 1 unless verbose
+    do_page_action("http://www.okcupid.com/messages")
+    low         = items_per_page + 1
+
+    until low >= total
+      # @bar.increment! 30 unless verbose
+      # do_page_action
+      low += items_per_page
+      @browser.go_to("http://www.okcupid.com/messages?low=#{low}&folder=1")
+      track_msg_dates
+      sleep 2
+    end
+
+  end
+
 end

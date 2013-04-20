@@ -1,6 +1,7 @@
 require './includes'
 
 class Application
+  attr_reader :config, :username, :password, :db, :scheduler
 
   def initialize(args)
     @username     = args[ :username]
@@ -10,8 +11,8 @@ class Application
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
     @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @api_browser  = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @alt_browser  = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
+    @browser2     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
+    @browser3     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @db           = initialize_db
     # @prefs      = Preferences.new(:browser => @browser)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
@@ -19,22 +20,23 @@ class Application
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
     @user         = Users.new(:database => db, :browser => @browser, :log => @log, :path => log_path)
     @scheduler    = Rufus::Scheduler.start_new
-    @tracker      = EventTracker.new(:browser => @browser, :database => @db, :settings => @config)
-    @events       = EventWatcher.new(:browser => @api_browser, :tracker => @tracker, :logger => @log)
+    @tracker      = EventTracker.new(:browser => @browser2, :database => @db, :settings => @config)
+    @events       = EventWatcher.new(:browser => @browser3, :tracker => @tracker, :logger => @log)
     @harvester    = Harvester.new(
-      :browser         => @alt_browser,
-      :database        => db,
-      :profile_scraper => @user,
-      :settings        => @config,
-    :events          => @events)
+      :browser          => @browser2,
+      :database         => db,
+      :profile_scraper  => @user,
+      :settings         => @config,
+    :events             => @events)
     @smarty       = SmartRoll.new(
-      :database   => db,
-      :blocklist  => blocklist,
-      :harvester  => @harvester,
-      :profile_scraper => @user,
-      :browser    => @browser,
-      :gui        => @display,
-    :settings     => @config)
+      :database         => db,
+      :blocklist        => blocklist,
+      :harvester        => @harvester,
+      :profile_scraper  => @user,
+      :tracker          => @tracker,
+      :browser          => @browser,
+      :gui              => @display,
+    :settings           => @config)
     @first_login        = false
     @scrape_event_time  = 0
     @quit_event_time    = Chronic.parse('3 days from now')
@@ -63,19 +65,6 @@ class Application
     DatabaseManager.new(:login_name => @username, :settings => @config)
   end
 
-
-  def config
-    @config
-  end
-
-  def username
-    @username
-  end
-
-  def password
-    @password
-  end
-
   def db
     @db
   end
@@ -98,7 +87,7 @@ class Application
   end
 
   def browsers_array
-    [@api_browser, @alt_browser]
+    [@browser3, @browser2]
   end
 
 
@@ -112,7 +101,7 @@ class Application
   end
 
   def test_more_matches
-    @harvester.test_more_matches
+    @tracker.test_more_matches
   end
 
   def get_new_user_counts
@@ -139,19 +128,19 @@ class Application
   end
 
   def scrape_inbox
-    @harvester.scrape_inbox
+    @tracker.scrape_inbox
   end
 
   def check_visitors
-    @harvester.visitors
+    @tracker.parse_visitors_page
   end
 
   def login
     # until browsers.size == 0
     #   browsers.shift.login
     # end
-    # @api_browser.login
-    # @alt_browser.login
+    # @browser3.login
+    # @browser2.login
     secondary_login
     @browser.login
   end
@@ -161,8 +150,8 @@ class Application
     # until temp.size == 0
     #   temp.shift.login
     # end
-    @alt_browser.login
-    @api_browser.login
+    @browser2.login
+    @browser3.login
   end
 
   def secondary_logout
@@ -231,7 +220,7 @@ class Application
   end
 
   def visitor_event
-    @harvester.visitor_event
+    @tracker.visitor_event
   end
 
   def check_events

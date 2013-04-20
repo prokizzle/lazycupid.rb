@@ -8,6 +8,7 @@ class SmartRoll
     @browser    = args[ :browser]
     @console    = args[ :gui]
     @settings   = args[ :settings]
+    @tracker    = args[ :tracker]
     @days       = 2
     @stats      = Statistics.new
     @selection  = Array.new
@@ -68,7 +69,7 @@ class SmartRoll
   end
 
   def check_visitors
-    viz = @harvester.visitors
+    viz = @tracker.parse_visitors_page
     @total_visitors += viz
     @total_visits += @tally
     @tally = 0
@@ -76,9 +77,9 @@ class SmartRoll
   end
 
   def payload
-    @harvester.test_more_matches
+    @tracker.test_more_matches
+    @tracker.scrape_inbox
     @harvester.scrape_activity_feed
-    @harvester.scrape_inbox
     @harvester.scrape_home_page
     check_visitors
   end

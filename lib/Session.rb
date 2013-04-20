@@ -45,21 +45,26 @@ class Session
   def go_to(link)
     @url = link
     # begin
-      @current_user = @agent.get(link)
-      @log.debug "#{@username}: #{@url}"
-      @body = @current_user.parser.xpath("//body").to_html
+    @current_user = @agent.get(link)
+    @log.debug "#{@url}"
+    @body = @current_user.parser.xpath("//body").to_html
     # rescue
     # end
   end
 
-  def harv_go_to(link)
-    @url = link
-    # begin
-      @harv_current_user = @agent.get(link)
-      @log.debug "#{@username}: #{@url}"
-      @harv_body = @current_user.parser.xpath("//body").to_html
-    # rescue
-    # end
+  def get_body_of(link)
+    url = link
+    temp = @agent.get(url)
+    @log.debug "#{@url}"
+    body = temp.parser.xpath("//body").to_html
+    {url: url, body: body}
+  end
+
+  def get_html_of(link)
+    url = link
+    temp = @agent.get(url)
+    @log.debug "#{@url}"
+    {url: url, html: temp}
   end
 
   def handle

@@ -1,6 +1,6 @@
 class Users
 
-  attr_reader :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
+  attr_reader :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
   attr_accessor :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
 
   def initialize(args)
@@ -28,6 +28,9 @@ class Users
     Logger.new("#{@path}#{@username}_#{Time.now}.log")
   end
 
+  def for_page(page_object)
+    @page = page_object
+  end
 
   def display_code
     puts body

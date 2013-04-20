@@ -7,8 +7,11 @@ class EventWatcher
     # @browser = Session.new(:username => @username, :password => password)
     @browser = args[ :browser]
     @tracker = args[ :tracker]
+    @log     = args[ :logger]
 
-    @last_event_time = 0
+    @m_last_event_time = 0
+    @s_last_event_time = 0
+    @i_last_event_time = 0
 
   end
 
@@ -67,22 +70,34 @@ class EventWatcher
     @event
   end
 
+  def orbit_user_signoff
+    @log.debug "orbit_user_signoff: #{@event['screenname']}"
+  end
+
   def check_events
     response = poll_response
     count = 0
     unless response == nil
-      response["events"].each do |event|
-        if event.has_key?('from')
-          @index = count
+      # begin
+        response["events"].each do |event|
+          if event.has_key?('from')
+            @index = count
+          end
+          count += 1
         end
-        count += 1
-      end
+      # rescue
+        # p response
+      # end
       if @index && response["events"][@index]
         @event = response["events"][@index]
         @details = response["people"]
-        @event = @event.merge(@details[@details.size - 1])
+        @event = @event.merge(@details[@details.size - 1]) unless @details[@details.size - 1] == nil
         response = @event["type"]
-        self.send(response)
+        begin
+          self.send(response)
+        rescue
+          @log.debug "#{response}: #{@event['screenname']}"
+        end
       end
     end
     unread = response["num_unread"].to_i

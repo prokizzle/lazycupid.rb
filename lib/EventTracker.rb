@@ -40,68 +40,57 @@ class EventTracker
   end
 
   def parse_visitors_page
+    @database.remove_unknown_gender
+    @visitors = Array.new
+    @final_visitors = Array.new
+
     @browser.go_to("http://www.okcupid.com/visitors")
-    @current_user       = @browser.current_user
-    @visitors_page      = @current_user.parser.xpath("//div[@id='main_column']").to_html
-    @details    = @visitors_page.scan(/>([\w\d]+).+(\d{2}) \/ (F|M)\s\/\s(\w+)\s\/\s[\w\s]+.+"location".([\w\s]+)..([\w\s]+)/)
 
-    puts @visitors_page if debug
-    wait = gets.chomp if debug
-
-    @gender     = Hash.new("Q")
-    @age        = Hash.new(0)
-    @sexuality  = Hash.new(0)
-    @state      = Hash.new(0)
-    @city       = Hash.new(0)
-
-    @details.each do |user|
-      handle              = user[0]
-      age                 = user[1]
-      gender              = user[2]
-      sexuality           = user[3]
-      city                = user[4]
-      state               = user[5]
-      @gender[handle]     = gender
-      @state[handle]      = state
-      @city[handle]       = city
-      @state[handle]      = state
-      @sexuality[handle]  = sexuality
-      @age[handle]        = age
-
-      puts user if debug && gender == "Q"
+    page = current_user.parser.xpath("//div[@id='main_column']/div").to_html
+    users = page.scan(/.p.class=.user_name.>(.+)<\/p>/)
+    users.each do |user|
+      block = user.shift
+      handle = block.match(/visitors.>(.+)<.a/)[1]
+      aso = block.match(/aso.>(.+)<.p/)[1]
+      age = aso.match(/(\d{2})/)[1].to_i
+      gender = aso.match(/#{age} \/ (\w) \//)[1]
+      sexuality = aso.match(/#{age} \/ #{gender} \/ (\w+) \//)[1]
+      status = aso.match(/#{age} \/ #{gender} \/ #{sexuality} \/ ([\w\s]+)/)[1]
+      location = block.match(/location.+>(.+)/)[1]
+      city = location_array(location)[:city]
+      state = location_array(location)[:state]
+      @visitors.push({handle: handle, age: age, gender: gender, sexuality: sexuality, status: status, city: city, state: state})
     end
 
-    visitor_list   = @visitors_page.scan(/"usr-([\w\d]+)".+z\-index\:\s(\d\d\d)/)
-    @count  = 0
-    visitor_list.each do |visitor, zindex|
 
-      @timestamp_block  = @current_user.parser.xpath("//div[@id='usr-#{visitor}-info']/p/script/text()").to_html
-      @timestamp        = @timestamp_block.match(/(\d{10}), 'JOU/)[1].to_i
-      @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
+    until @visitors.size == 0
+      user = @visitors.shift
+      block = current_user.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()
+    ").text
+      timestamp = block.match(/(\d+), .JOURNAL/)[1]
+      addition = {timestamp: timestamp}
+      final = user.merge(addition)
+      @final_visitors.push(final)
+      # puts block
+    end
+    @count = 0
+    until @final_visitors.size == 0
 
-      unless @stored_timestamp == @timestamp
+      user = @final_visitors.shift
+      @stored_timestamp = @database.get_visitor_timestamp(user[:handle]).to_i
+
+      unless @stored_timestamp == user[:timestamp]
         @count += 1
+        @database.add_user(user[:handle])
+        @database.ignore_user(user[:handle]) unless user[:gender] == @settings.gender
+        @database.set_gender(:username => user[:handle], :gender => user[:gender])
+        @database.set_state(:username => user[:handle], :state => user[:state])
 
-        puts visitor if verbose
-
-        puts "Scraped gender: #{@gender[visitor]}" if verbose
-        puts "Setting gender: #{@settings.gender}" if verbose
-
-
-        @db.add_user(visitor) unless @gender[visitor] == "Q"
-
-        @db.ignore_user(visitor) unless @gender[visitor] == @settings.gender
-
-        @db.set_gender(:username => visitor, :gender => @gender[visitor])
-        @db.set_state(:username => visitor, :state => @state[visitor])
-
-        increment_visitor_counter(visitor)
+        increment_visitor_counter(user[:handle])
+        @database.set_visitor_timestamp(user[:handle], user[:timestamp])
       end
-
-      @db.set_visitor_timestamp(visitor, @timestamp.to_i)
     end
-
-    @db.stats_add_visitors(@count.to_i)
+    @database.stats_add_visitors(@count.to_i)
     @count.to_i
   end
 

@@ -10,17 +10,19 @@ class Application
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
     @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
+    @api_browser  = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
+    @alt_browser  = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @db           = initialize_db
     # @prefs      = Preferences.new(:browser => @browser)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
-    @user         = Users.new(:database => db, :browser => @browser, :log => @log)
+    @user         = Users.new(:database => db, :browser => @browser, :log => @log, :path => log_path)
     @scheduler    = Rufus::Scheduler.start_new
     @tracker      = EventTracker.new(:browser => @browser, :database => @db, :settings => @config)
-    @events       = EventWatcher.new(:browser => @browser, :tracker => @tracker)
+    @events       = EventWatcher.new(:browser => @api_browser, :tracker => @tracker, :logger => @log)
     @harvester    = Harvester.new(
-      :browser         => @browser,
+      :browser         => @alt_browser,
       :database        => db,
       :profile_scraper => @user,
       :settings        => @config,
@@ -95,6 +97,10 @@ class Application
     db.close
   end
 
+  def browsers_array
+    [@api_browser, @alt_browser]
+  end
+
 
   def open_db
     # puts "Debug: Opening database"
@@ -123,9 +129,6 @@ class Application
     @blocklist.import_hidden_users
   end
 
-  def logout
-    @browser.logout
-  end
 
   def harvest_home_page
     @harvester.scrape_home_page
@@ -144,7 +147,34 @@ class Application
   end
 
   def login
+    # until browsers.size == 0
+    #   browsers.shift.login
+    # end
+    # @api_browser.login
+    # @alt_browser.login
+    secondary_login
     @browser.login
+  end
+
+  def secondary_login
+    # temp = browsers_array
+    # until temp.size == 0
+    #   temp.shift.login
+    # end
+    @alt_browser.login
+    @api_browser.login
+  end
+
+  def secondary_logout
+    temp = browsers_array
+    until temp.size == 0
+      temp.shift.logout
+    end
+  end
+
+  def logout
+    secondary_logout
+    @browser.logout
   end
 
   def range_roll
@@ -246,6 +276,7 @@ begin
   end
 rescue Exception => e
   puts e.message
+  puts e.backtrace
   # Exceptional.handle(e, 'Login workflow')
 rescue SystemExit, Interrupt
   quit = true

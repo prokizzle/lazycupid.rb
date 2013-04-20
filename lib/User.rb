@@ -7,6 +7,7 @@ class Users
     @db = args[ :database]
     @browser  = args[ :browser]
     @log      = args[ :log]
+    @path     = args[ :path]
     @verbose  = true
     @debug    = true
   end
@@ -22,6 +23,11 @@ class Users
   def debug
     @debug
   end
+
+  def log
+    Logger.new("#{@path}#{@username}_#{Time.now}.log")
+  end
+
 
   def display_code
     puts body
@@ -64,9 +70,14 @@ class Users
   end
 
   def match_percentage
-    result = @browser.current_user.parser.xpath("//span[@class='match']").text
-    new_result = /(\d+)/.match(result)[1]
-    new_result.to_i
+    begin
+      result = @browser.current_user.parser.xpath("//span[@class='match']").text
+      new_result = /(\d*\d*). Match/.match(result)[1]
+      new_result.to_i
+    rescue
+      log.debug "match_percentage: #{body}"
+      body.match(/(\d+). Match/)[1].to_i
+    end
   end
 
   def friend_percentage

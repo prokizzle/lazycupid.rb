@@ -112,16 +112,17 @@ class Harvester
     puts "Scraping: similar users" if verbose
     # @found = Array.new
     # @database.log(match)
-    # @browser.go_to("http://www.okcupid.com/profile/#{match}")
     if meets_preferences?
-      users = body.scan(/\/([\w\d _-]+)....profile_similar/)
-      users = users.to_set
-      users.each do |user|
+      @browser.go_to("http://www.okcupid.com/profile/#{@user.handle}")
+      similars = body.scan(/\/([\w\d _-]+)....profile_similar/)
+      similars = similars.to_set
+      similars.each do |similar_user|
+        similar_user = similar_user.shift
         if @user.gender == @settings.gender
-          @database.add_user(user[0])
-          @database.set_state(:username => user[0], :state => @user.state)
-          @database.set_gender(:username => user[0], :gender => @user.gender)
-          @database.set_distance(:username => user[0], :distance => @user.relative_distance)
+          @database.add_user(similar_user)
+          @database.set_state(:username => similar_user, :state => @user.state)
+          @database.set_gender(:username => similar_user, :gender => @user.gender)
+          @database.set_distance(:username => similar_user, :distance => @user.relative_distance)
         end
       end
     else
@@ -155,7 +156,9 @@ class Harvester
     users = page.scan(/.p.class=.user_name.>(.+)<\/p>/)
     users.each do |user|
       block = user.shift
-      handle = block.match(/visitors.>(.+)<.a/)[1]
+      # puts block
+      # wait = gets.chomp if debug
+      handle = block.match(/profile\/(.+)\?cf=visitors/)[1]
       aso = block.match(/aso.>(.+)<.p/)[1]
       age = aso.match(/(\d{2})/)[1].to_i
       gender = aso.match(/#{age} \/ (\w) \//)[1]
@@ -170,8 +173,7 @@ class Harvester
 
     until @visitors.size == 0
       user = @visitors.shift
-      block = current_user.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()
-  ").text
+      block = current_user.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()").text
       timestamp = block.match(/(\d+), .JOURNAL/)[1]
       addition = {timestamp: timestamp}
       final = user.merge(addition)
@@ -235,8 +237,8 @@ class Harvester
       @database.set_state(:username => visitor, :state => state)
 
       increment_visitor_counter(visitor)
+      @database.set_visitor_timestamp(visitor, timestamp)
     end
-    @database.set_visitor_timestamp(visitor, timestamp)
     @database.stats_add_visitors(1)
   end
 

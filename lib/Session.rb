@@ -1,6 +1,6 @@
 class Session
-  attr_accessor :go_to, :agent, :body, :current_user, :handle, :url
-  attr_reader :go_to, :agent, :body, :current_user, :handle, :url
+  attr_accessor :go_to, :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user
+  attr_reader :go_to, :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user
 
 
   def initialize(args)
@@ -52,6 +52,16 @@ class Session
     # end
   end
 
+  def harv_go_to(link)
+    @url = link
+    # begin
+      @harv_current_user = @agent.get(link)
+      @log.debug "#{@username}: #{@url}"
+      @harv_body = @current_user.parser.xpath("//body").to_html
+    # rescue
+    # end
+  end
+
   def handle
     /\/profile\/(.+)/.match(@url)[1]
   end
@@ -66,6 +76,10 @@ class Session
 
   def body
     @body
+  end
+
+  def body2
+    @body2
   end
 
   def account_deleted

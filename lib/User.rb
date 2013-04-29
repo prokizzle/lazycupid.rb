@@ -93,8 +93,8 @@ class Users
 
   def handle
 
-    log = Logger.new("logs/user_test_#{Time.now}.log")
-    log.debug @body
+    # log = Logger.new("logs/user_test_#{Time.now}.log")
+    # log.debug @body
     # begin
     # result = body.match(/username.>([-_\w\d]+)</)[1]
     # result = @html.parser.xpath("//p[@class='username']").text

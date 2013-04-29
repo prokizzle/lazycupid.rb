@@ -213,33 +213,37 @@ login_message = "Please login."
 quit          = false
 logged_in     = false
 
-# begin
-  until logged_in
+
+until logged_in
+  unless ARGV.size > 0
     print "\e[2J\e[f"
     puts "LazyCupid Main Menu","--------------------",""
     puts "#{login_message}",""
     print "Username: "
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
-    # Exceptional.rescue do
-    app = Application.new(:username => username, :password => password)
-    # end
-    if app.login
-      logged_in = true
-      login_message = "Success. Initializing."
-      print "\e[2J\e[f"
-    else
-      login_message = "Incorrect password. Try again."
-    end
+  else
+    puts "#{login_message}",""
+    username = ARGV[0]
+    password = ARGV[1]
   end
+  app = Application.new(:username => username, :password => password)
+  if app.login
+    logged_in = true
+    login_message = "Success. Initializing."
+    print "\e[2J\e[f"
+  else
+    login_message = "Incorrect password. Try again."
+  end
+end
 # rescue Exception => e
-  # puts e.message
-  # puts e.backtrace
-  # Exceptional.handle(e, 'Login workflow')
+# puts e.message
+# puts e.backtrace
+# Exceptional.handle(e, 'Login workflow')
 # rescue SystemExit, Interrupt
-  # quit = true
-  # logout = false
-  # puts "","","Goodbye."
+# quit = true
+# logout = false
+# puts "","","Goodbye."
 # end
 
 app.pre_roll_actions

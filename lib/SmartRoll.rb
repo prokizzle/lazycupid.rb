@@ -30,14 +30,14 @@ class SmartRoll
     pg = @db.new_user_smart_query
     pg.each do |user|
       array.push(user["name"])
-      puts user["name"] if debug
+      # puts user["name"] if debug
     end
 
     if array.size == 0
       pg = @db.followup_query
       pg.each do |user|
         array.push(user["name"])
-        puts user["name"] if debug
+        # puts user["name"] if debug
       end
     end
     result = array.to_set
@@ -47,7 +47,7 @@ class SmartRoll
   end
 
   def cache
-    if @selection.size <= 1
+    if @selection.size == 0
       @selection = reload
     else
       @selection
@@ -79,11 +79,11 @@ class SmartRoll
   end
 
   def payload
-    # @tracker.test_more_matches
-    # @tracker.scrape_inbox
-    # @harvester.scrape_activity_feed
-    # @harvester.scrape_home_page
-    # check_visitors
+    @tracker.test_more_matches
+    @tracker.scrape_inbox
+    @harvester.scrape_activity_feed
+    @harvester.scrape_home_page
+    check_visitors
   end
 
   def pre_roll_actions
@@ -98,7 +98,7 @@ class SmartRoll
 
   def visit_user(user)
     unless user == nil
-      puts user.to_s
+      # puts user.to_s
       # @browser.go_to("http://www.okcupid.com/profile/#{user}")
       response = @user.profile(user)
       if response[:inactive]

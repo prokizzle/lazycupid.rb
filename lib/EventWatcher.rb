@@ -16,11 +16,20 @@ class EventWatcher
   end
 
   def long_poll_result
-    @browser.get_body_of(api_url)[:body]
+    request_id = Time.now.to_i
+    response = @browser.body_of(api_url, request_id)
+    until response[:hash].to_i == request_id
+      response = @browser.body_of(api_url, request_id)
+    end
+    response[:body]
   end
 
   def login
     @browser.login
+  end
+
+  def html
+    @body.current_user
   end
 
   def logout
@@ -80,10 +89,12 @@ class EventWatcher
     unless response == nil
       # begin
       response["events"].each do |event|
+        if event.respond_to?(:has_key)
         if event.has_key?('from')
           @index = count
         end
         count += 1
+      end
       end
       # rescue
       # p response

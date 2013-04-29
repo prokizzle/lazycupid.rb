@@ -11,7 +11,7 @@ class Application
     @db_path      = File.dirname($0) + '/db/'
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
-    @db           = PGDatabaseManager.new(:login_name => @username, :settings => @config, :db => PG.connect( :dbname => 'lazy_cupid' ))
+    @db           = DatabaseMgr.new(:login_name => @username, :settings => @config)
     @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @browser2     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @browser3     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
@@ -252,9 +252,9 @@ app.scheduler.every '3h' do
   app.check_visitors
 end
 
-# app.scheduler.every '5s' do
-#   app.check_events
-# end
+app.scheduler.every '5s' do
+  app.check_events
+end
 
 app.scheduler.every '5m' do
   app.test_more_matches

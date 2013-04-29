@@ -1,9 +1,9 @@
-class PGDatabaseManager
+class DatabaseMgr
 
   def initialize(args)
     @login    = args[ :login_name]
     @settings = args[ :settings]
-    @db = args[:db]
+    @db = PGconn.connect( :dbname => 'lazy_cupid' )
 
     open_db
     db_migrations
@@ -685,26 +685,26 @@ class PGDatabaseManager
   end
 
   def log2(user)
-    if user.handle
-      unless existsCheck(user.handle)
-        add_user(user.handle)
+    if user[:handle]
+      unless existsCheck(user[:handle])
+        add_user(user[:handle])
       end
-      count = get_visit_count(user.handle) + 1
-      update_visit_count(user.handle, count)
-      set_my_last_visit_date(user.handle)
-      set_gender(:username => user.handle.to_s, :gender => user.gender.to_s)
-      set_sexuality(user.handle, user.sexuality)
-      set_match_percentage(user.handle, user.match_percentage)
-      set_state(:username => user.handle, :state => user.state)
-      set_distance(:username => user.handle, :distance => user.relative_distance)
-      set_age(user.handle, user.age)
-      set_city(user.handle, user.city)
-      set_smoking(user.handle, user.smoking)
-      set_body_type(user.handle, user.body_type)
-      set_drugs(user.handle, user.drugs)
-      set_drinking(user.handle, user.drinking)
-      set_height(user.handle, user.height)
-      set_last_online(user.handle, user.last_online)
+      count = get_visit_count(user[:handle]) + 1
+      update_visit_count(user[:handle], count)
+      set_my_last_visit_date(user[:handle])
+      set_gender(:username => user[:handle].to_s, :gender => user[:gender])
+      set_sexuality(user[:handle], user[:sexuality])
+      set_match_percentage(user[:handle], user[:match_percentage])
+      set_state(:username => user[:handle], :state => user[:state])
+      set_distance(:username => user[:handle], :distance => user[:distance])
+      set_age(user[:handle], user[:age])
+      set_city(user[:handle], user[:city])
+      # set_smoking(user[:handle], user[:smoking])
+      # set_body_type(user[:handle], user[:body_type])
+      # set_drugs(user[:handle], user[:drugs])
+      # set_drinking(user[:handle], user[:drinking])
+      # set_height(user[:handle], user[:height])
+      set_last_online(user[:handle], user[:last_online])
     end
     stats_add_visit
   end

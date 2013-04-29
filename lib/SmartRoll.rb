@@ -1,4 +1,5 @@
 class SmartRoll
+  attr_reader :debug, :verbose
 
   def initialize(args)
     @db         = args[ :database]
@@ -6,38 +7,37 @@ class SmartRoll
     @harvester  = args[ :harvester]
     @user       = args[ :profile_scraper]
     @browser    = args[ :browser]
-    @console    = args[ :gui]
     @settings   = args[ :settings]
+    @console    = args[:gui]
     @tracker    = args[ :tracker]
     @days       = 2
-    @stats      = Statistics.new
     @selection  = Array.new
     @selection  = reload
     @verbose    = @settings.verbose
     @debug      = @settings.debug
   end
 
-  def verbose
-    @verbose
-  end
+  # def verbose
+  #   @verbose
+  # end
 
-  def debug
-    @debug
-  end
+  # def debug
+  #   @debug
+  # end
 
   def reload
     array = Array.new
     pg = @db.new_user_smart_query
     pg.each do |user|
       array.push(user["name"])
-      puts user["name"]
+      puts user["name"] if debug
     end
 
     if array.size == 0
       pg = @db.followup_query
       pg.each do |user|
         array.push(user["name"])
-        puts user["name"]
+        puts user["name"] if debug
       end
     end
     result = array.to_set
@@ -79,11 +79,11 @@ class SmartRoll
   end
 
   def payload
-    @tracker.test_more_matches
-    @tracker.scrape_inbox
-    @harvester.scrape_activity_feed
-    @harvester.scrape_home_page
-    check_visitors
+    # @tracker.test_more_matches
+    # @tracker.scrape_inbox
+    # @harvester.scrape_activity_feed
+    # @harvester.scrape_home_page
+    # check_visitors
   end
 
   def pre_roll_actions
@@ -99,14 +99,16 @@ class SmartRoll
   def visit_user(user)
     unless user == nil
       puts user.to_s
-      @browser.go_to("http://www.okcupid.com/profile/#{user}")
-      if inactive_account
+      # @browser.go_to("http://www.okcupid.com/profile/#{user}")
+      response = @user.profile(user)
+      if response[:inactive]
         remove_match(user)
       else
-        @console.log(@user) if verbose
+        # puts response
+        @console.log(response) if verbose
         @tally += 1
-        @db.log2(@user)
-        autodiscover_new_users if @user.gender == @settings.gender
+        @db.log2(response)
+        autodiscover_new_users if response[:gender] == @settings.gender
       end
     else
       puts "User is nil"

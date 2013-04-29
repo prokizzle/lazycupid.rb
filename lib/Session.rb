@@ -1,6 +1,6 @@
 class Session
-  attr_accessor :go_to, :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user
-  attr_reader :go_to, :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user
+  attr_accessor :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user, :hash
+  attr_reader :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user, :hash
 
 
   def initialize(args)
@@ -8,6 +8,7 @@ class Session
     @password = args[ :password]
     @agent = Mechanize.new
     @log      = args[ :log]
+    @hash = Hash.new { |hash, key| hash[key] = 0 }
   end
 
   def login
@@ -52,19 +53,21 @@ class Session
     # end
   end
 
-  def get_body_of(link)
+  def body_of(link, request_id)
     url = link
     temp = @agent.get(url)
     @log.debug "#{@url}"
-    body = temp.parser.xpath("//body").to_html
-    {url: url, body: body}
+    returned_body = temp.parser.xpath("//body").to_html
+    response = {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
+    @hash[request_id] = response
+    response
   end
 
-  def get_html_of(link)
+  def html_of(link, request_id)
     url = link
     temp = @agent.get(url)
     @log.debug "#{@url}"
-    {url: url, html: temp}
+    {url: url, html: temp, hash: request_id}
   end
 
   def handle

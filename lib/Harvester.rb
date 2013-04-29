@@ -5,8 +5,8 @@ require 'progress_bar'
 # A class for gathering usernames to visit via various scraped portions of the site
 #
 class Harvester
-  attr_reader :type
-  attr_accessor :type
+  attr_reader :type, :user
+  attr_accessor :type, :user
 
   def initialize(args)
     @browser      = args[ :browser]
@@ -18,9 +18,9 @@ class Harvester
     @debug        = @settings.debug
   end
 
-  def user
-    @user
-  end
+  # def user
+  #   @user
+  # end
 
   def run
     # run code

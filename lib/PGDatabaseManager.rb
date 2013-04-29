@@ -3,7 +3,7 @@ class DatabaseMgr
   def initialize(args)
     @login    = args[ :login_name]
     @settings = args[ :settings]
-    @db = PGconn.connect( :dbname => 'lazy_cupid' )
+    @db = PGconn.connect( :dbname => 'HEROKU_POSTGRESQL_ROSE' )
 
     open_db
     db_migrations

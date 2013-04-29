@@ -20,13 +20,20 @@ class DatabaseManager
 
   def db_migrations
     # Exceptional.rescue do
-    #   @db.execute("alter table matches add column ignore_list integer")
+      # @db.execute("alter table matches add column account text")
+      begin
+      @db.execute("update matches set account=?", @login)
+    rescue
+      @db.execute("alter table matches add column account text")
+      @db.execute("update matches set account=?", @login)
+
+    end
     #   @db.execute("update matches set ignore_list=0 where ignored='false'")
     #   @db.execute("update matches set ignore_list=1 where ignored='true'")
     # end
     # @db.execute("alter table stats add column total_messages integer")
     # @db.execute("update stats set total_messages=0 where id=1")
-    @db.execute("delete from matches where gender=?", "Q")
+    # @db.execute("delete from matches where gender=?", "Q")
   end
 
   def action(stmt)

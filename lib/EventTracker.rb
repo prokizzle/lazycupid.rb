@@ -43,7 +43,7 @@ class EventTracker
     users = page.scan(/.p.class=.user_name.>(.+)<\/p>/)
     users.each do |user|
       block = user.shift
-      handle = block.match(/visitors.>(.+)<.a/)[1]
+      handle = block.match(/\/profile\/(.+)\?cf=visitors"/)[1]
       aso = block.match(/aso.>(.+)<.p/)[1]
       age = aso.match(/(\d{2})/)[1].to_i
       gender = aso.match(/#{age} \/ (\w) \//)[1]

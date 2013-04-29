@@ -1,20 +1,20 @@
 require './includes'
 
 class Application
-  attr_reader :config, :username, :password, :db, :scheduler
+  attr_reader :config, :username, :password, :db, :scheduler, :blocklist
 
   def initialize(args)
     @username     = args[ :username]
     @password     = args[ :password]
     config_path          = File.dirname($0) + '/config/'
     log_path      = File.dirname($0) + '/logs/'
+    @db_path      = File.dirname($0) + '/db/'
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
+    @db           = PGDatabaseManager.new(:login_name => @username, :settings => @config, :db => PG.connect( :dbname => 'lazy_cupid' ))
     @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @browser2     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @browser3     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @db           = initialize_db
-    # @prefs      = Preferences.new(:browser => @browser)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
@@ -46,31 +46,7 @@ class Application
   end
 
   def initialize_db
-    filename = "./db/#{@username}.db"
-    unless File.exists?(filename)
-      if @browser.is_logged_in
-        puts "Create new db for #{@username}?"
-        choice = gets.chomp
-        case choice
-        when "y"
-          tmp = DatabaseManager.new(:login_name => @username, :settings => @config)
-          tmp.import
-          tmp.close
-          @first_login = true
-        else
-          ""
-        end
-      end
-    end
-    DatabaseManager.new(:login_name => @username, :settings => @config)
-  end
-
-  def db
-    @db
-  end
-
-  def scheduler
-    @scheduler
+    DatabaseManager.new(:login_name => @username, :settings => @config, :db_path => @db_path)
   end
 
   def is_idle
@@ -94,10 +70,6 @@ class Application
   def open_db
     # puts "Debug: Opening database"
     # db.open
-  end
-
-  def blocklist
-    @blocklist
   end
 
   def test_more_matches
@@ -235,16 +207,13 @@ class Application
     @smarty.pre_roll_actions
   end
 
-
-
-
 end
 
 login_message = "Please login."
 quit          = false
 logged_in     = false
 
-begin
+# begin
   until logged_in
     print "\e[2J\e[f"
     puts "LazyCupid Main Menu","--------------------",""
@@ -263,15 +232,15 @@ begin
       login_message = "Incorrect password. Try again."
     end
   end
-rescue Exception => e
-  puts e.message
-  puts e.backtrace
+# rescue Exception => e
+  # puts e.message
+  # puts e.backtrace
   # Exceptional.handle(e, 'Login workflow')
-rescue SystemExit, Interrupt
-  quit = true
-  logout = false
-  puts "","","Goodbye."
-end
+# rescue SystemExit, Interrupt
+  # quit = true
+  # logout = false
+  # puts "","","Goodbye."
+# end
 
 app.pre_roll_actions
 
@@ -283,9 +252,9 @@ app.scheduler.every '3h' do
   app.check_visitors
 end
 
-app.scheduler.every '5s' do
-  app.check_events
-end
+# app.scheduler.every '5s' do
+#   app.check_events
+# end
 
 app.scheduler.every '5m' do
   app.test_more_matches
@@ -294,35 +263,5 @@ end
 app.scheduler.every '12s' do
   app.roll
 end
-
-# app.import_hidden_users
-
-# begin
-# until quit
-# app.check_what_to_do
-# quit = app.check_if_should_quit
-# end
-# rescue Exception => e
-# Exceptional.handle(e)
-# puts e.message
-# rescue SystemExit, Interrupt
-# puts "Goodbye"
-# quit = true
-# app.exit_db
-# end
-
-# app.scheduler.every '30min' do
-#   app.check_scrape_event
-# end
-# app.scheduler.every '5m' do
-#   app.check_if_should_visit_new_users
-# end
-# app.scheduler.every '1h' do
-#   app.check_if_should_follow_up
-# end
-
-# app.scheduler.every '30s' do
-#   puts "Idle"
-# end
 
 app.scheduler.join

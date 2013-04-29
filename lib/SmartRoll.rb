@@ -26,12 +26,24 @@ class SmartRoll
   end
 
   def reload
-    result = @db.new_user_smart_query.to_set
-    if result.size == 0
-      result = @db.followup_query.to_set
+    array = Array.new
+    pg = @db.new_user_smart_query
+    pg.each do |user|
+      array.push(user["name"])
+      puts user["name"]
     end
+
+    if array.size == 0
+      pg = @db.followup_query
+      pg.each do |user|
+        array.push(user["name"])
+        puts user["name"]
+      end
+    end
+    result = array.to_set
     result = result.to_a
     result
+
   end
 
   def cache
@@ -43,21 +55,11 @@ class SmartRoll
   end
 
   def next_user
-    cache.shift[0]
+    cache.shift
   end
 
   def autodiscover_new_users
     @harvester.scrape_from_user if @settings.autodiscover_on
-  end
-
-  def user_ob_debug
-    begin
-      test = [@user.gender, @user.handle, @user.match_percentage, @user.city, @user.state]
-    rescue
-      puts @browser.body
-      puts "Scraping ERROR!"
-      user = gets.chomp
-    end
   end
 
   def inactive_account
@@ -101,7 +103,6 @@ class SmartRoll
       if inactive_account
         remove_match(user)
       else
-        user_ob_debug if debug
         @console.log(@user) if verbose
         @tally += 1
         @db.log2(@user)

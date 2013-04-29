@@ -56,12 +56,12 @@ class Users
 
   def handle
 
-    begin
+    # begin
       # result = body.match(/username.>([-_\w\d]+)</)[1]
-      result = @browser.current_user.parser.xpath("//span[@id='basic_info_sn']").text
-    rescue
-      result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
-    end
+      result = @browser.current_user.parser.xpath("//p[@class='username']").text
+    # rescue
+      # result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
+    # end
 
     unless result == intended_handle
       @db.rename_alist_user(intended_handle, result)

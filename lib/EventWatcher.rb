@@ -12,11 +12,11 @@ class EventWatcher
     @m_last_event_time = 0
     @s_last_event_time = 0
     @i_last_event_time = 0
-
+    @events_hash = Hash.new { |hash, key| hash[key] = 0 }
   end
 
   def long_poll_result
-    @browser.go_to(api_url)
+    @browser.get_body_of(api_url)[:body]
   end
 
   def login
@@ -44,29 +44,29 @@ class EventWatcher
   end
 
   def msg_notify
-    unless this_event_time == @m_last_event_time
-      puts "New message from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
-      @tracker.register_message(@event["screenname"], this_event_time)
-    end
-    @m_last_event_time = this_event_time
+    # unless @events_hash.has_key(this_event_time)
+    puts "New message from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
+    @tracker.register_message(@event["screenname"], this_event_time)
+    # end
+    # @events_hash[this_event_time] = @event["screenname"]
     @event
   end
 
   def im
-    unless this_event_time == @i_last_event_time
-      puts "New IM from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
-      # @tracker.register_message(@event["screenname"], @event["server_gmt"])
-    end
-    @i_last_event_time = this_event_time
+    # unless @events_hash.has_key(this_event_time)
+    puts "New IM from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
+    # @tracker.register_message(@event["screenname"], @event["server_gmt"])
+    # end
+    # @events_hash[this_event_time] = @event["screenname"]
     @event
   end
 
   def stalk
-    unless this_event_time == @s_last_event_time
-      puts "New visit from #{@event['screenname']}"
-      @tracker.register_visit(@event)
-    end
-    @s_last_event_time = this_event_time
+    # unless @events_hash.has_key(this_event_time)
+    puts "New visit from #{@event['screenname']}"
+    @tracker.register_visit(@event)
+    # end
+    # @events_hash[this_event_time] = @event["screenname"]
     @event
   end
 
@@ -79,28 +79,31 @@ class EventWatcher
     count = 0
     unless response == nil
       # begin
-        response["events"].each do |event|
-          if event.has_key?('from')
-            @index = count
-          end
-          count += 1
+      response["events"].each do |event|
+        if event.has_key?('from')
+          @index = count
         end
+        count += 1
+      end
       # rescue
-        # p response
+      # p response
       # end
       if @index && response["events"][@index]
         @event = response["events"][@index]
         @details = response["people"]
         @event = @event.merge(@details[@details.size - 1]) unless @details[@details.size - 1] == nil
         response = @event["type"]
-        begin
-          self.send(response)
-        rescue
-          @log.debug "#{response}: #{@event['screenname']}"
+        unless @events_hash.has_key(this_event_time)
+          begin
+            self.send(response)
+          rescue
+            @log.debug "#{response}: #{@event['screenname']}"
+          end
+          @events_hash[this_event_time] = @event["screenname"]
         end
       end
     end
-    unread = response["num_unread"].to_i
+    # unread = response["num_unread"].to_i
     nil
   end
 

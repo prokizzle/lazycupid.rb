@@ -1,7 +1,7 @@
 require 'rubygems'
 require './lib/DataManager'
 require './lib/Output'
-require './lib/Lookup'
+require './lib/lookup'
 require './lib/Session'
 require './lib/SmartRoll'
 require './lib/BlockList'

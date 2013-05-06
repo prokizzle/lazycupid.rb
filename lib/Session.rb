@@ -1,17 +1,20 @@
 class Session
-  attr_accessor :go_to, :agent, :body, :current_user, :handle
-  attr_reader :go_to, :agent, :body, :current_user, :handle
+  attr_reader :agent, :body, :current_user, :url, :hash
+  attr_accessor :agent, :body, :current_user, :url, :hash
 
 
   def initialize(args)
     @username = args[ :username]
     @password = args[ :password]
     @agent = Mechanize.new
+    @log      = args[ :log]
+    @hash = Hash.new { |hash, key| hash[key] = 0 }
+    # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
   end
 
   def login
     begin
-      # @agent.user_agent_alias = 'Mac Safari'
+      @agent.user_agent_alias = 'Mac Safari'
       page = @agent.get("http://www.okcupid.com/")
       form = page.forms.first
       form['username']=@username
@@ -32,59 +35,52 @@ class Session
   end
 
   def is_logged_in
-    go_to("http://www.okcupid.com/")
-    /logged_in/.match(@body)
+    response = body_of("http://www.okcupid.com/", Time.now.to_i)
+    /logged_in/.match(response[:body])
   end
 
   def is_logged_out
-    go_to("http://www.okcupid.com/")
-    /logged_out/.match(@body)
+    response = body_of("http://www.okcupid.com/", Time.now.to_i)
+    /logged_out/.match(response[:body])
   end
 
-  def go_to(url, handle=nil)
-    @handle = handle
-    begin
-      @current_user = @agent.get(url)
-      @body = @current_user.parser.xpath("//body").to_html
-    rescue
-    end
+  def go_to(link)
+    @url = link
+    # begin
+    @current_user = @agent.get(link)
+    @log.debug "#{@url}"
+    @body = @current_user.parser.xpath("//body").to_html
+    # rescue
+    # end
+  end
+
+  def body_of(link, request_id)
+    url = link
+    # begin
+      @agent.read_timeout=30
+      temp = @agent.get(url)
+    # rescue Errno::ETIMEDOUT
+      # temp = @agent.get(url)
+    # end
+    @log.debug "#{@url}"
+    returned_body = temp.parser.xpath("//body").to_html
+    @response = {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
+    @response
+  end
+
+  def html_of(link, request_id)
+    url = link
+    temp = @agent.get(url)
+    @log.debug "#{@url}"
+    {url: url, html: temp, hash: request_id}
+  end
+
+  def handle
+    /\/profile\/(.+)/.match(@url)[1]
   end
 
   def logout
     go_to("http://www.okcupid.com/logout")
-  end
-
-  def session
-    @agent
-  end
-
-  def body
-    @body
-  end
-
-  def handle
-    @handle
-  end
-
-
-  def scrape_user_name
-    begin
-      @body.match(/href="\/profile\/([A-z0-9_-]+)\/photos"/)[1]
-    rescue
-      "N/A"
-    end
-  end
-
-  def scrape_match_percentage
-    begin
-      @match_per = @body.match(/"match"\>\<strong>(\d+)\%\<\/strong\> Match\<\/p\>/)[1]
-    rescue
-      begin
-        @match_per = @body.match(/<strong>(.+)\%\<\/strong\> Match\<\/p\>/)[1]
-      rescue
-        @match_per = "N/A"
-      end
-    end
   end
 
   def account_deleted

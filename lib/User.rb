@@ -1,25 +1,72 @@
 class Users
 
-  attr_reader :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
-  attr_accessor :handle, :match_percentage, :age, :count, :sexuality, :gender, :relationship_status, :is_blocked
+  attr_reader :verbose, :debug, :body, :url, :html
 
   def initialize(args)
     @db = args[ :database]
     @browser  = args[ :browser]
+    @log      = args[ :log]
+    @path     = args[ :path]
     @verbose  = true
     @debug    = true
   end
 
-  def body
-    @browser.body
+  # def verbose
+  #   @verbose
+  # end
+
+  # def debug
+  #   @debug
+  # end
+
+  def log
+    Logger.new("#{@path}#{@username}_#{Time.now}.log")
   end
 
-  def verbose
-    @verbose
+  def for_page(page_object)
+    @page = page_object
   end
 
-  def debug
-    @debug
+  def profile(user)
+    result = Hash.new { |hash, key| hash[key] = 0 }
+    request_id = Time.now.to_i
+    until result[:hash] == request_id
+      result = @browser.body_of("http://www.okcupid.com/profile/#{user}", request_id)
+    end
+    @body = result[:body]
+    @html = result[:html]
+    # puts @html
+    # wait = gets.chomp
+    @url = result[:url]
+    inactive = @body.match(/Uh\-oh/)
+    @intended_handle = /\/profile\/(.+)/.match(@url)[1]
+    if inactive
+      {inactive: inactive}
+    else
+      {handle: handle,
+       match_percentage: match_percentage,
+       age: age,
+       # friend_percentage: friend_percentage,
+       # enemy_percentage: enemy_percentage,
+       # ethnicity: ethnicity,
+       # height: height,
+       # bodytype: body_type,
+       # smoking: smoking,
+       # drinking: drinking,
+       # drugs: drugs,
+       # kids: kids,
+       last_online: last_online,
+       location: location,
+       city: city,
+       state: state,
+       sexuality: sexuality,
+       gender: gender,
+       distance: relative_distance,
+       relationship_status: relationship_status,
+       is_blocked: is_blocked,
+       intended_handle: @intended_handle,
+       inactive: inactive }
+    end
   end
 
   def display_code
@@ -29,94 +76,112 @@ class Users
   end
 
   def intended_handle
-    @browser.handle
+    temp_url = @url
+    begin
+      /\/profile\/(.+)/.match(temp_url)[1]
+    rescue Exception => e
+      @log.debug "#{temp_url}"
+      @log.debug body
+      @log.debug "#{e.message}"
+      @log.debug "#{e.backtrace}"
+    end
   end
 
   def asl
-    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married|Unknown) \/ (.+)\s<\/p>/.match(body)
+    /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married|Unknown) \/ (.+)\s<\/p>/.match(@body)
   end
 
   def handle
 
-    begin
-      result = body.match(/username.>([-_\w\d]+)</)[1]
-    rescue
-      result = /username.>(.+)<.p>.<p.class..info.>/.match(body)[1]
-    end
+    # log = Logger.new("logs/user_test_#{Time.now}.log")
+    # log.debug @body
+    # begin
+    # result = body.match(/username.>([-_\w\d]+)</)[1]
+    # result = @html.parser.xpath("//p[@class='username']").text
 
-    unless result == intended_handle
-      @db.delete_user(intended_handle)
+    # rescue
+    # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
+    result = @body.match(/<div class="userinfo"> <div class="details"> <p class="username">(.+)<.p> <p class="info">/)[1]
+    # end
+
+    unless result == @intended_handle.to_s
+      @db.rename_alist_user(@intended_handle, result)
       puts "A-list bug: #{intended_handle} is now #{result}" if verbose
     end
 
-    result
+    # puts result
+    result.to_s
 
   end
 
   def match_percentage
-    />(\d+). Match.*/.match(body)[1].to_i
+    begin
+      result = @html.parser.xpath("//span[@class='match']").text
+      new_result = /(\d*\d*). Match/.match(result)[1]
+      new_result.to_i
+    rescue
+      log.debug "match_percentage: #{body}"
+      @body.match(/(\d+). Match/)[1].to_i
+    end
   end
 
   def friend_percentage
-    />(\d+). Friend.*/.match(body)[1].to_i
+    />(\d+). Friend.*/.match(@body)[1].to_i
   end
 
   def enemy_percentage
-    />(\d+). Enemy.*/.match(body)[1].to_i
+    />(\d+). Enemy.*/.match(@body)[1].to_i
   end
 
   def slut_test_results
-    /(\d+). slut/.match(body)[1].to_i
+    /(\d+). slut/.match(@body)[1].to_i
   end
 
   def age
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_age']").to_html
-    age = />(\d{2})</.match(result)[1]
-    age.to_i
+    result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
   end
 
   def ethnicity
-    /ethnicities.>\s([\w\s]+).*/.match(body)[1].to_s
+    /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
   end
 
   def height
-    /height.>.+\(*([\d\.]*)m*/.match(body)[1].to_f
+    /height.>.+\(*([\d\.]*)m*/.match(@body)[1].to_f
   end
 
   def body_type
-    /bodytype.>(.+)<.dd>/.match(body)[1].to_s
+    /bodytype.>(.+)<.dd>/.match(@body)[1].to_s
   end
 
   def smoking
     # display_code if debug
-    # /smoking.>(.*)<.dd>/.match(body)[1].to_s
-    result = @browser.current_user.parser.xpath("//dd[@id='ajax_smoking']").to_html
-    smoking = />(.*)</.match(result)[1]
-    smoking.to_s
+    # /smoking.>(.*)<.dd>/.match(@body)[1].to_s
+    @html.parser.xpath("//dd[@id='ajax_smoking']").text
 
   end
 
   def drinking
-    # /drinking.>(.+)<.dd>/.match(body)[1].to_s
-    result = @browser.current_user.parser.xpath("//dd[@id='ajax_drinking']").to_html
-    new_result = />(.*)</.match(result)[1]
-    new_result.to_s
+    # /drinking.>(.+)<.dd>/.match(@body)[1].to_s
+    @html.parser.xpath("//dd[@id='ajax_drinking']").text
   end
 
   def drugs
-    /drugs.>(.+)<\/dd>/.match(body)[1].to_s
+    /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
   end
 
   def kids
-    /children.>(.+)<\/dd>/.match(body)[1].to_s
+    /children.>(.+)<\/dd>/.match(@body)[1].to_s
   end
 
   def last_online
     begin
-      result = /(\d{10}),..JOURNAL_FORMAT./.match(body)[1].to_i
+      result = /(\d{10}),..JOURNAL_FORMAT./.match(@body)[1].to_i
       result
     rescue
-      Time.now.to_i if body.match(/Online now\!/)
+      begin
+        Time.now.to_i if body.match(/Online now\!/)
+      rescue
+      end
     end
   end
 
@@ -125,9 +190,7 @@ class Users
   end
 
   def location
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_location']").to_html
-    location = />(.*)</.match(result)[1]
-    location.to_s
+    @html.parser.xpath("//span[@id='ajax_location']").text
   end
 
   def city
@@ -161,29 +224,23 @@ class Users
 
 
   def sexuality
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_orientation']").to_html
-    sexuality = />(Straight|Bisexual|Gay)</.match(result)[1]
-    sexuality.to_s
+    @html.parser.xpath("//span[@id='ajax_orientation']").text
   end
 
   def gender
-    result = @browser.current_user.parser.xpath("//span[@id='ajax_gender']").to_html
-    gender = />(M|F)</.match(result)[1]
-    gender.to_s
+    @html.parser.xpath("//span[@id='ajax_gender']").text
   end
 
   def relative_distance
     begin
-      /\((\d+) miles*\)/.match(body)[1].to_i
+      /\((\d+) miles*\)/.match(@body)[1].to_i
     rescue
       1
     end
   end
 
   def relationship_status
-        result = @browser.current_user.parser.xpath("//span[@id='ajax_status']").to_html
-        new_result = />(.*)</.match(result)[1]
-        new_result.to_s
+    @html.parser.xpath("//span[@id='ajax_status']").text
   end
 
   def is_blocked

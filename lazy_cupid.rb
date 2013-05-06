@@ -13,17 +13,15 @@ class Application
     @config       = Settings.new(:username => username, :path => config_path)
     @db           = DatabaseMgr.new(:login_name => @username, :settings => @config)
     @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @browser2     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @browser3     = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
     @user         = Users.new(:database => db, :browser => @browser, :log => @log, :path => log_path)
     @scheduler    = Rufus::Scheduler.start_new
-    @tracker      = EventTracker.new(:browser => @browser2, :database => @db, :settings => @config)
-    @events       = EventWatcher.new(:browser => @browser3, :tracker => @tracker, :logger => @log)
+    @tracker      = EventTracker.new(:browser => @browser, :database => @db, :settings => @config)
+    @events       = EventWatcher.new(:browser => @browser, :tracker => @tracker, :logger => @log)
     @harvester    = Harvester.new(
-      :browser          => @browser2,
+      :browser          => @browser,
       :database         => db,
       :profile_scraper  => @user,
       :settings         => @config,
@@ -63,7 +61,7 @@ class Application
   end
 
   def browsers_array
-    [@browser3, @browser2]
+    [@browser, @browser]
   end
 
 
@@ -111,9 +109,9 @@ class Application
     # until browsers.size == 0
     #   browsers.shift.login
     # end
-    # @browser3.login
-    # @browser2.login
-    secondary_login
+    # @browser.login
+    # @browser.login
+    # secondary_login
     @browser.login
   end
 
@@ -122,8 +120,8 @@ class Application
     # until temp.size == 0
     #   temp.shift.login
     # end
-    @browser2.login
-    @browser3.login
+    @browser.login
+    @browser.login
   end
 
   def secondary_logout
@@ -157,8 +155,8 @@ class Application
   end
 
   def multi_scrape
-    harvest_home_page
-    scrape_activity_feed
+    # harvest_home_page
+    # scrape_activity_feed
     scrape_inbox
   end
 
@@ -207,6 +205,10 @@ class Application
     @smarty.pre_roll_actions
   end
 
+  def set_stop_time
+    @stop_time = Chronic.parse('4h from now').to_i
+  end
+
 end
 
 login_message = "Please login."
@@ -223,11 +225,13 @@ until logged_in
     username = gets.chomp
     password = ask("password: ") { |q| q.echo = false }
   else
-    puts "#{login_message}",""
+    # puts "#{login_message}",""
     username = ARGV[0]
     password = ARGV[1]
   end
+  # Exceptional.rescue do
   app = Application.new(:username => username, :password => password)
+  # end
   if app.login
     logged_in = true
     login_message = "Success. Initializing."
@@ -245,13 +249,16 @@ end
 # logout = false
 # puts "","","Goodbye."
 # end
+#
+
+# app.set_stop_time
 
 app.pre_roll_actions
 
 app.scheduler.every '30m' do
-  app.multi_scrape
+  app.scrape_inbox
 end
-
+#
 app.scheduler.every '3h' do
   app.check_visitors
 end
@@ -264,8 +271,16 @@ app.scheduler.every '5m' do
   app.test_more_matches
 end
 
-app.scheduler.every '12s' do
-  app.roll
-end
+# app.scheduler.every '12s' do #|job|
+  # if Time.now.to_i >= @stop_time.to_i
+    # puts "Roll session complete."
+    # job.unschedule
+  # else
+  loop do
+    app.roll
+    sleep 12
+  end
+  # end
+# end
 
 app.scheduler.join

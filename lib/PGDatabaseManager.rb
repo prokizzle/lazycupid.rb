@@ -1,9 +1,11 @@
 class DatabaseMgr
+attr_reader :login
+
 
   def initialize(args)
     @login    = args[ :login_name]
     @settings = args[ :settings]
-    @db = PGconn.connect( :dbname => 'app_dev' )
+    @db = PGconn.connect( :dbname => 'lazy_cupid' )
 
     open_db
     db_migrations
@@ -11,6 +13,7 @@ class DatabaseMgr
     @debug    = @settings.debug
     @did_migrate = false
     # @path = args[ :db_path]
+    delete_self_refs
   end
 
   def db
@@ -19,6 +22,12 @@ class DatabaseMgr
 
   def verbose
     @verbose
+  end
+
+  def delete_self_refs
+    @db.exec("delete from matches where name = $1", [@login])
+    @db.exec("delete from matches where name = $1", [nil])
+    @db.exec("delete from matches where name = $1", [""])
   end
 
   def db_migrations
@@ -143,11 +152,11 @@ class DatabaseMgr
     result[0]["total_messages"].to_i
   end
 
-  def add_user(username, count=0)
+  def add_user(username)
     unless existsCheck(username) || username == "pictures"
       puts "Adding user:        #{username}" if verbose
       # @db.transaction
-      @db.exec( "insert into matches(name, counts, ignored, time_added, account) values ($1, $2, $3, $4, $5)", [username, count, 'false', Time.now.to_i, @login])
+      @db.exec("insert into matches(name, ignore_list, time_added, account) values ($1, $2, $3, $4)", [username.to_s, 0, Time.now.to_i, @login.to_s])
       # @db.commit
       stats_add_new_user
     else

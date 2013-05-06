@@ -6,7 +6,7 @@ require 'progress_bar'
 #
 class Harvester
   attr_reader :type, :user
-  attr_accessor :type, :user
+  attr_accessor :type, :user, :body
 
   def initialize(args)
     @browser      = args[ :browser]
@@ -27,7 +27,7 @@ class Harvester
   end
 
   def body
-    @browser.body
+    @user.body
   end
 
   def current_user
@@ -228,19 +228,6 @@ class Harvester
     end
 
   end
-
-
-  def scrape_activity_feed
-    puts "Scraping activity feed." if verbose
-    @browser.go_to("http://www.okcupid.com/home?cf=logo")
-    results = body.scan(/\/profile\/([\w\d_-]+)\?cf=home_orbits.>.</)
-    results.each do |user|
-      handle = user[0]
-      @database.add_user(handle)
-    end
-  end
-
-
 
   def page_turner(args)
     page_links      = Regexp.quote(args[ :page_links].to_s)

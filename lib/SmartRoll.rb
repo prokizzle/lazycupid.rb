@@ -29,14 +29,14 @@ class SmartRoll
     array = Array.new
     pg = @db.new_user_smart_query
     pg.each do |user|
-      array.push(user["name"])
+      array.push(user["name"]) if user.has_key?("name")
       # puts user["name"] if debug
     end
 
     if array.size == 0
       pg = @db.followup_query
       pg.each do |user|
-        array.push(user["name"])
+        array.push(user["name"]) if user.has_key?("name")
         # puts user["name"] if debug
       end
     end
@@ -81,8 +81,6 @@ class SmartRoll
   def payload
     @tracker.test_more_matches
     @tracker.scrape_inbox
-    @harvester.scrape_activity_feed
-    @harvester.scrape_home_page
     check_visitors
   end
 
@@ -97,33 +95,32 @@ class SmartRoll
   end
 
   def visit_user(user)
-    unless user == nil
-      # puts user.to_s
-      # @browser.go_to("http://www.okcupid.com/profile/#{user}")
-      response = @user.profile(user)
-      if response[:inactive]
-        remove_match(user)
-      else
-        # puts response
-        @console.log(response) if verbose
-        @tally += 1
-        @db.log2(response)
-        autodiscover_new_users if response[:gender] == @settings.gender
-      end
+    response = @user.profile(user)
+    if response[:inactive]
+      remove_match(user)
     else
-      puts "User is nil"
-      puts user
+      # puts response
+      @console.log(response) if verbose
+      @tally += 1
+      @db.log2(response)
+      # @harvester.body = @user.body
+      autodiscover_new_users if response[:gender] == @settings.gender
     end
   end
 
   def roll
-    temp = next_user
-    unless temp == nil
-      visit_user(temp)
-      @already_idle == false
-    else
-      puts "Idle..." unless @already_idle
-      @already_idle = true
+    temp = next_user.to_s
+    # puts "Waiting..."
+    # wait = gets.chomp
+    unless temp == @db.login
+      unless temp == nil || temp == ""
+        puts ".#{temp}."
+        visit_user(temp)
+        @already_idle == false
+      else
+        puts "Idle..." unless @already_idle
+        @already_idle = true
+      end
     end
   end
 

@@ -13,6 +13,7 @@ class EventWatcher
     @s_last_event_time = 0
     @i_last_event_time = 0
     @events_hash = Hash.new { |hash, key| hash[key] = 0 }
+    @instant_instance = 1
   end
 
   def long_poll_result
@@ -37,7 +38,10 @@ class EventWatcher
   end
 
   def api_url
-    "http://api.okcupid.com/instantevents?random=#{rand}"
+    # @instant_instance = 1 if @instant_instance > 2
+    result = "http://1-instant.okcupid.com/instantevents?random=#{rand}"
+    # @instant_instance += 1
+    result
   end
 
   def this_event_time
@@ -49,7 +53,11 @@ class EventWatcher
   end
 
   def poll_response
-    JSON.parse(content.gsub('\"', '"')).to_hash
+    begin
+      JSON.parse(content.gsub('\"', '"')).to_hash
+    rescue JSON::ParserError
+      content.to_hash
+    end
   end
 
   def msg_notify
@@ -90,11 +98,11 @@ class EventWatcher
       # begin
       response["events"].each do |event|
         if event.respond_to?(:has_key)
-        if event.has_key?('from')
-          @index = count
+          if event.has_key?('from')
+            @index = count
+          end
+          count += 1
         end
-        count += 1
-      end
       end
       # rescue
       # p response

@@ -1,6 +1,6 @@
 class Session
-  attr_accessor :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user, :hash
-  attr_reader :agent, :body, :body2, :current_user, :current_user2, :handle, :url, :api_body, :api_current_user, :harv_body, :harv_current_user, :hash
+  attr_reader :agent, :body, :current_user, :url, :hash
+  attr_accessor :agent, :body, :current_user, :url, :hash
 
 
   def initialize(args)
@@ -9,11 +9,12 @@ class Session
     @agent = Mechanize.new
     @log      = args[ :log]
     @hash = Hash.new { |hash, key| hash[key] = 0 }
+    # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
   end
 
   def login
     begin
-      # @agent.user_agent_alias = 'Mac Safari'
+      @agent.user_agent_alias = 'Mac Safari'
       page = @agent.get("http://www.okcupid.com/")
       form = page.forms.first
       form['username']=@username
@@ -34,13 +35,13 @@ class Session
   end
 
   def is_logged_in
-    go_to("http://www.okcupid.com/")
-    /logged_in/.match(@body)
+    response = body_of("http://www.okcupid.com/", Time.now.to_i)
+    /logged_in/.match(response[:body])
   end
 
   def is_logged_out
-    go_to("http://www.okcupid.com/")
-    /logged_out/.match(@body)
+    response = body_of("http://www.okcupid.com/", Time.now.to_i)
+    /logged_out/.match(response[:body])
   end
 
   def go_to(link)
@@ -55,12 +56,16 @@ class Session
 
   def body_of(link, request_id)
     url = link
-    temp = @agent.get(url)
+    # begin
+      @agent.read_timeout=30
+      temp = @agent.get(url)
+    # rescue Errno::ETIMEDOUT
+      # temp = @agent.get(url)
+    # end
     @log.debug "#{@url}"
     returned_body = temp.parser.xpath("//body").to_html
-    response = {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
-    @hash[request_id] = response
-    response
+    @response = {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
+    @response
   end
 
   def html_of(link, request_id)
@@ -76,18 +81,6 @@ class Session
 
   def logout
     go_to("http://www.okcupid.com/logout")
-  end
-
-  def session
-    @agent
-  end
-
-  def body
-    @body
-  end
-
-  def body2
-    @body2
   end
 
   def account_deleted

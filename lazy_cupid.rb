@@ -255,32 +255,31 @@ end
 
 app.pre_roll_actions
 
-app.scheduler.every '30m' do
+app.scheduler.every '30m', :mutex => 'that_mutex' do
   app.scrape_inbox
 end
 #
-app.scheduler.every '3h' do
+app.scheduler.every '3h', :mutex => 'that_mutex' do
   app.check_visitors
 end
 
-app.scheduler.every '5s' do
-  app.check_events
-end
+# app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'that_mutex' do
+  # app.check_events
+# end
 
-app.scheduler.every '5m' do
+app.scheduler.every '5m', :mutex => 'that_mutex' do
   app.test_more_matches
 end
 
-# app.scheduler.every '12s' do #|job|
+app.scheduler.every '12s', :mutex => 'that_mutex' do #|job|
   # if Time.now.to_i >= @stop_time.to_i
     # puts "Roll session complete."
     # job.unschedule
   # else
-  loop do
+  # loop do
     app.roll
-    sleep 12
-  end
   # end
-# end
+  # end
+end
 
 app.scheduler.join

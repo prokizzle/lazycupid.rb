@@ -36,6 +36,10 @@ def msg_notify
   print_event_info
 end
 
+def looks_vote
+
+end
+
 def stalk
   # unless @event["server_gmt"].to_i == @last_event_time
   puts "New visit from #{@people['screenname']}" unless @stalks.has_key?(@event["server_gmt"])

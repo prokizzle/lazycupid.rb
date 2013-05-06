@@ -5,14 +5,15 @@ attr_reader :login
   def initialize(args)
     @login    = args[ :login_name]
     @settings = args[ :settings]
-    @db = PGconn.connect( :dbname => 'lazy_cupid' )
-
+    @db = PGconn.connect( :dbname => @settings.db_name#,
+      #:password => @settings.db_pass,
+      #:user=>@settings.db_user
+      )
     open_db
     db_migrations
     @verbose  = @settings.verbose
     @debug    = @settings.debug
     @did_migrate = false
-    # @path = args[ :db_path]
     delete_self_refs
   end
 

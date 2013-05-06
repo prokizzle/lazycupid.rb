@@ -15,6 +15,7 @@ class EventWatcher
     @spotlight  = Hash.new
     @messages   = Hash.new
     @stalks     = Hash.new
+    @looks_vote = Hash.new
     @new_events = Array.new
     @new_people = Array.new
     @hash = Hash.new { |hash, key| hash[key] = 0 }
@@ -72,6 +73,10 @@ class EventWatcher
       @tracker.register_message(@event["screenname"], this_event_time)
     end
     @messages[@event["server_gmt"]] = @people["screenname"]
+  end
+
+  def looks_vote
+
   end
 
   def im

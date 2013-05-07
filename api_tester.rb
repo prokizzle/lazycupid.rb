@@ -1,8 +1,6 @@
 require './includes'
 
-class Settings2
-  attr_reader :debug, :verbose
-end
+
 
 @debug = false
 
@@ -14,10 +12,10 @@ end
 @stalks     = Hash.new
 @username   = ARGV[0]
 
-settings    = Settings2.new
+settings    = Settings.new(:username => @username, :path => File.dirname($0) + '/config/')
 
-db          = DatabaseMgr.new(:login_name => @username :settings => settings)
-browser     = Session.new(:username => @username :password => ARGV[1], :log => @log)
+db          = DatabaseMgr.new(:login_name => @username, :settings => settings)
+browser     = Session.new(:username => @username, :password => ARGV[1], :log => @log)
 tracker     = EventTracker.new(:browser => browser, :database => db, :settings => settings)
 app         = EventWatcher.new(:browser => browser, :tracker => tracker, :logger => Logger.new("logs/#{@username}_#{Time.now}.log"))
 print "Logging in... "
@@ -124,5 +122,5 @@ loop do
 #       sleep 4
 #     end
 app.check_events
-  end
+  # end
 end

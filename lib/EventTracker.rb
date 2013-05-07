@@ -117,8 +117,8 @@ class EventTracker
     age       = person['age']
     sexuality = translate_sexuality(person['orientation'])
     location  = person['location']
-    city      = @regex.parsed_location(location)[:city]
-    state     = @regex.parsed_location(location)[:state]
+    city      = @regex.location_array(location)[:city]
+    state     = @regex.location_array(location)[:state]
     @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
     unless @stored_timestamp == timestamp

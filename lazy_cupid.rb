@@ -259,9 +259,9 @@ app.scheduler.every '30m', :mutex => 'that_mutex' do
   app.scrape_inbox
 end
 #
-app.scheduler.every '3h', :mutex => 'that_mutex' do
-  app.check_visitors
-end
+# app.scheduler.every '3h', :mutex => 'that_mutex' do
+  # app.check_visitors
+# end
 
 app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'that_mutex' do
   app.check_events
@@ -271,7 +271,7 @@ app.scheduler.every '5m', :mutex => 'that_mutex' do
   app.scrape_ajax_matches
 end
 
-app.scheduler.every '12s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
+app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
   # if Time.now.to_i >= @stop_time.to_i
     # puts "Roll session complete."
     # job.unschedule

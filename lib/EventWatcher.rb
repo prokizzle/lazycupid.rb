@@ -95,7 +95,7 @@ class EventWatcher
   def stalk
     unless @stalks.has_key?(@event["server_gmt"])
       puts "New visit from #{@event['screenname']}"
-      @tracker.register_visit(@event)
+      @tracker.register_visit(@people)
     end
     @stalks[@event["server_gmt"]] = @people["screenname"]
   end

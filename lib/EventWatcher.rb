@@ -67,7 +67,7 @@ class EventWatcher
     begin
       JSON.parse(content.gsub('\"', '"')).to_hash
     rescue JSON::ParserError
-      content.to_hash
+      # content.to_hash
     end
   end
 
@@ -94,7 +94,7 @@ class EventWatcher
 
   def stalk
     unless @stalks.has_key?(@event["server_gmt"])
-      puts "New visit from #{@event['screenname']}"
+      # puts "New visit from #{@event['screenname']}"
       @tracker.register_visit(@people)
     end
     @stalks[@event["server_gmt"]] = @people["screenname"]

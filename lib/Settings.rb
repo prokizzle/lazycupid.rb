@@ -19,10 +19,10 @@ class Settings
     @db_file  = "#{path}/database.yml"
     unless File.exists?(@filename)
       config = {geo: {
-                  :distance_filter_type => "state",
-                  :preferred_state => "California",
-                  :preferred_city => "San Diego",
-                  :distance => 8000
+                  :distance_filter_type => "distance",
+                  :preferred_state => " ",
+                  :preferred_city => " ",
+                  :distance => 150
                 },
                 matching: {
                   :min_percent => 50,

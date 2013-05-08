@@ -35,7 +35,9 @@ class Output
   end
 
   def log(user)
-    puts "#{@username}: #{user[:handle]}; #{user[:match_percentage]}%; #{user[:city]}, #{user[:state]}; #{user[:relative_distance]}; #{@you.visited(user[:handle])}; #{Time.at(user[:last_online]||0).ago.to_words}"
+    print @username
+    result = {user: user[:handle], match_percent: user[:match_percentage], city: user[:city], state: user[:state], distance: user[:distance], count: @you.visited(user[:handle]), last_online: Time.at(user[:last_online]||0).ago.to_words}
+    puts result
   end
 
   def travel_plans(user)

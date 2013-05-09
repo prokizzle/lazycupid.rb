@@ -15,11 +15,12 @@ class EventWatcher
     @spotlight  = Hash.new
     @messages   = Hash.new
     @stalks     = Hash.new
+    @looks_vote = Hash.new
     @new_events = Array.new
     @new_people = Array.new
     @hash = Hash.new { |hash, key| hash[key] = 0 }
     @events_hash = Hash.new { |hash, key| hash[key] = 0 }
-    @instant_instance = 1
+    @instant = 2
   end
 
   def long_poll_result
@@ -44,10 +45,14 @@ class EventWatcher
   end
 
   def api_url
-    # @instant_instance = 1 if @instant_instance > 2
-    result = "http://1-instant.okcupid.com/instantevents?random=#{rand}"
-    # @instant_instance += 1
-    result
+    case @instant
+    when 1
+      @instant = 2
+    else
+      @instant = 1
+    end
+    i = @instant
+    "http://#{i}-instant.okcupid.com/instantevents?random=#{rand}&server_gmt=#{Time.now.to_i}"
   end
 
   def this_event_time
@@ -62,7 +67,7 @@ class EventWatcher
     begin
       JSON.parse(content.gsub('\"', '"')).to_hash
     rescue JSON::ParserError
-      content.to_hash
+      # content.to_hash
     end
   end
 
@@ -72,6 +77,10 @@ class EventWatcher
       @tracker.register_message(@event["screenname"], this_event_time)
     end
     @messages[@event["server_gmt"]] = @people["screenname"]
+  end
+
+  def looks_vote
+
   end
 
   def im
@@ -85,23 +94,26 @@ class EventWatcher
 
   def stalk
     unless @stalks.has_key?(@event["server_gmt"])
-      puts "New visit from #{@event['screenname']}"
-      @tracker.register_visit(@event)
+      # puts "New visit from #{@event['screenname']}"
+      @tracker.register_visit(@people)
     end
     @stalks[@event["server_gmt"]] = @people["screenname"]
   end
 
   def new_spotlight_user
-    unless @spotlight.has_key?(@event["server_gmt"])
-      puts "New spotlight user: #{@people["screenname"]}"
-      @spotlight[@event["server_gmt"]] = @people["screenname"]
+    handle_ = @people["screenname"]
+    gmt_ = @event["server_gmt"]
+    unless @spotlight.has_key?(gmt_)
+      puts "New spotlight user: #{handle_}"
+      @tracker.add_user(handle_)
+      @spotlight[gmt_] = handle_
     end
-    print_event_info
+    # print_event_info
   end
 
   def toolbar_trigger
     puts "Toolbar trigger"
-    print_event_info
+    # print_event_info
   end
 
   def orbit_user_signoff

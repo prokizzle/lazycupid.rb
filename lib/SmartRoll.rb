@@ -27,23 +27,29 @@ class SmartRoll
 
   def reload
     array = Array.new
-    pg = @db.new_user_smart_query
-    pg.each do |user|
-      array.push(user["name"]) if user.has_key?("name")
-      # puts user["name"] if debug
-    end
-
-    if array.size == 0
-      pg = @db.followup_query
+    pg = @db.followup_query
+    unless pg == {}
       pg.each do |user|
         array.push(user["name"]) if user.has_key?("name")
         # puts user["name"] if debug
       end
     end
-    result = array.to_set
-    result = result.to_a
-    result
 
+    if array.size == 0
+      pg = @db.new_user_smart_query
+      unless pg == {}
+        pg.each do |user|
+          array.push(user["name"]) if user.has_key?("name")
+          # puts user["name"] if debug
+        end
+      end
+    end
+    remove_duplicates(array)
+  end
+
+  def remove_duplicates(array)
+    result = array.to_set
+    result.to_a
   end
 
   def cache
@@ -81,7 +87,7 @@ class SmartRoll
   def payload
     @tracker.test_more_matches
     @tracker.scrape_inbox
-    check_visitors
+    # check_visitors
   end
 
   def pre_roll_actions

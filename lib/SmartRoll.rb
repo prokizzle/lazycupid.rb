@@ -64,8 +64,8 @@ class SmartRoll
     cache.shift
   end
 
-  def autodiscover_new_users
-    @harvester.scrape_from_user if @settings.autodiscover_on
+  def autodiscover_new_users(user)
+    @harvester.scrape_from_user(user) if @settings.autodiscover_on
   end
 
   def inactive_account
@@ -110,7 +110,7 @@ class SmartRoll
       @tally += 1
       @db.log2(response)
       # @harvester.body = @user.body
-      autodiscover_new_users if response[:gender] == @settings.gender
+      autodiscover_new_users(response) if response[:gender] == @settings.gender
     end
   end
 

@@ -1,8 +1,9 @@
 class DatabaseMgr
-attr_reader :login
+attr_reader :login, :debug, :verbose
 
 
   def initialize(args)
+    @did_migrate = false
     @login    = args[ :login_name]
     @settings = args[ :settings]
     @db = PGconn.connect( :dbname => @settings.db_name#,
@@ -13,7 +14,6 @@ attr_reader :login
     db_migrations
     @verbose  = @settings.verbose
     @debug    = @settings.debug
-    @did_migrate = false
     delete_self_refs
   end
 
@@ -41,6 +41,7 @@ attr_reader :login
     # @db.exec("alter table stats add column total_messages integer")
     # @db.exec("update stats set total_messages=0 where id=1")
     # @db.exec("delete from matches where gender=?", "Q")
+    @db.exec("delete from matches where gender is null")
   end
 
   def action(stmt)
@@ -120,8 +121,7 @@ attr_reader :login
   end
 
   def stats_add_visit
-    # updated = stats_get_visits_count + 1
-    # @db.exec("update stats set total_visits=$1 and account=$2", [updated, @login])
+    @db.exec("update stats set total_visits=total_visits + 1 where account=$1", [@login])
   end
 
   def stats_add_new_user
@@ -130,7 +130,7 @@ attr_reader :login
   end
 
   def stats_add_new_messages(number)
-    # @db.exec("update stats set total_messages=$1 where account=$2", get_total_received_message_count, @login])
+    @db.exec("update stats set total_messages=total_messages + 1 where account=$1", [@login])
   end
 
   def stats_get_visitor_count
@@ -153,11 +153,11 @@ attr_reader :login
     result[0]["total_messages"].to_i
   end
 
-  def add_user(username)
+  def add_user(username, gender)
     unless existsCheck(username) || username == "pictures"
       puts "Adding user:        #{username}" if verbose
       # @db.transaction
-      @db.exec("insert into matches(name, ignore_list, time_added, account) values ($1, $2, $3, $4)", [username.to_s, 0, Time.now.to_i, @login.to_s])
+      @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender) values ($1, $2, $3, $4, $5, $6)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender])
       # @db.commit
       stats_add_new_user
     else
@@ -192,6 +192,11 @@ attr_reader :login
     @db.exec( "update matches set counts=$1 where name=$2 and account=$3", [number.to_i, match_name, @login] )
   end
 
+  def increment_visit_count(match_name)
+    puts "Incrementing visit count: #{match_name}" if verbose
+    @db.exec("update matches set counts=counts + 1 where name=$1 and account=$2", [match_name, @login])
+  end
+
   def rename_alist_user(old_name, new_name)
     # if existsCheck(new_name)
     # update_visit_count(new_name, get_visit_count(old_name) + get_visit_count(new_name) + 1)
@@ -221,7 +226,7 @@ attr_reader :login
   def new_user_smart_query
     @db.exec("select name from matches
     where account=$2
-    and(counts = 0 or counts is null)
+    and counts = 0
     and (ignore_list=0 or ignore_list is null)
     and (gender is null or gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
@@ -695,12 +700,17 @@ attr_reader :login
   end
 
   def log2(user)
+    puts "*** Log init ***" if debug
     if user[:handle]
+      puts "*** Log valid user ***" if debug
       unless existsCheck(user[:handle])
+        puts "*** Log new user ***" if debug
         add_user(user[:handle])
       end
-      count = get_visit_count(user[:handle]) + 1
-      update_visit_count(user[:handle], count)
+
+      # count = get_visit_count(user[:handle]) + 1
+      # update_visit_count(user[:handle], count)
+      increment_visit_count(user[:handle])
       set_my_last_visit_date(user[:handle])
       set_gender(:username => user[:handle].to_s, :gender => user[:gender])
       set_sexuality(user[:handle], user[:sexuality])

@@ -66,11 +66,6 @@ class Harvester
     @settings.preferred_city
   end
 
-  def scrape_from_user
-    self.leftbar_scrape
-    self.similar_user_scrape
-  end
-
   def distance_criteria_met?
     # puts "by state:     #{filter_by_state?}" if verbose
     # puts "Max dist:     #{max_distance}" if verbose
@@ -104,27 +99,24 @@ class Harvester
       age_criteria_met?
   end
 
-  def leftbar_scrape
-    puts "Scraping: leftbar" if verbose
-    # @browser.go_to(url)
-    array = body.scan(/\/([\w\d_-]+)\?leftbar_match/)
-    array.each { |user| @database.add_user(user[0]) }
-  end
-
-  def similar_user_scrape
-    puts "Scraping: similar users" if verbose
+  def scrape_from_user(user_body)
     # @found = Array.new
     # @database.log(match)
     if meets_preferences?
-      @browser.go_to("http://www.okcupid.com/profile/#{@user.handle}")
-      similars = body.scan(/\/([\w\d _-]+)....profile_similar/)
+      user_ = user_body
+      @body = user_[:body]
+      puts "Scraping: leftbar" if verbose
+      array = @body.scan(/\/([\w\d_-]+)\?leftbar_match/)
+      array.each { |user| @database.add_user(user.shift, @settings.gender) }
+      puts "Scraping: similar users" if verbose
+      similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)
       similars = similars.to_set
       similars.each do |similar_user|
         similar_user = similar_user.shift
-        if @user.gender == @settings.gender
-          @database.add_user(similar_user)
+        if user_[:gender] == @settings.gender
+          @database.add_user(similar_user, user_[:gender])
           @database.set_state(:username => similar_user, :state => @user.state)
-          @database.set_gender(:username => similar_user, :gender => @user.gender)
+          # @database.set_gender(:username => similar_user, :gender => @user.gender)
           @database.set_distance(:username => similar_user, :distance => @user.relative_distance)
         end
       end

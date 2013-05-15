@@ -15,12 +15,12 @@ require './includes'
 settings    = Settings.new(:username => @username, :path => File.dirname($0) + '/config/')
 
 db          = DatabaseMgr.new(:login_name => @username, :settings => settings)
-browser     = Session.new(:username => @username, :password => ARGV[1], :log => @log)
+browser     = Browser.new(:username => @username, :password => ARGV[1], :log => @log)
 tracker     = EventTracker.new(:browser => browser, :database => db, :settings => settings)
-app         = EventWatcher.new(:browser => browser, :tracker => tracker, :logger => Logger.new("logs/#{@username}_#{Time.now}.log"))
+api         = EventWatcher.new(:browser => browser, :tracker => tracker, :logger => Logger.new("logs/#{@username}_#{Time.now}.log"))
 print "Logging in... "
 
-if app.login
+if api.login
   puts "Success."
 else
   puts "Failed."
@@ -121,6 +121,6 @@ loop do
 #       # puts hash
 #       sleep 4
 #     end
-app.check_events
+api.check_events
   # end
 end

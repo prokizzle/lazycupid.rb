@@ -4,7 +4,7 @@ class EventWatcher
 
   def initialize(args)
     # puts "Initializing browser..."
-    # @browser = Session.new(:username => @username, :password => password)
+    # @browser = Browser.new(:username => @username, :password => password)
     @browser = args[ :browser]
     @tracker = args[ :tracker]
     @log     = args[ :logger]
@@ -104,8 +104,8 @@ class EventWatcher
     handle_ = @people["screenname"]
     gmt_ = @event["server_gmt"]
     unless @spotlight.has_key?(gmt_)
-      puts "New spotlight user: #{handle_}"
-      @tracker.add_user(handle_)
+      puts "New spotlight user: #{handle_} (#{@people["gender"]})"
+      @tracker.add_user(handle_, @people["gender"])
       @spotlight[gmt_] = handle_
     end
     # print_event_info
@@ -118,6 +118,14 @@ class EventWatcher
 
   def orbit_user_signoff
     @log.debug "orbit_user_signoff: #{@event['screenname']}"
+  end
+
+  def orbit_user_signon
+    @log.debug "orbit_user_signon: #{@event['screenname']}"
+  end
+
+  def orbit_nth_question
+    @log.debug "orbit_nth_question: #{@event['screenname']}"
   end
 
   def process(event, people)

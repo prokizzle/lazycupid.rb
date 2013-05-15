@@ -65,7 +65,9 @@ class Users
        relationship_status: relationship_status,
        is_blocked: is_blocked,
        intended_handle: @intended_handle,
-       inactive: inactive }
+       inactive: inactive,
+       body: @body,
+       html: @html }
     end
   end
 

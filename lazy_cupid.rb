@@ -12,7 +12,7 @@ class Application
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(:username => username, :path => config_path)
     @db           = DatabaseMgr.new(:login_name => @username, :settings => @config)
-    @browser      = Session.new(:username => username, :password => password, :path => log_path, :log => @log)
+    @browser      = Browser.new(:username => username, :password => password, :path => log_path, :log => @log)
     @blocklist    = BlockList.new(:database => db, :browser => @browser)
     @search       = Lookup.new(:database => db)
     @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
@@ -202,6 +202,7 @@ class Application
   end
 
   def pre_roll_actions
+    # @blocklist.import_hidden_users
     @smarty.pre_roll_actions
   end
 

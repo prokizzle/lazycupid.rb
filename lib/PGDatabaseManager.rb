@@ -1,19 +1,19 @@
 class DatabaseMgr
-attr_reader :login
+  attr_reader :login, :debug, :verbose
 
 
   def initialize(args)
+    @did_migrate = false
     @login    = args[ :login_name]
     @settings = args[ :settings]
     @db = PGconn.connect( :dbname => @settings.db_name#,
-      #:password => @settings.db_pass,
-      #:user=>@settings.db_user
-      )
+                          #:password => @settings.db_pass,
+                          #:user=>@settings.db_user
+                          )
     open_db
-    db_migrations
+    db_tasks
     @verbose  = @settings.verbose
     @debug    = @settings.debug
-    @did_migrate = false
     delete_self_refs
   end
 
@@ -31,16 +31,22 @@ attr_reader :login
     @db.exec("delete from matches where name = $1", [""])
   end
 
-  def db_migrations
+  def db_tasks
     # Exceptional.rescue do
-      # @db.exec("alter table matches add column account text")
-      # @db.exec("alter table stats add column account text")
+    # @db.exec("alter table matches add column account text")
+    # @db.exec("alter table stats add column account text")
     #   @db.exec("update matches set ignore_list=0 where ignored='false'")
     #   @db.exec("update matches set ignore_list=1 where ignored='true'")
     # end
     # @db.exec("alter table stats add column total_messages integer")
     # @db.exec("update stats set total_messages=0 where id=1")
     # @db.exec("delete from matches where gender=?", "Q")
+    begin
+      stats_get_visitor_count
+    rescue
+      @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
+    end
+    @db.exec("delete from matches where gender is null")
   end
 
   def action(stmt)
@@ -105,32 +111,30 @@ attr_reader :login
           account text
           )
         ")
-      @db.exec("insert into stats(id, total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5, $6)", [1, 0, 0, 0, 0, @login])
+      @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
     rescue Exception => e
       # Exceptional.handle(e, 'Database')
       puts e.message if verbose
     end
-    db_migrations
+    db_tasks
     @did_migrate = true
   end
 
-  def stats_add_visitors(number)
-    # updated = stats_get_visitor_count + number.to_i
-    # @db.exec("update stats set total_visitors=$1 and account=$2", [updated. @login])
+  def stats_add_visit
+    @db.exec("update stats set total_visits=total_visits + 1 where account=$1", [@login])
   end
 
-  def stats_add_visit
-    # updated = stats_get_visits_count + 1
-    # @db.exec("update stats set total_visits=$1 and account=$2", [updated, @login])
+  def stats_add_visitor
+    @db.exec("update stats set total_visitors=total_visitors+1 where account=$1", [@login])
   end
 
   def stats_add_new_user
     # updated = stats_get_new_users_count + 1
-    # @db.exec("update stats set new_users=$1 and account=$2", [updated, @login])
+    @db.exec("update stats set new_users=new_users + 1 where account=$1", [@login])
   end
 
-  def stats_add_new_messages(number)
-    # @db.exec("update stats set total_messages=$1 where account=$2", get_total_received_message_count, @login])
+  def stats_add_new_message
+    @db.exec("update stats set total_messages=total_messages + 1 where account=$1", [@login])
   end
 
   def stats_get_visitor_count
@@ -153,11 +157,11 @@ attr_reader :login
     result[0]["total_messages"].to_i
   end
 
-  def add_user(username)
+  def add_user(username, gender)
     unless existsCheck(username) || username == "pictures"
       puts "Adding user:        #{username}" if verbose
       # @db.transaction
-      @db.exec("insert into matches(name, ignore_list, time_added, account) values ($1, $2, $3, $4)", [username.to_s, 0, Time.now.to_i, @login.to_s])
+      @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender) values ($1, $2, $3, $4, $5, $6)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender])
       # @db.commit
       stats_add_new_user
     else
@@ -192,11 +196,16 @@ attr_reader :login
     @db.exec( "update matches set counts=$1 where name=$2 and account=$3", [number.to_i, match_name, @login] )
   end
 
+  def increment_visit_count(match_name)
+    puts "Incrementing visit count: #{match_name}" if verbose
+    @db.exec("update matches set counts=counts + 1 where name=$1 and account=$2", [match_name, @login])
+  end
+
   def rename_alist_user(old_name, new_name)
     # if existsCheck(new_name)
     # update_visit_count(new_name, get_visit_count(old_name) + get_visit_count(new_name) + 1)
     # else
-    add_user(new_name)
+    add_user(new_name, get_gender(old_name))
     # update_visit_count(new_name, get_visit_count(old_name))
     # set_gender(:username => new_name, :gender => get_gender(old_name))
     # set_age(new_name, get_age(old_name))
@@ -221,9 +230,9 @@ attr_reader :login
   def new_user_smart_query
     @db.exec("select name from matches
     where account=$2
-    and(counts = 0 or counts is null)
+    and counts = 0
     and (ignore_list=0 or ignore_list is null)
-    and (gender is null or gender=$1)
+    and (gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
 
   end
@@ -233,7 +242,7 @@ attr_reader :login
     where account=$2
     (counts = 0 or counts is null)
     and (ignore_list=0 or ignore_list is null)
-    and (gender is null or gender=$1)
+    and (gender=$1)
     order by time_added asc", [@settings.gender, @login])
     result[0][0].to_i
   end
@@ -261,7 +270,7 @@ attr_reader :login
         and ignore_list = 0
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=$9)",
+        and (gender=$9)",
                                      [min_time.to_i,
                                       min_counts,
                                       max_counts,
@@ -283,7 +292,7 @@ attr_reader :login
          and ignore_list = 0
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
-         and (gender is null or gender=$8)",
+         and (gender=$8)",
                                  [min_time.to_i,
                                   min_counts,
                                   max_counts,
@@ -305,7 +314,7 @@ attr_reader :login
           and ignore_list = 0
           and (age between $6 and $7 or age is null)
           and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-          and (gender is null or gender=$9)
+          and (gender=$9)
 ",
                                      [min_time.to_i,
                                       min_counts,
@@ -345,17 +354,17 @@ attr_reader :login
         and ignore_list = 0
         and (age between $7 and $8 or age is null)
         and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=$10)",
-        [@login,
-                                             min_time.to_i,
-                                             min_counts,
-                                             max_counts,
-                                             location_filter,
-                                             preferred_state_alt,
-                                             min_age,
-                                             max_age,
-                                             min_percent,
-                                             desired_gender])
+        and (gender=$10)",
+                                     [@login,
+                                      min_time.to_i,
+                                      min_counts,
+                                      max_counts,
+                                      location_filter,
+                                      preferred_state_alt,
+                                      min_age,
+                                      max_age,
+                                      min_percent,
+                                      desired_gender])
     when "city"
       location_filter     = "#{@settings.preferred_city}"
       preferred_city_alt = "#{@settings.preferred_city} "
@@ -369,7 +378,7 @@ attr_reader :login
         and ignore_list = 0
         and (age between $7 and $8 or age is null)
         and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=$10)",
+        and (gender=$10)",
                                      [@login,
                                       min_time.to_i,
                                       min_counts,
@@ -392,7 +401,7 @@ attr_reader :login
         and ignore_list = 0
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=$9)",
+        and (gender=$9)",
                                      [@login,
                                       min_time.to_i,
                                       min_counts,
@@ -426,7 +435,7 @@ attr_reader :login
         and ignored is not 'true'
         and (age between $7 and $8 or age is null)
         and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender is null or gender=$10)", [@login, min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender])
+        and (gender=$10)", [@login, min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender])
   end
 
   def user_record_exists(user)
@@ -604,13 +613,13 @@ attr_reader :login
     result[0]["match_percent"].to_i
   end
 
-  def set_visitor_counter(visitor, number)
-    @db.exec( "update matches set visit_count=$1 where name=$2 and account=$3", [number, visitor, @login])
+  def increment_visitor_counter(visitor)
+    @db.exec( "update matches set visit_count=visit_count+1 where name=$1 and account=$2", [visitor, @login])
   end
 
-  def set_received_messages_count(user, number)
+  def increment_received_messages_count(user)
     puts "Recieved msg count updated: #{user}" if verbose
-    @db.exec("update matches set r_msg_count=$1 where name=$2 and account=$3", [number, user, @login])
+    @db.exec("update matches set r_msg_count=r_msg_count+1 where name=$1 and account=$2", [user, @login])
   end
 
   def get_received_messages_count(user)
@@ -650,8 +659,8 @@ attr_reader :login
     end
   end
 
-  def set_my_last_visit_date(user)
-    @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
+  def set_my_last_visit_date(user, date=Time.now.to_i)
+    @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [date, user, @login])
   end
 
   def set_visitor_timestamp(visitor, timestamp)
@@ -695,12 +704,17 @@ attr_reader :login
   end
 
   def log2(user)
+    puts "*** Log init ***" if debug
     if user[:handle]
+      puts "*** Log valid user ***" if debug
       unless existsCheck(user[:handle])
+        puts "*** Log new user ***" if debug
         add_user(user[:handle])
       end
-      count = get_visit_count(user[:handle]) + 1
-      update_visit_count(user[:handle], count)
+
+      # count = get_visit_count(user[:handle]) + 1
+      # update_visit_count(user[:handle], count)
+      increment_visit_count(user[:handle])
       set_my_last_visit_date(user[:handle])
       set_gender(:username => user[:handle].to_s, :gender => user[:gender])
       set_sexuality(user[:handle], user[:sexuality])
@@ -724,8 +738,8 @@ attr_reader :login
     @db.exec("update matches set ignored='true' where gender='M' and account=$1", [@login])
   end
 
-  def is_ignored(username)
-    add_user(username) unless existsCheck(username)
+  def is_ignored(username, gender="Q")
+    add_user(username, gender) unless existsCheck(username)
     result = @db.exec( "select ignore_list from matches where name=$1 and account=$2", [username, @login])
     # to_boolean(result[0]["ignore_list"].to_s)
     # begin
@@ -737,7 +751,7 @@ attr_reader :login
 
   def ignore_user(username)
     unless existsCheck(username)
-      add_user(username)
+      add_user(username, "Q")
     end
     unless is_ignored(username)
       puts "Added to ignore list: #{username}" if verbose

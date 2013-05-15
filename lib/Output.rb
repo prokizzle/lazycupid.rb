@@ -36,7 +36,7 @@ class Output
 
   def log(user)
     print @username
-    result = {user: user[:handle], match_percent: user[:match_percentage], city: user[:city], state: user[:state], distance: user[:distance], count: @you.visited(user[:handle]), last_online: Time.at(user[:last_online]||0).ago.to_words}
+    result = {user: user[:handle], match_percent: user[:match_percentage], age: user[:age], city: user[:city], state: user[:state], distance: user[:distance], count: @you.visited(user[:handle]), last_online: Time.at(user[:last_online]||0).ago.to_words}
     puts result
   end
 

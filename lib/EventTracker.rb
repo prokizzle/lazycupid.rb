@@ -21,23 +21,8 @@ class EventTracker
     result
   end
 
-  def increment_visitor_counter(visitor)
-    original      = @db.get_visitor_count(visitor)
-    new_counter   = original + 1
-
-    @db.set_visitor_counter(visitor, new_counter)
-  end
-
-  def increment_message_counter(user)
-    original = @db.get_received_messages_count(user)
-    new_counter = original + 1
-    @db.stats_add_new_messages(1)
-
-    @db.set_received_messages_count(user, new_counter)
-  end
-
-  def add_user(user)
-    @db.add_user(user.to_s)
+  def add_user(user, gender)
+    @db.add_user(user.to_s, gender)
   end
 
   def parse_visitors_page
@@ -89,7 +74,7 @@ class EventTracker
         @db.set_gender(:username => user[:handle], :gender => user[:gender])
         @db.set_state(:username => user[:handle], :state => user[:state])
 
-        increment_visitor_counter(user[:handle])
+        @db.increment_visitor_counter(user[:handle])
         @db.set_visitor_timestamp(user[:handle], user[:timestamp])
       end
     end
@@ -125,15 +110,15 @@ class EventTracker
       puts "*****************","New visitor: #{visitor}","*****************"
 
 
-      @db.add_user(visitor)
+      @db.add_user(visitor, gender)
       @db.ignore_user(visitor) unless gender == @settings.gender
-      @db.set_gender(:username => visitor, :gender => gender)
+      # @db.set_gender(:username => visitor, :gender => gender)
       @db.set_state(:username => visitor, :state => state)
 
-      increment_visitor_counter(visitor)
+      @db.increment_visitor_counter(visitor)
     end
     @db.set_visitor_timestamp(visitor, timestamp)
-    @db.stats_add_visitors(1)
+    @db.stats_add_visitor
   end
 
   def visitor_event
@@ -173,20 +158,23 @@ class EventTracker
       timestamp_block = @html.parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
       timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
       sender          = sender.to_s
+      gender          = "Q"
 
-      register_message(sender, timestamp)
+      register_message(sender, timestamp, gender)
 
     end
   end
 
-  def register_message(sender, timestamp)
+  def register_message(sender, timestamp, gender)
     @stored_time     = @db.get_last_received_message_date(sender)
 
+    @db.add_user(sender, gender)
     @db.ignore_user(sender)
 
     unless @stored_time == timestamp
-      increment_message_counter(sender)
+      @db.increment_received_messages_count(sender)
       @db.set_last_received_message_date(sender, timestamp)
+      @db.stats_add_new_message
     end
   end
 
@@ -216,8 +204,8 @@ class EventTracker
         result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
         # puts city, state
         username = user[0].to_s
-        @db.add_user(username)
-        @db.set_gender(:username => username, :gender => gender)
+        @db.add_user(username, gender)
+        # @db.set_gender(:username => username, :gender => gender)
         @db.set_age(username, age)
         begin
           city = ""

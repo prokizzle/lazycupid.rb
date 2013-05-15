@@ -21,21 +21,6 @@ class EventTracker
     result
   end
 
-  def increment_visitor_counter(visitor)
-    original      = @db.get_visitor_count(visitor)
-    new_counter   = original + 1
-
-    @db.set_visitor_counter(visitor, new_counter)
-  end
-
-  def increment_message_counter(user)
-    original = @db.get_received_messages_count(user)
-    new_counter = original + 1
-    @db.stats_add_new_messages(1)
-
-    @db.set_received_messages_count(user, new_counter)
-  end
-
   def add_user(user, gender)
     @db.add_user(user.to_s, gender)
   end
@@ -89,7 +74,7 @@ class EventTracker
         @db.set_gender(:username => user[:handle], :gender => user[:gender])
         @db.set_state(:username => user[:handle], :state => user[:state])
 
-        increment_visitor_counter(user[:handle])
+        @db.increment_visitor_counter(user[:handle])
         @db.set_visitor_timestamp(user[:handle], user[:timestamp])
       end
     end
@@ -130,10 +115,10 @@ class EventTracker
       # @db.set_gender(:username => visitor, :gender => gender)
       @db.set_state(:username => visitor, :state => state)
 
-      increment_visitor_counter(visitor)
+      @db.increment_visitor_counter(visitor)
     end
     @db.set_visitor_timestamp(visitor, timestamp)
-    @db.stats_add_visitors(1)
+    @db.stats_add_visitor
   end
 
   def visitor_event
@@ -187,8 +172,9 @@ class EventTracker
     @db.ignore_user(sender)
 
     unless @stored_time == timestamp
-      increment_message_counter(sender)
+      @db.increment_received_messages_count(sender)
       @db.set_last_received_message_date(sender, timestamp)
+      @db.stats_add_new_message
     end
   end
 

@@ -4,7 +4,7 @@ class EventWatcher
 
   def initialize(args)
     # puts "Initializing browser..."
-    # @browser = Session.new(:username => @username, :password => password)
+    # @browser = Browser.new(:username => @username, :password => password)
     @browser = args[ :browser]
     @tracker = args[ :tracker]
     @log     = args[ :logger]
@@ -118,6 +118,14 @@ class EventWatcher
 
   def orbit_user_signoff
     @log.debug "orbit_user_signoff: #{@event['screenname']}"
+  end
+
+  def orbit_user_signon
+    @log.debug "orbit_user_signon: #{@event['screenname']}"
+  end
+
+  def orbit_nth_question
+    @log.debug "orbit_nth_question: #{@event['screenname']}"
   end
 
   def process(event, people)

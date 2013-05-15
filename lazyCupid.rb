@@ -13,7 +13,7 @@ class Roller
       @password     = args[ :password]
       path          = File.dirname($0) + '/config/'
       @config       = Settings.new(:username => username, :path => path)
-      @browser      = Session.new(:username => username, :password => password)
+      @browser      = Browser.new(:username => username, :password => password)
       @db           = initialize_db
       # @prefs      = Preferences.new(:browser => @browser)
       @blocklist    = BlockList.new(:database => db, :browser => @browser)

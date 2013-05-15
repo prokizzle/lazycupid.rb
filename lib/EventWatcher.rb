@@ -80,7 +80,7 @@ class EventWatcher
   end
 
   def looks_vote
-
+    @log.debug "looks_vote: #{@event["screenname"]}"
   end
 
   def im
@@ -112,7 +112,7 @@ class EventWatcher
   end
 
   def toolbar_trigger
-    puts "Toolbar trigger"
+    @log.debug "Toolbar trigger"
     # print_event_info
   end
 

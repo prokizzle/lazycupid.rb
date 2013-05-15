@@ -1,5 +1,5 @@
 class DatabaseMgr
-attr_reader :login, :debug, :verbose
+  attr_reader :login, :debug, :verbose
 
 
   def initialize(args)
@@ -7,11 +7,11 @@ attr_reader :login, :debug, :verbose
     @login    = args[ :login_name]
     @settings = args[ :settings]
     @db = PGconn.connect( :dbname => @settings.db_name#,
-    #:password => @settings.db_pass,
-      #:user=>@settings.db_user
-      )
+                          #:password => @settings.db_pass,
+                          #:user=>@settings.db_user
+                          )
     open_db
-    db_migrations
+    db_tasks
     @verbose  = @settings.verbose
     @debug    = @settings.debug
     delete_self_refs
@@ -31,18 +31,22 @@ attr_reader :login, :debug, :verbose
     @db.exec("delete from matches where name = $1", [""])
   end
 
-  def db_migrations
+  def db_tasks
     # Exceptional.rescue do
-      # @db.exec("alter table matches add column account text")
-      # @db.exec("alter table stats add column account text")
+    # @db.exec("alter table matches add column account text")
+    # @db.exec("alter table stats add column account text")
     #   @db.exec("update matches set ignore_list=0 where ignored='false'")
     #   @db.exec("update matches set ignore_list=1 where ignored='true'")
     # end
     # @db.exec("alter table stats add column total_messages integer")
     # @db.exec("update stats set total_messages=0 where id=1")
     # @db.exec("delete from matches where gender=?", "Q")
+    begin
+      stats_get_visitor_count
+    rescue
+      @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
+    end
     @db.exec("delete from matches where gender is null")
-    # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
   end
 
   def action(stmt)
@@ -112,7 +116,7 @@ attr_reader :login, :debug, :verbose
       # Exceptional.handle(e, 'Database')
       puts e.message if verbose
     end
-    db_migrations
+    db_tasks
     @did_migrate = true
   end
 
@@ -351,16 +355,16 @@ attr_reader :login, :debug, :verbose
         and (age between $7 and $8 or age is null)
         and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
         and (gender=$10)",
-        [@login,
-                                             min_time.to_i,
-                                             min_counts,
-                                             max_counts,
-                                             location_filter,
-                                             preferred_state_alt,
-                                             min_age,
-                                             max_age,
-                                             min_percent,
-                                             desired_gender])
+                                     [@login,
+                                      min_time.to_i,
+                                      min_counts,
+                                      max_counts,
+                                      location_filter,
+                                      preferred_state_alt,
+                                      min_age,
+                                      max_age,
+                                      min_percent,
+                                      desired_gender])
     when "city"
       location_filter     = "#{@settings.preferred_city}"
       preferred_city_alt = "#{@settings.preferred_city} "

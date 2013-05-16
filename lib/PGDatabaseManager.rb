@@ -14,7 +14,7 @@ class DatabaseMgr
     db_tasks
     @verbose  = @settings.verbose
     @debug    = @settings.debug
-    delete_self_refs
+    # delete_self_refs
   end
 
   def db
@@ -41,12 +41,12 @@ class DatabaseMgr
     # @db.exec("alter table stats add column total_messages integer")
     # @db.exec("update stats set total_messages=0 where id=1")
     # @db.exec("delete from matches where gender=?", "Q")
-    begin
-      stats_get_visitor_count
-    rescue
-      @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
-    end
-    @db.exec("delete from matches where gender is null")
+    # begin
+      # stats_get_visitor_count
+    # rescue
+      # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
+    # end
+    # @db.exec("delete from matches where gender is null")
   end
 
   def action(stmt)
@@ -184,6 +184,10 @@ class DatabaseMgr
     rescue
       0
     end
+  end
+
+  def set_visit_count(name, count)
+    @db.exec("update matches set counts = $1 where name=$2 and account = $3", [count, name, @login])
   end
 
   # def get_last_visit_date(user)
@@ -772,6 +776,16 @@ class DatabaseMgr
           where name = $1
           and account = $2
       ) ", [username, @login]).any?
+  end
+
+  def import_user(args)
+    name = args[:name]
+    distance = args[:distance]
+    age = args[:age]
+    counts = args[:counts]
+    last_visit = args[:last_visit]
+    gender = args[:gender]
+    @db.exec("insert into matches (name, counts, gender, age, distance, last_visit) values ($1, $2, $3, $4, $5, $6)", [name, counts, gender, age, distance, last_visit])
   end
 
   def remove_unknown_gender

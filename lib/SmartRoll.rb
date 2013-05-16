@@ -120,7 +120,7 @@ class SmartRoll
     # wait = gets.chomp
     unless temp == @db.login
       unless temp == nil || temp == ""
-        puts ".#{temp}."
+        puts ".#{temp}." if debug
         visit_user(temp)
         @already_idle == false
       else

@@ -80,7 +80,7 @@ class EventWatcher
   end
 
   def looks_vote
-
+    @log.debug "looks_vote: #{@event["screenname"]}"
   end
 
   def im
@@ -104,7 +104,7 @@ class EventWatcher
     handle_ = @people["screenname"]
     gmt_ = @event["server_gmt"]
     unless @spotlight.has_key?(gmt_)
-      puts "New spotlight user: #{handle_} (#{@people["gender"]})"
+      puts "New spotlight user: #{handle_} (#{@people["gender"]})" #if verbose
       @tracker.add_user(handle_, @people["gender"])
       @spotlight[gmt_] = handle_
     end
@@ -112,7 +112,7 @@ class EventWatcher
   end
 
   def toolbar_trigger
-    puts "Toolbar trigger"
+    @log.debug "Toolbar trigger"
     # print_event_info
   end
 

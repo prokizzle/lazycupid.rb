@@ -5,4 +5,6 @@ An intelligent auto-visitor bot for OKCupid.
   bundle install
 
 ##Usage:
-ruby lazyCupid.rb
+ruby lazy_cupid.rb
+or
+ruby lazy_cupid.rb _username_ _password_

@@ -140,22 +140,15 @@ class EventTracker
     end
   end
 
-  def do_page_action(url)
-    puts "","Scraping: #{url}" if verbose
-    @browser.go_to(url)
-    track_msg_dates
-    sleep 2
-  end
-
-  def track_msg_dates
+  def track_msg_dates(msg_page)
+    result = async_response(msg_page)
     message_list = @body.scan(/"message_(\d+)"/)
 
     message_list.each do |message_id|
-
       message_id      = message_id[0]
-      msg_block       = @html.parser.xpath("//li[@id='message_#{message_id}']").to_html
+      msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
       sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
-      timestamp_block = @html.parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
+      timestamp_block = result[:html].parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
       timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
       sender          = sender.to_s
       gender          = "Q"
@@ -227,20 +220,24 @@ class EventTracker
     end
   end
 
+  def async_response(url)
+    result = Hash.new
+    result[:hash] = 0
+    key = Time.now.to_i
+    until result[:hash] == key
+      result = @browser.body_of(url, key)
+    end
+    # p result
+    result
+  end
+
   def scrape_inbox
     puts "Scraping inbox" if verbose
     items_per_page = 30
     result = Hash.new
     result[:hash] = 0
 
-    key = Time.now.to_i
-
-    until result[:hash] == key
-      result = @browser.body_of("http://www.okcupid.com/messages", Time.now.to_i)
-    end
-
-    @body = result[:body]
-    @html = result[:html]
+    result = async_response("http://www.okcupid.com/messages")
 
     all_lows    = result[:body].scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
     highest     = 0
@@ -253,17 +250,13 @@ class EventTracker
     puts "Total messages: #{total}" if verbose
     # @bar         = ProgressBar.new(total, :counter) unless verbose
     # @bar.increment! 1 unless verbose
-    do_page_action("http://www.okcupid.com/messages")
+    track_msg_dates("http://www.okcupid.com/messages")
+
     low         = items_per_page + 1
 
     until low >= total
-      # @bar.increment! 30 unless verbose
-      # do_page_action
       low += items_per_page
-      result = @browser.body_of("http://www.okcupid.com/messages?low=#{low}&folder=1", Time.now.to_i)
-      @body = result[:body]
-      @html = result[:html]
-      track_msg_dates
+      track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
       sleep 2
     end
 

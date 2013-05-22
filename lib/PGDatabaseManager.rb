@@ -692,49 +692,35 @@ class DatabaseMgr
     @db.exec("select name, city, state from matches where r_msg_count is not null and account=$1", [@login])
   end
 
-  def log(match_name, match_percent=0)
-    if existsCheck(match_name)
-      count = get_visit_count(match_name) + 1
-      update_visit_count(match_name, count)
-      set_my_last_visit_date(match_name)
-      # set_gender(:username => match_name, :gender => gender)
-      # set_sexuality(match_name, sexuality)
-      # set_match_percentage(match_name, match_percent)
-    else
-      add_user(match_name)
-      # set_sexuality(match_name, sexuality)
-      # set_gender(:username => match_name, :gender => gender)
-    end
-  end
-
   def log2(user)
-    puts "*** Log init ***" if debug
     if user[:handle]
-      puts "*** Log valid user ***" if debug
       unless existsCheck(user[:handle])
-        puts "*** Log new user ***" if debug
         add_user(user[:handle])
       end
 
-      # count = get_visit_count(user[:handle]) + 1
-      # update_visit_count(user[:handle], count)
       increment_visit_count(user[:handle])
       set_my_last_visit_date(user[:handle])
-      set_gender(:username => user[:handle].to_s, :gender => user[:gender])
-      set_sexuality(user[:handle], user[:sexuality])
-      set_match_percentage(user[:handle], user[:match_percentage])
-      set_state(:username => user[:handle], :state => user[:state])
-      set_distance(:username => user[:handle], :distance => user[:distance])
-      set_age(user[:handle], user[:age])
-      set_city(user[:handle], user[:city])
-      # set_smoking(user[:handle], user[:smoking])
-      # set_body_type(user[:handle], user[:body_type])
-      # set_drugs(user[:handle], user[:drugs])
-      # set_drinking(user[:handle], user[:drinking])
-      # set_height(user[:handle], user[:height])
-      set_last_online(user[:handle], user[:last_online])
+      set_user_details(user)
+      p "Height: #{user[:height]}"
     end
     stats_add_visit
+  end
+
+  def set_user_details(user)
+    @db.exec("update matches
+      set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online) =
+      ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      where name=$10",
+      [user[:gender],
+      user[:sexuality],
+      user[:match_percentage],
+      user[:state],
+      user[:distance],
+      user[:age],
+      user[:city],
+      user[:height],
+      user[:last_online],
+      user[:handle]])
   end
 
   def reset_ignored_list

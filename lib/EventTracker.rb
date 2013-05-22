@@ -142,7 +142,7 @@ class EventTracker
 
   def track_msg_dates(msg_page)
     result = async_response(msg_page)
-    message_list = @body.scan(/"message_(\d+)"/)
+    message_list = result[:body].scan(/"message_(\d+)"/)
 
     message_list.each do |message_id|
       message_id      = message_id[0]
@@ -165,6 +165,7 @@ class EventTracker
     @db.ignore_user(sender)
 
     unless @stored_time == timestamp
+      puts "New message found: #{sender} at #{Time.at(timestamp)}"
       @db.increment_received_messages_count(sender)
       @db.set_last_received_message_date(sender, timestamp)
       @db.stats_add_new_message
@@ -174,10 +175,9 @@ class EventTracker
 
   def test_more_matches
     begin
-      result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1", Time.now.to_i)
-      @body = result[:body]
-      @html = result[:html]
-      parsed = JSON.parse(@html.content).to_hash
+      # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
+      result = async_response("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
+      parsed = JSON.parse(result[:html].content).to_hash
       html = parsed["html"]
       @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
       html_doc = Nokogiri::HTML(html)
@@ -203,8 +203,9 @@ class EventTracker
         begin
           city = ""
           state = ""
-          city = /location.>(.+),\s(.+)</.match(result)[1].to_s if /location.>(.+),\s(.+)</.match(result)
-          state = /location.>(.+),\s(.+)</.match(result)[2].to_s if /location.>(.+),\s(.+)</.match(result)
+          location = /location.>(.+)</.match(result)[1]
+          city = @regex.location_array(location)[:city]
+          state = @regex.location_array(location)[:state]
           @db.set_city(username, city)
           @db.set_state(:username => username, :state => state)
         rescue Exception => e
@@ -223,9 +224,9 @@ class EventTracker
   def async_response(url)
     result = Hash.new
     result[:hash] = 0
-    key = Time.now.to_i
-    until result[:hash] == key
-      result = @browser.body_of(url, key)
+    timekey = Time.now.to_i
+    until result[:hash] == timekey
+      result = @browser.body_of(url, timekey)
     end
     # p result
     result

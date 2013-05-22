@@ -1,6 +1,7 @@
 
 require './includes'
 class EventWatcher
+  attr_reader :debug, :verbose
 
   def initialize(args)
     # puts "Initializing browser..."
@@ -9,9 +10,8 @@ class EventWatcher
     @tracker = args[ :tracker]
     @log     = args[ :logger]
 
-    @m_last_event_time = 0
-    @s_last_event_time = 0
-    @i_last_event_time = 0
+    @api        = APIEvents.new(tracker: @tracker, logger: @log)
+
     @spotlight  = Hash.new
     @messages   = Hash.new
     @stalks     = Hash.new
@@ -34,10 +34,6 @@ class EventWatcher
 
   def login
     @browser.login
-  end
-
-  def html
-    @body.current_user
   end
 
   def logout
@@ -71,106 +67,39 @@ class EventWatcher
     end
   end
 
-  def msg_notify
-    unless @messages.has_key?(@event["server_gmt"])
-      puts "New message from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
-      @tracker.register_message(@event["screenname"], this_event_time)
-    end
-    @messages[@event["server_gmt"]] = @people["screenname"]
-  end
-
-  def looks_vote
-    @log.debug "looks_vote: #{@event["screenname"]}"
-  end
-
-  def im
-    # unless @events_hash.has_key(this_event_time)
-    puts "New IM from #{@event["screenname"]}" #unless @event["server_gmt"] == @gmt
-    # @tracker.register_message(@event["screenname"], @event["server_gmt"])
-    # end
-    # @events_hash[this_event_time] = @event["screenname"]
-    @event
-  end
-
-  def stalk
-    unless @stalks.has_key?(@event["server_gmt"])
-      # puts "New visit from #{@event['screenname']}"
-      @tracker.register_visit(@people)
-    end
-    @stalks[@event["server_gmt"]] = @people["screenname"]
-  end
-
-  def new_spotlight_user
-    handle_ = @people["screenname"]
-    gmt_ = @event["server_gmt"]
-    unless @spotlight.has_key?(gmt_)
-      puts "New spotlight user: #{handle_} (#{@people["gender"]})" #if verbose
-      @tracker.add_user(handle_, @people["gender"])
-      @spotlight[gmt_] = handle_
-    end
-    # print_event_info
-  end
-
-  def toolbar_trigger
-    @log.debug "Toolbar trigger"
-    # print_event_info
-  end
-
-  def orbit_user_signoff
-    @log.debug "orbit_user_signoff: #{@event['screenname']}"
-  end
-
-  def orbit_user_signon
-    @log.debug "orbit_user_signon: #{@event['screenname']}"
-  end
-
-  def orbit_nth_question
-    @log.debug "orbit_nth_question: #{@event['screenname']}"
-  end
-
-  def process(event, people)
-    @event = event
-    @people = people
-    type = event["type"]
-    self.send(type)
-  end
-
   def check_events
-    # if app.check_events.respond_to?('each')
 
-    # puts "Requesting..."
-    temp = poll_response
-    # puts "Reponse received."
-    count = 0
-    # puts temp["events"]
-    # puts temp["im_off"]
-    # puts temp["num_unread"]
-    # puts temp["people"]
-    # puts temp["server_seqid"]
-    # puts temp
-    events_array = temp["events"]
-    people_array = temp["people"]
+    temp              = poll_response
+    count             = 0
+    events_array      = temp["events"]
+    people_array      = temp["people"]
     events_array_size = events_array.size
-    index = 0
+    index             = 0
+
     people_array.size.to_i.times do
-      current_event_hash = events_array.shift
+
+      current_event_hash  = events_array.shift
       current_people_hash = people_array.shift
+
       unless current_event_hash == nil && current_people_hash == nil
         current_event_hash.merge(current_people_hash)
         gmt = current_event_hash["server_gmt"]
         @new_events.push(current_event_hash)
         @new_people.push(current_people_hash)
+
         unless @hash.has_key?(gmt.to_i)
           x_temp = @new_events.shift
           y_temp = @new_people.shift
           # puts "Processing: #{x_temp}","for #{current_people_hash["screenname"]} who is #{current_event_hash["from"]}"
-          process(x_temp, y_temp)
+          @api.process(x_temp, y_temp)
         end
+
         @hash[gmt.to_i] = current_event_hash
-        # puts hash
-        # sleep 4
+
       end
+
     end
+
   end
 
   def new_mail

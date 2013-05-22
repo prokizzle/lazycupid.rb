@@ -10,41 +10,37 @@ class Application
     log_path      = File.dirname($0) + '/logs/'
     @db_path      = File.dirname($0) + '/db/'
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
-    @config       = Settings.new(:username => username, :path => config_path)
-    @db           = DatabaseMgr.new(:login_name => @username, :settings => @config)
-    @browser      = Browser.new(:username => username, :password => password, :path => log_path, :log => @log)
-    @blocklist    = BlockList.new(:database => db, :browser => @browser)
-    @search       = Lookup.new(:database => db)
-    @display      = Output.new(:stats => @search, :username => username, :smart_roller => @smarty)
-    @user         = Users.new(:database => db, :browser => @browser, :log => @log, :path => log_path)
+    @config       = Settings.new(username: username, path: config_path)
+    @db           = DatabaseMgr.new(login_name: @username, settings: @config)
+    @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
+    @blocklist    = BlockList.new(database: db, browser: @browser)
+    @search       = Lookup.new(database: db)
+    @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
+    @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
     @scheduler    = Rufus::Scheduler.start_new
-    @tracker      = EventTracker.new(:browser => @browser, :database => @db, :settings => @config)
-    @events       = EventWatcher.new(:browser => @browser, :tracker => @tracker, :logger => @log)
+    @tracker      = EventTracker.new(browser: @browser, database: @db, settings: @config)
+    @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log)
     @harvester    = Harvester.new(
-      :browser          => @browser,
-      :database         => db,
-      :profile_scraper  => @user,
-      :settings         => @config,
-    :events             => @events)
+      browser:           @browser,
+      database:          db,
+      profile_scraper:   @user,
+      settings:          @config,
+    events:              @events)
     @smarty       = SmartRoll.new(
-      :database         => db,
-      :blocklist        => blocklist,
-      :harvester        => @harvester,
-      :profile_scraper  => @user,
-      :tracker          => @tracker,
-      :browser          => @browser,
-      :gui              => @display,
-    :settings           => @config)
+      database:          db,
+      blocklist:         blocklist,
+      harvester:         @harvester,
+      profile_scraper:   @user,
+      tracker:           @tracker,
+      browser:           @browser,
+      gui:               @display,
+    settings:            @config)
     @first_login        = false
     @scrape_event_time  = 0
     @quit_event_time    = Chronic.parse('3 days from now')
     is_idle             = false
     @idle               = Time.now.to_i
 
-  end
-
-  def initialize_db
-    DatabaseManager.new(:login_name => @username, :settings => @config, :db_path => @db_path)
   end
 
   def is_idle
@@ -197,6 +193,10 @@ class Application
     @events.check_events
   end
 
+  def unread_messages
+    @events.new_mail.to_i
+  end
+
   def roll
     @smarty.roll
   end
@@ -231,7 +231,7 @@ until logged_in
     password = ARGV[1]
   end
   # Exceptional.rescue do
-  app = Application.new(:username => username, :password => password)
+  app = Application.new(username: username, password: password)
   # end
   if app.login
     logged_in = true
@@ -256,15 +256,19 @@ end
 
 app.pre_roll_actions
 app.scheduler.every '30m', :mutex => 'that_mutex' do
-  app.scrape_inbox
+  # if @has_unread_messages is true
+    app.scrape_inbox
+  #   @has_unread_messages = false
+  # end
 end
 #
 # app.scheduler.every '3h', :mutex => 'that_mutex' do
-  # app.check_visitors
+# app.check_visitors
 # end
 
 app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'that_mutex' do
   app.check_events
+  # @has_unread_messages = true if app.unread_messages > 0
 end
 
 app.scheduler.every '5m', :mutex => 'that_mutex' do
@@ -273,11 +277,11 @@ end
 
 app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
   # if Time.now.to_i >= @stop_time.to_i
-    # puts "Roll session complete."
-    # job.unschedule
+  # puts "Roll session complete."
+  # job.unschedule
   # else
   # loop do
-    app.roll
+  app.roll
   # end
   # end
 end

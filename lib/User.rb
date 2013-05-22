@@ -49,7 +49,7 @@ class Users
        # friend_percentage: friend_percentage,
        # enemy_percentage: enemy_percentage,
        # ethnicity: ethnicity,
-       # height: height,
+       height: height,
        # bodytype: body_type,
        # smoking: smoking,
        # drinking: drinking,
@@ -148,7 +148,18 @@ class Users
   end
 
   def height
-    /height.>.+\(*([\d\.]*)m*/.match(@body)[1].to_f
+    # hash = Hash.new
+    result = @html.parser.xpath("//dd[@id='ajax_height']").text
+    begin
+      # hash[:meters] =
+      /(\d+.\d+)../.match(result)[1].to_f
+      # hash[:feet] = /(\d+'\d*"/)/.match(result)[1].to_s
+      # {meters: /(\d+.\d+)../.match(result)[1].to_f, feet: /(\d+'\d*"/)/.match(result)[1].to_s}
+
+    rescue
+      # {meters: 0, feet: 0}
+      0
+    end
   end
 
   def body_type

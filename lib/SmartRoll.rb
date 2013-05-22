@@ -61,7 +61,7 @@ class SmartRoll
   end
 
   def next_user
-    cache.shift
+    cache.shift.to_s
   end
 
   def autodiscover_new_users(user)
@@ -85,7 +85,9 @@ class SmartRoll
   end
 
   def payload
+    puts "Getting new matches..." unless verbose
     @tracker.test_more_matches
+    puts "Checking for new messages..." unless verbose
     @tracker.scrape_inbox
     # check_visitors
   end
@@ -115,13 +117,13 @@ class SmartRoll
   end
 
   def roll
-    temp = next_user.to_s
+    current_user = next_user
     # puts "Waiting..."
     # wait = gets.chomp
-    unless temp == @db.login
-      unless temp == nil || temp == ""
-        puts ".#{temp}." if debug
-        visit_user(temp)
+    unless current_user == @db.login
+      unless current_user == nil || current_user == ""
+        puts ".#{current_user}." if debug
+        visit_user(current_user)
         @already_idle == false
       else
         puts "Idle..." unless @already_idle

@@ -6,9 +6,9 @@ class DatabaseMgr
     @did_migrate = false
     @login    = args[ :login_name]
     @settings = args[ :settings]
-    @db = PGconn.connect( :dbname => @settings.db_name#,
-                          #:password => @settings.db_pass,
-                          #:user=>@settings.db_user
+    @db = PGconn.connect( :dbname => @settings.db_name,
+                          :password => @settings.db_pass,
+                          :user => @settings.db_user
                           )
     open_db
     db_tasks

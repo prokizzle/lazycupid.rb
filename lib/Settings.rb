@@ -133,7 +133,7 @@ class Settings
   end
 
   def db_user
-    @db_settings["development"]["user"].to_s
+    @db_settings["development"]["username"].to_s
   end
 
   def db_pass

@@ -257,6 +257,8 @@ class DatabaseMgr
     desired_gender  = @settings.gender
     min_age         = @settings.min_age
     max_age         = @settings.max_age
+    age_sort        = @settings.age_sort
+    height_sort     = @settings.height_sort
     min_counts      = 1
     max_counts      = @settings.max_followup
     min_percent     = @settings.min_percent
@@ -274,7 +276,8 @@ class DatabaseMgr
         and ignore_list = 0
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-        and (gender=$9)",
+        and (gender=$9)
+        order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                      [min_time.to_i,
                                       min_counts,
                                       max_counts,
@@ -285,6 +288,7 @@ class DatabaseMgr
                                       min_percent,
                                       desired_gender,
                                       @login])
+
     when "distance"
       location_filter = @settings.max_distance
       result          = @db.exec("
@@ -296,7 +300,8 @@ class DatabaseMgr
          and ignore_list = 0
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
-         and (gender=$8)",
+         and (gender=$8)
+         order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                  [min_time.to_i,
                                   min_counts,
                                   max_counts,
@@ -319,7 +324,7 @@ class DatabaseMgr
           and (age between $6 and $7 or age is null)
           and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
           and (gender=$9)
-",
+          order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                      [min_time.to_i,
                                       min_counts,
                                       max_counts,

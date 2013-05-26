@@ -31,9 +31,11 @@ class Settings
                   :enemy_percent => 0,
                   :min_age => 18,
                   :max_age => 45,
+                  :age_sort => "ASC", #prefer younger
                   :gender => "F",
                   :min_height => 0, #flatlanders!
                   :max_height => 300, #giants!
+                  :height_sort => "ASC", #prefer shorter
                 },
                 visit_freq: {
                   :days_ago => 3,
@@ -91,12 +93,20 @@ class Settings
     @settings[:matching][:max_age].to_i
   end
 
+  def age_sort
+    @settings[:matching][:age_sort].to_s
+  end
+
   def max_height
     @settings[:matching][:max_height].to_f
   end
 
   def min_height
     @settings[:matching][:min_height].to_f
+  end
+
+  def height_sort
+    @settings[:matching][:height_sort].to_s
   end
 
   def autodiscover_on

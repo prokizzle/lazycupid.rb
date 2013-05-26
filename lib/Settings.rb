@@ -3,6 +3,7 @@ class Settings
     :min_percent,
     :min_age,
     :max_age,
+    :max_height,
     :days_ago,
     :preferred_state,
     :max_followup,
@@ -30,7 +31,9 @@ class Settings
                   :enemy_percent => 0,
                   :min_age => 18,
                   :max_age => 45,
-                  :gender => "F"
+                  :gender => "F",
+                  :min_height => 0, #flatlanders!
+                  :max_height => 300, #giants!
                 },
                 visit_freq: {
                   :days_ago => 3,
@@ -86,6 +89,14 @@ class Settings
 
   def max_age
     @settings[:matching][:max_age].to_i
+  end
+
+  def max_height
+    @settings[:matching][:max_height].to_f
+  end
+
+  def min_height
+    @settings[:matching][:min_height].to_f
   end
 
   def autodiscover_on

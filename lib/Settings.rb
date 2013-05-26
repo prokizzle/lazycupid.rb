@@ -3,6 +3,7 @@ class Settings
     :min_percent,
     :min_age,
     :max_age,
+    :max_height,
     :days_ago,
     :preferred_state,
     :max_followup,
@@ -31,7 +32,12 @@ class Settings
                   :enemy_percent => 0,
                   :min_age => @user.match_preferences[:min_age],
                   :max_age => @user.match_preferences[:max_age],
-                  :gender => "F"
+                  :age_sort => "ASC", #prefer younger
+                  :gender => "F",
+                  :min_height => 0, #flatlanders!
+                  :max_height => 300, #giants!
+                  :height_sort => "ASC", #prefer shorter
+                  :last_online_cutoff => 365 #ignore users not online in X days
                 },
                 visit_freq: {
                   :days_ago => 3,
@@ -89,6 +95,26 @@ class Settings
     @settings[:matching][:max_age].to_i
   end
 
+  def age_sort
+    @settings[:matching][:age_sort].to_s
+  end
+
+  def max_height
+    @settings[:matching][:max_height].to_f
+  end
+
+  def min_height
+    @settings[:matching][:min_height].to_f
+  end
+
+  def height_sort
+    @settings[:matching][:height_sort].to_s
+  end
+
+  def last_online_cutoff
+    @settings[:matching][:last_online_cutoff].to_i
+  end
+
   def autodiscover_on
     @settings[:scraping][:autodiscover_on] == true
   end
@@ -123,7 +149,7 @@ class Settings
   end
 
   def db_user
-    @db_settings["development"]["user"].to_s
+    @db_settings["development"]["username"].to_s
   end
 
   def db_pass

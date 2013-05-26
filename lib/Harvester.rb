@@ -58,6 +58,14 @@ class Harvester
     @settings.max_distance.to_i
   end
 
+  def max_height
+    @settings.max_height.to_f
+  end
+
+  def min_height
+    @settings.min_height.to_f
+  end
+
   def preferred_state
     @settings.preferred_state
   end
@@ -89,11 +97,22 @@ class Harvester
     @user.age.between?(min_age, max_age)
   end
 
+  def height_criteria_met?
+    @user.height.to_f >= min_height && @user.height.to_f <= max_height
+  end
+
 
   def meets_preferences?
     puts "Match met:    #{match_percent_criteria_met?}" if verbose
     puts "Distance met: #{distance_criteria_met?}" if verbose
     puts "Age met:      #{age_criteria_met?}" if verbose
+    puts "Height met:   #{height_criteria_met?}" if verbose
+    
+    unless height_criteria_met?
+      puts "Ignoring #{@user.handle} based on their height." if verbose
+      @database.ignore_user(@user.handle)
+    end
+
     match_percent_criteria_met? &&
       distance_criteria_met? &&
       age_criteria_met?
@@ -123,6 +142,8 @@ class Harvester
     else
       puts "Not scraped: #{@user.handle}" if verbose
     end
+
+
   end
 
   def location_array(location)

@@ -1,6 +1,6 @@
 development:
   adapter: postgresql
   host: localhost
-  username: ***REMOVED***
+  username: postgres
   password: 123456
   database: lazy_cupid

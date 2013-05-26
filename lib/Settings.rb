@@ -36,6 +36,7 @@ class Settings
                   :min_height => 0, #flatlanders!
                   :max_height => 300, #giants!
                   :height_sort => "ASC", #prefer shorter
+                  :last_online_cutoff => 360 #ignore users not online in X days
                 },
                 visit_freq: {
                   :days_ago => 3,
@@ -107,6 +108,10 @@ class Settings
 
   def height_sort
     @settings[:matching][:height_sort].to_s
+  end
+
+  def last_online_cutoff
+    @settings[:matching][:last_online_cutoff].to_i
   end
 
   def autodiscover_on

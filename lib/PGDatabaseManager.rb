@@ -253,15 +253,16 @@ class DatabaseMgr
 
   def followup_query
 
-    min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-    desired_gender  = @settings.gender
-    min_age         = @settings.min_age
-    max_age         = @settings.max_age
-    age_sort        = @settings.age_sort
-    height_sort     = @settings.height_sort
-    min_counts      = 1
-    max_counts      = @settings.max_followup
-    min_percent     = @settings.min_percent
+    min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+    desired_gender      = @settings.gender
+    min_age             = @settings.min_age
+    max_age             = @settings.max_age
+    age_sort            = @settings.age_sort
+    height_sort         = @settings.height_sort
+    last_online_cutoff  = @settings.last_online_cutoff
+    min_counts          = 1
+    max_counts          = @settings.max_followup
+    min_percent         = @settings.min_percent
 
     case @settings.distance_filter_type
     when "state"
@@ -277,6 +278,7 @@ class DatabaseMgr
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
         and (gender=$9)
+        and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))  
         order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                      [min_time.to_i,
                                       min_counts,
@@ -301,6 +303,7 @@ class DatabaseMgr
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
          and (gender=$8)
+         and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
          order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                  [min_time.to_i,
                                   min_counts,
@@ -324,6 +327,7 @@ class DatabaseMgr
           and (age between $6 and $7 or age is null)
           and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
           and (gender=$9)
+          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
           order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                      [min_time.to_i,
                                       min_counts,

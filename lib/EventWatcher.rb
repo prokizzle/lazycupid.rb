@@ -18,6 +18,7 @@ class EventWatcher
     @looks_vote = Hash.new
     @new_events = Array.new
     @new_people = Array.new
+    @people_hash = Hash.new
     @hash = Hash.new { |hash, key| hash[key] = 0 }
     @events_hash = Hash.new { |hash, key| hash[key] = 0 }
     @instant = 2
@@ -70,34 +71,30 @@ class EventWatcher
   def check_events
 
     temp              = poll_response
-    count             = 0
     events_array      = temp["events"]
     people_array      = temp["people"]
     events_array_size = events_array.size
     index             = 0
 
-    people_array.size.to_i.times do
+    temp["people"].each do |user|
+      unless @people_hash.has_key?(user["screenname"])
+        @people_hash[user["screenname"]] = user
+      end
+    end
 
-      current_event_hash  = events_array.shift
-      current_people_hash = people_array.shift
-
-      unless current_event_hash == nil && current_people_hash == nil
-        current_event_hash.merge(current_people_hash)
-        gmt = current_event_hash["server_gmt"]
-        @new_events.push(current_event_hash)
-        @new_people.push(current_people_hash)
-
-        unless @hash.has_key?(gmt.to_i)
-          x_temp = @new_events.shift
-          y_temp = @new_people.shift
-          # puts "Processing: #{x_temp}","for #{current_people_hash["screenname"]} who is #{current_event_hash["from"]}"
-          @api.process(x_temp, y_temp)
+    begin
+      temp["events"].each do |event|
+        key = "#{event['server_gmt']}#{event['type']}"
+        unless @hash[key] == event["server_seqid"]
+          @api.process(event, @people_hash[event['from']], key)
+          @hash[key] = event["server_seqid"]
         end
 
-        @hash[gmt.to_i] = current_event_hash
-
       end
-
+    rescue
+      # puts "*****"
+      @log.debug temp["events"]
+      # puts "*****"
     end
 
   end

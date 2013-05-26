@@ -1,13 +1,13 @@
 class EventTracker
 
-  attr_reader :verbose, :debug, :body
+  attr_reader :verbose, :debug, :body, :account
 
   def initialize(args)
     @browser = args[ :browser]
     @db = args[:database]
     @settings = args[ :settings]
     @regex = RegEx.new
-
+    @account = @db.login
   end
 
   def current_user

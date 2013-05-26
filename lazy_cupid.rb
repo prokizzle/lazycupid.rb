@@ -12,13 +12,14 @@ class Application
     @log          = Logger.new("logs/#{@username}_#{Time.now}.log")
     @config       = Settings.new(username: username, path: config_path)
     @db           = DatabaseMgr.new(login_name: @username, settings: @config)
+    @db2          = DatabaseMgr.new(login_name: @username, settings: @config)
     @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
     @blocklist    = BlockList.new(database: db, browser: @browser)
     @search       = Lookup.new(database: db)
     @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
     @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
     @scheduler    = Rufus::Scheduler.start_new
-    @tracker      = EventTracker.new(browser: @browser, database: @db, settings: @config)
+    @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
     @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log)
     @harvester    = Harvester.new(
       browser:           @browser,
@@ -256,7 +257,7 @@ end
 
 app.pre_roll_actions
 
-app.scheduler.every '30m', :mutex => 'that_mutex' do
+app.scheduler.every '30m', :mutex => 'tracker' do
   # if @has_unread_messages is true
     app.scrape_inbox
   #   @has_unread_messages = false
@@ -267,12 +268,12 @@ end
 # app.check_visitors
 # end
 
-app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'that_mutex' do
+app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
   app.check_events
   # @has_unread_messages = true if app.unread_messages > 0
 end
 
-app.scheduler.every '5m', :mutex => 'that_mutex' do
+app.scheduler.every '5m', :mutex => 'tracker' do
   app.scrape_ajax_matches
 end
 

@@ -5,7 +5,7 @@ class Preferences
         @browser = args[ :browser]
     end
 
-    def get_match_preferences
+    def match_preferences
         r = @browser.body_of("http://www.okcupid.com/profile", Time.now.to_i)
         gentation = r[:html].parser.xpath("//li[@id='ajax_gentation']").to_html
         ages = r[:html].parser.xpath("//li[@id='ajax_ages']").to_html
@@ -15,7 +15,7 @@ class Preferences
         @max_age = (/(\d{2}).+(\d{2})/).match(ages)[2]
         @my_city = (/[\w\s]+,\s([\w\s]+)/).match(location)[1]
         # <li id="ajax_ages">Ages 20&ndash;35</li>
-        puts @min_age, @max_age, @my_city, @looking_for
+        {min_age: @min_age, max_age: @max_age, city: @my_city, looking_for: @looking_for}
     end
 
 end

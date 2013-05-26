@@ -17,19 +17,20 @@ class Settings
     path      = args[ :path]
     @filename = "#{path}/#{@account}.yml"
     @db_file  = "#{path}/database.yml"
+    @user     = args[ :user]
     unless File.exists?(@filename)
       config = {geo: {
                   :distance_filter_type => "distance",
                   :preferred_state => " ",
-                  :preferred_city => " ",
+                  :preferred_city => @user.match_preferences[:my_city],
                   :distance => 150
                 },
                 matching: {
                   :min_percent => 50,
                   :friend_percent => 0,
                   :enemy_percent => 0,
-                  :min_age => 18,
-                  :max_age => 45,
+                  :min_age => @user.match_preferences[:min_age],
+                  :max_age => @user.match_preferences[:max_age],
                   :gender => "F"
                 },
                 visit_freq: {

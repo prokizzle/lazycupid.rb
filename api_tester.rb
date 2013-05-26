@@ -11,6 +11,7 @@ require './includes'
 @messages   = Hash.new
 @stalks     = Hash.new
 @username   = ARGV[0]
+@people_hash = Hash.new
 
 settings    = Settings.new(:username => @username, :path => File.dirname($0) + '/config/')
 
@@ -18,6 +19,7 @@ db          = DatabaseMgr.new(:login_name => @username, :settings => settings)
 browser     = Browser.new(:username => @username, :password => ARGV[1], :log => @log)
 tracker     = EventTracker.new(:browser => browser, :database => db, :settings => settings)
 api         = EventWatcher.new(:browser => browser, :tracker => tracker, :logger => Logger.new("logs/#{@username}_#{Time.now}.log"))
+api_events  = APIEvents.new(:tracker => tracker)
 print "Logging in... "
 
 if api.login
@@ -87,40 +89,33 @@ end
 # @new_people = Array.new
 # hash = Hash.new { |hash, key| hash[key] = 0 }
 loop do
-#   # if app.check_events.respond_to?('each')
+  # temp = api.poll_response
 
-#   # puts "Requesting..."
-#   temp = app.poll_response
-#   # puts "Reponse received."
-#   count = 0
-#   # puts temp["events"]
-#   # puts temp["im_off"]
-#   # puts temp["num_unread"]
-#   # puts temp["people"]
-#   # puts temp["server_seqid"]
-#   # puts temp
-#   events_array = temp["events"]
-#   people_array = temp["people"]
-#   events_array_size = events_array.size
-#   index = 0
-#   people_array.size.to_i.times do
-#     current_event_hash = events_array.shift
-#     current_people_hash = people_array.shift
-#     unless current_event_hash == nil && current_people_hash == nil
-#       current_event_hash.merge(current_people_hash)
-#       gmt = current_event_hash["server_gmt"]
-#       @new_events.push(current_event_hash)
-#       @new_people.push(current_people_hash)
-#       unless hash.has_key?(gmt.to_i)
-#         x_temp = @new_events.shift
-#         y_temp = @new_people.shift
-#         # puts "Processing: #{x_temp}","for #{current_people_hash["screenname"]} who is #{current_event_hash["from"]}"
-#         process(x_temp, y_temp)
-#       end
-#       hash[gmt.to_i] = current_event_hash
-#       # puts hash
-#       sleep 4
-#     end
-api.check_events
+  # temp["people"].each do |user|
+  #   unless @people_hash.has_key?(user["screenname"])
+  #     @people_hash[user["screenname"]] = user
+  #   end
   # end
+  # begin
+  #   temp["events"].each do |event|
+  #     key = "#{event['server_gmt']}#{event['type']}"
+  #     unless @hash[key] == event["server_seqid"]
+  #       p "New #{event['type']} From #{event['from']}"
+  #       p "At #{Time.at(event['server_gmt'])}"
+  #       # p event['server_seqid']
+  #       # p @people_hash[event['from']]
+  #       @api.process(event, @people_hash[event['from'])
+  #       # puts "-----------"
+  #       @hash[key] = event["server_seqid"]
+  #     end
+
+  #   end
+  # rescue
+  #   puts "*****"
+  #   p temp["events"]
+  #   puts "*****"
+  # end
+
+  api.check_events
+
 end

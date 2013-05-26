@@ -11,6 +11,8 @@
   :min_age: 18
   :max_age: 45
   :gender: F
+  :min_height: 0 # 0 meters tall
+  :max_height: 3 # 3 meters tall 
 :visit_freq:
   :days_ago: 3
   :max_followup: 15

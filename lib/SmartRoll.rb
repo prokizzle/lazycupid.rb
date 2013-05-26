@@ -68,10 +68,6 @@ class SmartRoll
     @harvester.scrape_from_user(user) if @settings.autodiscover_on
   end
 
-  def inactive_account
-    @browser.account_deleted
-  end
-
   def remove_match(user)
     @db.delete_user(user)
   end

@@ -36,7 +36,7 @@ class Settings
                   :min_height => 0, #flatlanders!
                   :max_height => 300, #giants!
                   :height_sort => "ASC", #prefer shorter
-                  :last_online_cutoff => 360 #ignore users not online in X days
+                  :last_online_cutoff => 365 #ignore users not online in X days
                 },
                 visit_freq: {
                   :days_ago => 3,

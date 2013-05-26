@@ -9,8 +9,9 @@ class RegEx
     elsif result.size == 1
       city    = location.match(/(.+), (.+)/)[1]
       state   = location.match(/(.+), (.+)/)[2]
+      country = "United States"
     end
-    {:city => city, :state => state}
+    {city: city, state: state, country: country }
   end
 
 end

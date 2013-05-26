@@ -1,4 +1,4 @@
-class Session
+class Browser
   attr_reader :agent, :body, :current_user, :url, :hash
   attr_accessor :agent, :body, :current_user, :url, :hash
 
@@ -56,16 +56,11 @@ class Session
 
   def body_of(link, request_id)
     url = link
-    # begin
-      @agent.read_timeout=30
-      temp = @agent.get(url)
-    # rescue Errno::ETIMEDOUT
-      # temp = @agent.get(url)
-    # end
+    @agent.read_timeout=30
+    temp = @agent.get(url)
     @log.debug "#{@url}"
     returned_body = temp.parser.xpath("//body").to_html
-    @response = {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
-    @response
+    {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
   end
 
   def html_of(link, request_id)

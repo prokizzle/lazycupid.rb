@@ -24,8 +24,8 @@ class BlockList
     @db.unignore_user(match) if user_exists(match)
   end
 
-  def is_ignored (user)
-    (@db.is_ignored(user))
+  def is_ignored (user, gender)
+    (@db.is_ignored(user, gender))
   end
 
   def body
@@ -33,22 +33,22 @@ class BlockList
   end
 
   def scrape_users
-    hidden_users = body.scan(/"\/profile\/([\d\w]+)"/)
-    hidden_users.each { |user| add(user[0]) unless is_ignored(user[0]) }
+    hidden_users = @response[:body].scan(/"\/profile\/([\d\w]+)"/)
+    hidden_users.each { |user| add(user.shift) unless is_ignored(user[0], "Q") }
   end
 
   def import_hidden_users
 
-    @browser.go_to("http://www.okcupid.com/hidden-users")
-    total = body.match(/hidden-users\?low=(\d+)">\d+<.a><.li>\n<li class="next"/)[1].to_i
-    # puts body
-    bar = ProgressBar.new(total, :counter)
-    bar.increment! 1
+    @response = @browser.body_of("http://www.okcupid.com/hidden-users", Time.now.to_i)
+    total = @response[:body].match(/hidden-users\?low=(\d+)">\d+<.a><.li>\n<li class="next"/)[1].to_i
+    # puts @response[:body]
+    bar = ProgressBar.new(total, :counter) unless verbose
+    bar.increment! 1 unless verbose
     scrape_users
-    until body.match(/next inactive/)
-      low = body.match(/hidden-users\?low\=(\d+).+Next/)[1].to_i
-      bar.increment! 25
-      @browser.go_to("http://www.okcupid.com/hidden-users?low=#{low}")
+    until @response[:body].match(/next inactive/)
+      low = @response[:body].match(/hidden-users\?low\=(\d+).+Next/)[1].to_i
+      bar.increment! 25 unless verbose
+      @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", Time.now.to_i)
       scrape_users
       sleep 2
     end

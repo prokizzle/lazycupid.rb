@@ -1,35 +1,28 @@
 class EventTracker
 
-  attr_reader :verbose, :debug
+  attr_reader :verbose, :debug, :body, :account
 
   def initialize(args)
     @browser = args[ :browser]
     @db = args[:database]
     @settings = args[ :settings]
     @regex = RegEx.new
-  end
-
-  def body
-    @browser.body
+    @account = @db.login
   end
 
   def current_user
-    @browser.current_user
+    @html
   end
 
-  def increment_visitor_counter(visitor)
-    original      = @db.get_visitor_count(visitor)
-    new_counter   = original + 1
-
-    @db.set_visitor_counter(visitor, new_counter)
+  def body_of(url)
+    result = @browser.body_of("http://www.okcupid.com/visitors", Time.now.to_i)
+    @html = result[:html]
+    @body = result[:body]
+    result
   end
 
-  def increment_message_counter(user)
-    original = @db.get_received_messages_count(user)
-    new_counter = original + 1
-    @db.stats_add_new_messages(1)
-
-    @db.set_received_messages_count(user, new_counter)
+  def add_user(user, gender)
+    @db.add_user(user.to_s, gender)
   end
 
   def parse_visitors_page
@@ -37,9 +30,11 @@ class EventTracker
     @visitors = Array.new
     @final_visitors = Array.new
 
-    @browser.go_to("http://www.okcupid.com/visitors")
+    result = @browser.body_of("http://www.okcupid.com/visitors", Time.now.to_i)
+    @html = result[:html]
+    @body = result[:body]
 
-    page = current_user.parser.xpath("//div[@id='main_column']/div").to_html
+    page = @html.parser.xpath("//div[@id='main_column']/div").to_html
     users = page.scan(/.p.class=.user_name.>(.+)<\/p>/)
     users.each do |user|
       block = user.shift
@@ -58,7 +53,7 @@ class EventTracker
 
     until @visitors.size == 0
       user = @visitors.shift
-      block = current_user.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()
+      block = @html.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()
     ").text
       timestamp = block.match(/(\d+), .JOURNAL/)[1]
       addition = {timestamp: timestamp}
@@ -79,7 +74,7 @@ class EventTracker
         @db.set_gender(:username => user[:handle], :gender => user[:gender])
         @db.set_state(:username => user[:handle], :state => user[:state])
 
-        increment_visitor_counter(user[:handle])
+        @db.increment_visitor_counter(user[:handle])
         @db.set_visitor_timestamp(user[:handle], user[:timestamp])
       end
     end
@@ -107,23 +102,23 @@ class EventTracker
     age       = person['age']
     sexuality = translate_sexuality(person['orientation'])
     location  = person['location']
-    city      = parsed_location(location)[:city]
-    state     = parsed_location(location)[:state]
+    city      = @regex.location_array(location)[:city]
+    state     = @regex.location_array(location)[:state]
     @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
     unless @stored_timestamp == timestamp
       puts "*****************","New visitor: #{visitor}","*****************"
 
 
-      @db.add_user(visitor)
+      @db.add_user(visitor, gender)
       @db.ignore_user(visitor) unless gender == @settings.gender
-      @db.set_gender(:username => visitor, :gender => gender)
+      # @db.set_gender(:username => visitor, :gender => gender)
       @db.set_state(:username => visitor, :state => state)
 
-      increment_visitor_counter(visitor)
+      @db.increment_visitor_counter(visitor)
     end
     @db.set_visitor_timestamp(visitor, timestamp)
-    @db.stats_add_visitors(1)
+    @db.stats_add_visitor
   end
 
   def visitor_event
@@ -145,46 +140,44 @@ class EventTracker
     end
   end
 
-  def do_page_action(url)
-    puts "","Scraping: #{url}" if verbose
-    @browser.go_to(url)
-    track_msg_dates
-    sleep 2
-  end
-
-  def track_msg_dates
-    message_list = body.scan(/"message_(\d+)"/)
+  def track_msg_dates(msg_page)
+    result = async_response(msg_page)
+    message_list = result[:body].scan(/"message_(\d+)"/)
 
     message_list.each do |message_id|
-
       message_id      = message_id[0]
-      msg_block       = current_user.parser.xpath("//li[@id='message_#{message_id}']").to_html
+      msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
       sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
-      timestamp_block = current_user.parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
+      timestamp_block = result[:html].parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
       timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
       sender          = sender.to_s
+      gender          = "Q"
 
-      register_message(sender, timestamp)
+      register_message(sender, timestamp, gender)
 
     end
   end
 
-  def register_message(sender, timestamp)
+  def register_message(sender, timestamp, gender)
     @stored_time     = @db.get_last_received_message_date(sender)
 
+    @db.add_user(sender, gender)
     @db.ignore_user(sender)
 
     unless @stored_time == timestamp
-      increment_message_counter(sender)
+      puts "New message found: #{sender} at #{Time.at(timestamp)}"
+      @db.increment_received_messages_count(sender)
       @db.set_last_received_message_date(sender, timestamp)
+      @db.stats_add_new_message
     end
   end
 
 
   def test_more_matches
     begin
-      @browser.go_to("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&ajax_load=1")
-      parsed = JSON.parse(@browser.current_user.content).to_hash
+      # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
+      result = async_response("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
+      parsed = JSON.parse(result[:html].content).to_hash
       html = parsed["html"]
       @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
       html_doc = Nokogiri::HTML(html)
@@ -204,14 +197,15 @@ class EventTracker
         result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
         # puts city, state
         username = user[0].to_s
-        @db.add_user(username)
-        @db.set_gender(:username => username, :gender => gender)
+        @db.add_user(username, gender)
+        # @db.set_gender(:username => username, :gender => gender)
         @db.set_age(username, age)
         begin
           city = ""
           state = ""
-          city = /location.>(.+),\s(.+)</.match(result)[1].to_s if /location.>(.+),\s(.+)</.match(result)
-          state = /location.>(.+),\s(.+)</.match(result)[2].to_s if /location.>(.+),\s(.+)</.match(result)
+          location = /location.>(.+)</.match(result)[1]
+          city = @regex.location_array(location)[:city]
+          state = @regex.location_array(location)[:state]
           @db.set_city(username, city)
           @db.set_state(:username => username, :state => state)
         rescue Exception => e
@@ -227,13 +221,26 @@ class EventTracker
     end
   end
 
+  def async_response(url)
+    result = Hash.new
+    result[:hash] = 0
+    timekey = Time.now.to_i
+    until result[:hash] == timekey
+      result = @browser.body_of(url, timekey)
+    end
+    # p result
+    result
+  end
+
   def scrape_inbox
     puts "Scraping inbox" if verbose
     items_per_page = 30
+    result = Hash.new
+    result[:hash] = 0
 
-    @browser.go_to("http://www.okcupid.com/messages")
+    result = async_response("http://www.okcupid.com/messages")
 
-    all_lows    = body.scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
+    all_lows    = result[:body].scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
     highest     = 0
 
     all_lows.each do |item|
@@ -244,15 +251,13 @@ class EventTracker
     puts "Total messages: #{total}" if verbose
     # @bar         = ProgressBar.new(total, :counter) unless verbose
     # @bar.increment! 1 unless verbose
-    do_page_action("http://www.okcupid.com/messages")
+    track_msg_dates("http://www.okcupid.com/messages")
+
     low         = items_per_page + 1
 
     until low >= total
-      # @bar.increment! 30 unless verbose
-      # do_page_action
       low += items_per_page
-      @browser.go_to("http://www.okcupid.com/messages?low=#{low}&folder=1")
-      track_msg_dates
+      track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
       sleep 2
     end
 

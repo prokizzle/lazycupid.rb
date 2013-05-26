@@ -62,6 +62,10 @@ class Harvester
     @settings.max_height.to_f
   end
 
+  def min_height
+    @settings.min_height.to_f
+  end
+
   def preferred_state
     @settings.preferred_state
   end

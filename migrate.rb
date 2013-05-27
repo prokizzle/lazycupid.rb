@@ -1,5 +1,6 @@
 require 'sqlite3'
 require './includes'
+require 'progress_bar'
 
 @login = ARGV.shift
 config_path   = File.dirname($0) + '/config/'

@@ -96,9 +96,7 @@ class DatabaseMgr
         last_online integer,
         ignore_list integer        )")
     rescue Exception => e
-      # puts e.message
       puts e.message if verbose
-      # Exceptional.handle(e, 'Database')
     end
 
     begin
@@ -113,7 +111,6 @@ class DatabaseMgr
         ")
       @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
     rescue Exception => e
-      # Exceptional.handle(e, 'Database')
       puts e.message if verbose
     end
     db_tasks
@@ -278,7 +275,7 @@ class DatabaseMgr
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
         and (gender=$9)
-        and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))  
+        and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
         order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                      [min_time.to_i,
                                       min_counts,

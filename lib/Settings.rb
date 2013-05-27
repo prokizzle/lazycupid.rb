@@ -18,20 +18,20 @@ class Settings
     path      = args[ :path]
     @filename = "#{path}/#{@account}.yml"
     @db_file  = "#{path}/database.yml"
-    @user     = args[ :user]
+    @browser     = args[ :browser]
     unless File.exists?(@filename)
       config = {geo: {
                   :distance_filter_type => "distance",
                   :preferred_state => " ",
-                  :preferred_city => @user.match_preferences[:my_city],
-                  :distance => 150
+                  :preferred_city => " ", #match_preferences[:my_city],
+                  :distance => 50
                 },
                 matching: {
                   :min_percent => 50,
                   :friend_percent => 0,
                   :enemy_percent => 0,
-                  :min_age => @user.match_preferences[:min_age],
-                  :max_age => @user.match_preferences[:max_age],
+                  :min_age => 18, #match_preferences[:min_age],
+                  :max_age => 50, #match_preferences[:max_age],
                   :age_sort => "ASC", #prefer younger
                   :gender => "F",
                   :min_height => 0, #flatlanders!
@@ -57,6 +57,19 @@ class Settings
     end
     @settings = YAML.load_file(@filename)
     @db_settings = YAML.load_file(@db_file)
+  end
+
+  def match_preferences
+    r = @browser.body_of("http://www.okcupid.com/profile", Time.now.to_i)
+    gentation = r[:html].parser.xpath("//li[@id='ajax_gentation']").to_html
+    ages = r[:html].parser.xpath("//li[@id='ajax_ages']").to_html
+    location = r[:html].parser.xpath("//span[@id='ajax_location']")
+    @looking_for = /(\w+) who like/.match(gentation)[1]
+    @min_age = (/(\d{2}).+(\d{2})/).match(ages)[1]
+    @max_age = (/(\d{2}).+(\d{2})/).match(ages)[2]
+    @my_city = (/[\w\s]+,\s([\w\s]+)/).match(location)[1]
+    # <li id="ajax_ages">Ages 20&ndash;35</li>
+    {min_age: @min_age, max_age: @max_age, city: @my_city, looking_for: @looking_for}
   end
 
   def reload_settings

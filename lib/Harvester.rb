@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'progress_bar'
 
 #
 # A class for gathering usernames to visit via various scraped portions of the site
@@ -107,7 +106,7 @@ class Harvester
     puts "Distance met: #{distance_criteria_met?}" if verbose
     puts "Age met:      #{age_criteria_met?}" if verbose
     puts "Height met:   #{height_criteria_met?}" if verbose
-    
+
     unless height_criteria_met?
       puts "Ignoring #{@user.handle} based on their height." if verbose
       @database.ignore_user(@user.handle)

@@ -26,119 +26,113 @@ class SmartRoll
   # end
 
   def reload
-    array = Array.new
     if @alt_reload
-      pg = @db.new_users_only
-      unless pg == {}
-        pg.each do |user|
-          array.push(user["name"]) if user.has_key?("name")
-          # puts user["name"] if debug
-        end
-      end
+      results = @db.focus_query_new_users
       @alt_reload = false
     else
+      results = @db.followup_query
+    end
 
-      pg = @db.followup_query
-      unless pg == {}
-        pg.each do |user|
-          array.push(user["name"]) if user.has_key?("name")
-          # puts user["name"] if debug
-        end
-      end
+    queue = build_user_list(results)
+    if queue.size == 0
+      results = @db.new_user_smart_query
+      queue = build_user_list(results)
+    end
 
-      if array.size == 0
-        pg = @db.new_user_smart_query
-        unless pg == {}
-          pg.each do |user|
-            array.push(user["name"]) if user.has_key?("name")
-            # puts user["name"] if debug
-          end
-        end
+    remove_duplicates(queue)
+  end
+
+  def build_user_list(results)
+    array = Array.new
+    unless results == {}
+      results.each do |user|
+        array.push(user["name"]) if user.has_key?("name")
+        # puts user["name"] if debug
       end
     end
-    remove_duplicates(array)
+    array
   end
 
 
-      def remove_duplicates(array)
-        result = array.to_set
-        result.to_a
-      end
+  def remove_duplicates(array)
+    result = array.to_set
+    result.to_a
+  end
 
-      def cache
-        if @selection.size == 0
-          @selection = reload
-        else
-          @selection
-        end
-      end
-
-      def next_user
-        cache.shift.to_s
-      end
-
-      def autodiscover_new_users(user)
-        @harvester.scrape_from_user(user) if @settings.autodiscover_on
-      end
-
-      def remove_match(user)
-        @db.delete_user(user)
-      end
-
-      def check_visitors
-        viz = @tracker.parse_visitors_page
-        @total_visitors += viz
-        @total_visits += @tally
-        @tally = 0
-        puts ""
-      end
-
-      def payload
-        puts "Getting new matches..." unless verbose
-        @tracker.test_more_matches
-        puts "Checking for new messages..." unless verbose
-        @tracker.scrape_inbox
-        # check_visitors
-      end
-
-      def pre_roll_actions
-        # @console.progress(@selection.size)
-        @tally = 0
-        @total_visitors = 0
-        @total_visits = 0
-        @start_time = Time.now.to_i
-        payload
-        puts "","Running..." unless verbose
-      end
-
-      def visit_user(user)
-        response = @user.profile(user)
-        if response[:inactive]
-          remove_match(user)
-        else
-          # puts response
-          @console.log(response) if verbose
-          @tally += 1
-          @db.log2(response)
-          # @harvester.body = @user.body
-          autodiscover_new_users(response) if response[:gender] == @settings.gender
-        end
-      end
-
-      def roll
-        current_user = next_user
-        # puts "Waiting..."
-        # wait = gets.chomp
-        unless current_user == @db.login
-          unless current_user == nil || current_user == ""
-            puts ".#{current_user}." if debug
-            visit_user(current_user)
-            @already_idle == false
-          else
-            puts "Idle..." unless @already_idle
-            @already_idle = true
-          end
-        end
-      end
-
+  def cache
+    if @selection.size == 0
+      @selection = reload
+    else
+      @selection
     end
+  end
+
+  def next_user
+    cache.shift.to_s
+  end
+
+  def autodiscover_new_users(user)
+    @harvester.scrape_from_user(user) if @settings.autodiscover_on
+  end
+
+  def remove_match(user)
+    @db.delete_user(user)
+  end
+
+  def check_visitors
+    viz = @tracker.parse_visitors_page
+    @total_visitors += viz
+    @total_visits += @tally
+    @tally = 0
+    puts ""
+  end
+
+  def payload
+    puts "Getting new matches..." unless verbose
+    @tracker.test_more_matches
+    puts "Checking for new messages..." unless verbose
+    @tracker.scrape_inbox
+    # check_visitors
+  end
+
+  def pre_roll_actions
+    # @console.progress(@selection.size)
+    @tally = 0
+    @total_visitors = 0
+    @total_visits = 0
+    @start_time = Time.now.to_i
+    payload
+    puts "","Running..." unless verbose
+  end
+
+  def visit_user(user)
+    response = @user.profile(user)
+    if response[:inactive]
+      remove_match(user)
+    else
+      # puts response
+      @console.log(response) if verbose
+      @tally += 1
+      @db.log2(response)
+      # @harvester.body = @user.body
+      autodiscover_new_users(response) if response[:gender] == @settings.gender
+    end
+  end
+
+  def roll
+    current_user = next_user
+    # puts "Waiting..."
+    # wait = gets.chomp
+    unless current_user == @db.login
+      unless current_user == nil || current_user == ""
+        puts ".#{current_user}." if debug
+        visit_user(current_user)
+        @already_idle == false
+      else
+        puts "Idle..." unless @already_idle
+        @already_idle = true
+      end
+    end
+  end
+
+end

@@ -42,11 +42,15 @@ class DatabaseMgr
     # @db.exec("update stats set total_messages=0 where id=1")
     # @db.exec("delete from matches where gender=?", "Q")
     # begin
-      # stats_get_visitor_count
+    # stats_get_visitor_count
     # rescue
-      # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
+    # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
     # end
     # @db.exec("delete from matches where gender is null")
+    begin
+      @db.exec("create index users_by_account on matches (account, name, counts, last_visit, gender, distance)")
+    rescue
+    end
   end
 
   def action(stmt)
@@ -236,6 +240,17 @@ class DatabaseMgr
     and (gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
 
+  end
+
+  def focus_query_new_users
+    time = Time.now.to_i
+    date_range_min = time - 1209600
+    date_range_max = time - 604800
+    @db.exec("select name from matches
+      where account=$1
+      and (last_visit >= $2 or last_visit is null or last_visit is 0)
+      and date_added between $3 and $4",
+             [@login, time - 86400, date_range_min, date_range_max])
   end
 
   def count_new_user_smart_query
@@ -717,16 +732,16 @@ class DatabaseMgr
       set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online) =
       ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       where name=$10",
-      [user[:gender],
-      user[:sexuality],
-      user[:match_percentage],
-      user[:state],
-      user[:distance],
-      user[:age],
-      user[:city],
-      user[:height],
-      user[:last_online],
-      user[:handle]])
+             [user[:gender],
+              user[:sexuality],
+              user[:match_percentage],
+              user[:state],
+              user[:distance],
+              user[:age],
+              user[:city],
+              user[:height],
+              user[:last_online],
+              user[:handle]])
   end
 
   def reset_ignored_list

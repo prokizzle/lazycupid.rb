@@ -43,8 +43,8 @@ class EventWatcher
 
   def api_url
     case @instant
-    when 1
-      @instant = 2
+    when @instant < 4
+      @instant += 1
     else
       @instant = 1
     end

@@ -34,12 +34,15 @@ class BlockList
 
   def scrape_users
     hidden_users = @response[:body].scan(/"\/profile\/([\d\w]+)"/)
-    hidden_users.each { |user| add(user.shift) unless is_ignored(user[0], "Q") }
+    hidden_users.each { |user| add(user.shift) }
   end
 
   def import_hidden_users
+    puts "Importing hidden users..."
 
     @response = @browser.body_of("http://www.okcupid.com/hidden-users", Time.now.to_i)
+    # puts @response[:body]
+    # sleep 50
     total = @response[:body].match(/hidden-users\?low=(\d+)">\d+<.a><.li>\n<li class="next"/)[1].to_i
     # puts @response[:body]
     scrape_users

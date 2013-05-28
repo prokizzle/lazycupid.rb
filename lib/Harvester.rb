@@ -97,7 +97,7 @@ class Harvester
   end
 
   def height_criteria_met?
-    @user.height.to_f >= min_height && @user.height.to_f <= max_height
+    (@user.height.to_f >= min_height && @user.height.to_f <= max_height) || @user.height == 0
   end
 
 

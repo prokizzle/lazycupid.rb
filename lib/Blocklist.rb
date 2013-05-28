@@ -50,7 +50,7 @@ class BlockList
       low = @response[:body].match(/hidden-users\?low\=(\d+).+Next/)[1].to_i
       @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", Time.now.to_i)
       scrape_users
-      sleep 2
+      # sleep 2
     end
   end
 end

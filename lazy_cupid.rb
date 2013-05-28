@@ -211,6 +211,10 @@ class Application
     @stop_time = Chronic.parse('4h from now').to_i
   end
 
+  def run_new_user_focus_crawl
+    @smarty.alt_reload = true
+  end
+
 end
 
 login_message = "Please login."
@@ -275,6 +279,10 @@ end
 
 app.scheduler.every '5m', :mutex => 'tracker' do
   app.scrape_ajax_matches
+end
+
+app.scheduler.every '6h', :mutex => 'that_mutex' do
+  app.run_new_user_focus_crawl
 end
 
 app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|

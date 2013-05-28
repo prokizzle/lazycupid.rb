@@ -1,5 +1,6 @@
 class SmartRoll
-  attr_reader :debug, :verbose
+  attr_reader :debug, :verbose, :alt_reload
+  attr_accessor :alt_reload
 
   def initialize(args)
     @db         = args[:database]

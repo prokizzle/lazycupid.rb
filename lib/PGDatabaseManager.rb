@@ -248,9 +248,8 @@ class DatabaseMgr
     date_range_max = time - 604800
     @db.exec("select name from matches
       where account=$1
-      and (last_visit >= $2 or last_visit is null or last_visit is 0)
-      and date_added between $3 and $4",
-             [@login, time - 86400, date_range_min, date_range_max])
+      and (last_visit >= $2 or last_visit is null)
+      and date_added between $3 and $4", [@login, time - 86400, date_range_min, date_range_max])
   end
 
   def count_new_user_smart_query
@@ -750,14 +749,13 @@ class DatabaseMgr
   end
 
   def is_ignored(username, gender="Q")
-    add_user(username, gender) unless existsCheck(username)
+    array = Array.new
+    add_user(username, "Q") unless existsCheck(username)
     result = @db.exec( "select ignore_list from matches where name=$1 and account=$2", [username, @login])
-    # to_boolean(result[0]["ignore_list"].to_s)
-    # begin
-    result[0]["ignore_list"].to_i == 1
-    # rescue
-    # false
-    # end
+    result.each do |man|
+      array.push(man)
+    end
+    array.shift["ignore_list"].to_i == 1
   end
 
   def ignore_user(username)
@@ -766,7 +764,7 @@ class DatabaseMgr
     end
     unless is_ignored(username)
       puts "Added to ignore list: #{username}" if verbose
-      @db.exec( "update matches set ignore_list=1 where name=$1 and account=$2", [username, @login])
+      @db.exec( "update matches set ignore_list=$3 where name=$1 and account=$2", [username, @login, 1])
     else
       puts "User already ignored: #{username}" if verbose
     end

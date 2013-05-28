@@ -15,7 +15,7 @@ class SmartRoll
     @selection  = reload
     @verbose    = @settings.verbose
     @debug      = @settings.debug
-    @alt_reload = false
+    @alt_reload = true
   end
 
   # def verbose

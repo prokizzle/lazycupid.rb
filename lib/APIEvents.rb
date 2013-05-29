@@ -10,7 +10,7 @@ class APIEvents
     @messages   = Hash.new
     @stalks     = Hash.new
 
-    @g = Growl.new "localhost", "LazyCupid"
+    @g = Growl.new "localhost", "#{@tracker.account}"
     @g.add_notification "lazy-cupid-notification"
 
 
@@ -30,13 +30,17 @@ class APIEvents
       key = "#{@event['server_gmt']}#{@event['from']}"
       p key
       unless @messages.has_key?(key)
-        @g.notify "lazy-cupid-notification", @tracker.account, "New message from #{@people['screenname']}"
+        @g.notify "lazy-cupid-notification", "New Message", "#{@people['screenname']}"
         puts "New message from #{@event["from"]}"
         @tracker.register_message(@event["from"], this_event_time)
       end
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
       @last_call = Time.now.to_i
     # end
+  end
+
+  def html_link(profile)
+    "<a href='http://www.okcupid.com/profile/#{profile}'>profile</a>"
   end
 
   def looks_vote
@@ -56,7 +60,7 @@ class APIEvents
     unless @stalks.has_key?(@event["server_gmt"])
       # puts "New visit from #{@event['screenname']}"
       @tracker.register_visit(@people)
-      @g.notify "lazy-cupid-notification", @tracker.account, "New visit from #{@people['screenname']}"
+      @g.notify "lazy-cupid-notification", "New visitor", "#{@people['screenname']}"
     end
     @stalks[@event["server_gmt"]] = @people["screenname"]
   end

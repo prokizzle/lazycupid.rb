@@ -43,14 +43,18 @@ class BlockList
     @response = @browser.body_of("http://www.okcupid.com/hidden-users", Time.now.to_i)
     # puts @response[:body]
     # sleep 50
-    total = @response[:body].match(/hidden-users\?low=(\d+)">\d+<.a><.li>\n<li class="next"/)[1].to_i
-    # puts @response[:body]
-    scrape_users
-    until @response[:body].match(/next inactive/)
-      low = @response[:body].match(/hidden-users\?low\=(\d+).+Next/)[1].to_i
-      @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", Time.now.to_i)
+    begin
       scrape_users
-      # sleep 2
+      total = @response[:body].match(/hidden-users\?low=(\d+)">\d+<.a><.li>\n<li class="next"/)[1].to_i
+      # puts @response[:body]
+      until @response[:body].match(/next inactive/)
+        low = @response[:body].match(/hidden-users\?low\=(\d+).+Next/)[1].to_i
+        @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", Time.now.to_i)
+        scrape_users
+        sleep [2,3,4,5,6].sample
+      end
+    rescue
+      puts "Finished import."
     end
   end
 end

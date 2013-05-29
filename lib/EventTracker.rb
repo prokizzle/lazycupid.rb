@@ -7,6 +7,7 @@ class EventTracker
     @db = args[:database]
     @settings = args[ :settings]
     @regex = RegEx.new
+    @queries = MatchQueries.new
     @account = @db.login
   end
 
@@ -172,11 +173,21 @@ class EventTracker
     end
   end
 
+  def default_match_search
+    @queries.default
+  end
 
-  def test_more_matches
+  def focus_new_users
+    @queries.focus_new_users
+  end
+
+
+
+
+  def test_more_matches(query="http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
     begin
       # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
-      result = async_response("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
+      result = async_response(query)
       parsed = JSON.parse(result[:html].content).to_hash
       html = parsed["html"]
       @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)

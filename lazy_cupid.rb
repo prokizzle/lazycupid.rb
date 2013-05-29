@@ -68,7 +68,11 @@ class Application
   end
 
   def scrape_ajax_matches
-    @tracker.test_more_matches
+    @tracker.default_match_search
+  end
+
+  def scrape_ajax_new_matches
+    @tracker.focus_new_users
   end
 
   def get_new_user_counts
@@ -279,6 +283,10 @@ end
 
 app.scheduler.every '5m', :mutex => 'tracker' do
   app.scrape_ajax_matches
+end
+
+app.scheduler.every '2h', :mutex => 'tracker' do
+  app.scrape_ajax_new_matches
 end
 
 app.scheduler.every '6h', :mutex => 'that_mutex' do

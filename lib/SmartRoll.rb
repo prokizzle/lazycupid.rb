@@ -28,18 +28,26 @@ class SmartRoll
 
   def reload
     if @alt_reload
+      # puts "Checking for focus" if verbose
       results = @db.focus_query_new_users
+      @query_name = "focus"
       @alt_reload = false
     else
+      # puts "Checking for follow up" if verbose
       results = @db.followup_query
+      @query_name = "followup"
+
     end
 
     queue = build_user_list(results)
     if queue.size == 0
+      # puts "Checking for new user" if verbose
       results = @db.new_user_smart_query
+      @query_name = "new users"
+
       queue = build_user_list(results)
     end
-
+    puts "#{@query_name} query returned results" if queue.size > 0
     remove_duplicates(queue)
   end
 

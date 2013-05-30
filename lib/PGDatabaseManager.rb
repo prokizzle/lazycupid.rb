@@ -249,7 +249,14 @@ class DatabaseMgr
     @db.exec("select name from matches
       where account=$1
       and (last_visit >= $2 or last_visit is null)
-      and time_added between $3 and $4", [@login, time - 86400, date_range_min, date_range_max])
+      and time_added between $3 and $4
+      and ignore_list=0
+      and gender=$5",
+      [@login, #1
+      time - 86400, #2
+      date_range_min, #3
+      date_range_max, #4
+      @settings.gender]) #5
   end
 
   def count_new_user_smart_query

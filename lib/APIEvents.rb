@@ -9,6 +9,7 @@ class APIEvents
     @spotlight  = Hash.new
     @messages   = Hash.new
     @stalks     = Hash.new
+    @settings   = args[:settings]
 
     @g = Growl.new "localhost", "#{@tracker.account}"
     @g.add_notification "lazy-cupid-notification"
@@ -31,7 +32,7 @@ class APIEvents
       p key
       unless @messages.has_key?(key)
         @g.notify "lazy-cupid-notification", "New Message", "#{@people['screenname']}"
-        puts "New message from #{@event["from"]}"
+        puts "New message from #{@event["from"]}" if @settings.growl_new_mail
         @tracker.register_message(@event["from"], this_event_time)
       end
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
@@ -60,7 +61,7 @@ class APIEvents
     unless @stalks.has_key?(@event["server_gmt"])
       # puts "New visit from #{@event['screenname']}"
       @tracker.register_visit(@people)
-      @g.notify "lazy-cupid-notification", "New visitor", "#{@people['screenname']}"
+      @g.notify "lazy-cupid-notification", "New visitor", "#{@people['screenname']}" if @settings.growl_new_visits
     end
     @stalks[@event["server_gmt"]] = @people["screenname"]
   end

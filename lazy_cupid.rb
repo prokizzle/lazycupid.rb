@@ -20,7 +20,7 @@ class Application
     @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
     @scheduler    = Rufus::Scheduler.start_new
     @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
-    @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log)
+    @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)
     @harvester    = Harvester.new(
       browser:           @browser,
       database:          db,

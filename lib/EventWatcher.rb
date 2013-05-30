@@ -6,11 +6,12 @@ class EventWatcher
   def initialize(args)
     # puts "Initializing browser..."
     # @browser = Browser.new(:username => @username, :password => password)
-    @browser = args[ :browser]
-    @tracker = args[ :tracker]
-    @log     = args[ :logger]
+    @browser    = args[:browser]
+    @tracker    = args[:tracker]
+    @log        = args[:logger]
+    @settings   = args[:settings]
 
-    @api        = APIEvents.new(tracker: @tracker, logger: @log)
+    @api        = APIEvents.new(tracker: @tracker, logger: @log, settings: @settings)
 
     @spotlight  = Hash.new
     @messages   = Hash.new

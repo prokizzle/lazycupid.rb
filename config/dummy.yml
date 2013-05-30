@@ -21,6 +21,12 @@
   :max_followup: 15
 :scraping:
   :autodiscover_on: true
+:growl:
+    :new_visits: false
+    :new_mail: true
+    :favorite_sign_on: false
+    :favorite_sign_off: false
+    :new_im: false
 :development:
   :verbose: true
   :debug: false

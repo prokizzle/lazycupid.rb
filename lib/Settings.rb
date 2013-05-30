@@ -46,6 +46,13 @@ class Settings
                 scraping: {
                   :autodiscover_on => true
                 },
+                growl: {
+                  new_visits: false,
+                  new_mail: true,
+                  favorite_sign_on: false,
+                  favorite_sign_off: false,
+                  new_im: false
+                },
                 development: {
                   :verbose => true,
                   :debug => false
@@ -138,6 +145,26 @@ class Settings
 
   def max_followup
     @settings[:visit_freq][:max_followup].to_i
+  end
+
+  def growl_new_visits
+    @settings[:growl][:new_visits] == true
+  end
+
+  def growl_new_im
+    @settings[:growl][:new_im] == true
+  end
+
+  def growl_new_mail
+    @settings[:growl][:new_mail] == true
+  end
+
+  def growl_fave_signoff
+    @settings[:growl][:favorite_sign_off] == true
+  end
+
+  def growl_fave_signon
+    @settings[:growl][:favorite_sign_on] == true
   end
 
   def debug

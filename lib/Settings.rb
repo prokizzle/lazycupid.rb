@@ -62,6 +62,20 @@ class Settings
         f.write(config.to_yaml)
       end
     end
+    unless File.exists?(@db_file)
+      db_ = {
+        development: {
+          adapter: "postgresql",
+          host: "localhost",
+          username: "postgres",
+          password: "123456",
+          database: "lazy_cupid"
+        }
+      }
+      File.open(@db_file, "w") do |f|
+        f.write(db_.to_yaml)
+      end
+    end
     @settings = YAML.load_file(@filename)
     @db_settings = YAML.load_file(@db_file)
   end

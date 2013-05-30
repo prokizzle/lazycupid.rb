@@ -50,6 +50,17 @@ class DatabaseMgr
     begin
       @db.exec("create index users_by_account on matches (account, name, counts, last_visit, gender, distance)")
     rescue
+
+    end
+    begin
+      @db.exec("alter table matches add column flag integer")
+      @db.exec("update table matches set flag = -1 where account=$1", [@login])
+    rescue
+    end
+    @db.exec("update matches set ignore_list=1 where account=$1 and gender <> $2", [@login, @settings.gender])
+    begin
+      @db.exec("create index ignored_users on matches (account, name, ignore_list)")
+    rescue
     end
   end
 

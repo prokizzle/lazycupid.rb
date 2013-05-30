@@ -232,6 +232,10 @@ class DatabaseMgr
     @db.exec( "select name from matches where gender is null and last_visit<$1 and account=$2", [days, @login] )
   end
 
+  def toggle_flag(name)
+    @db.exec("update matches set flag=flag * -1 where name=$1 and account=$2", [name, @login])
+  end
+
   def new_user_smart_query
     @db.exec("select name from matches
     where account=$2

@@ -72,9 +72,6 @@ class EventWatcher
   def check_events
 
     temp              = poll_response
-    events_array      = temp["events"]
-    people_array      = temp["people"]
-    events_array_size = events_array.size
     index             = 0
 
     temp["people"].each do |user|

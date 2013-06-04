@@ -47,7 +47,7 @@ class SmartRoll
 
       queue = build_user_list(results)
     end
-    puts "#{@query_name} query returned results" if queue.size > 0
+    # puts "#{@query_name} query returned results" if queue.size > 0
     remove_duplicates(queue)
   end
 

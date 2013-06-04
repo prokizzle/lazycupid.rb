@@ -23,7 +23,7 @@ class EventTracker
   end
 
   def add_user(user, gender)
-    @db.add_user(user.to_s, gender)
+    @db.add_user(user.to_s, gender, caller[0][/`.*'/].to_s.match(/`(.+)'/)[1])
   end
 
   def parse_visitors_page
@@ -70,7 +70,7 @@ class EventTracker
 
       unless @stored_timestamp == user[:timestamp]
         @count += 1
-        @db.add_user(user[:handle])
+        @db.add_user(user[:handle], user[:gender], "visitors")
         @db.ignore_user(user[:handle]) unless user[:gender] == @settings.gender
         @db.set_gender(:username => user[:handle], :gender => user[:gender])
         @db.set_state(:username => user[:handle], :state => user[:state])
@@ -111,7 +111,7 @@ class EventTracker
       puts "*****************","New visitor: #{visitor}","*****************"
 
 
-      @db.add_user(visitor, gender)
+      @db.add_user(visitor, gender, "api_visitor")
       @db.ignore_user(visitor) unless gender == @settings.gender
       # @db.set_gender(:username => visitor, :gender => gender)
       @db.set_state(:username => visitor, :state => state)
@@ -162,7 +162,7 @@ class EventTracker
   def register_message(sender, timestamp, gender)
     @stored_time     = @db.get_last_received_message_date(sender)
 
-    @db.add_user(sender, gender)
+    @db.add_user(sender, gender, "inbox")
     @db.ignore_user(sender)
 
     unless @stored_time == timestamp
@@ -208,7 +208,7 @@ class EventTracker
         result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
         # puts city, state
         username = user[0].to_s
-        @db.add_user(username, gender)
+        @db.add_user(username, gender, "ajax_match_search")
         # @db.set_gender(:username => username, :gender => gender)
         @db.set_age(username, age)
         begin

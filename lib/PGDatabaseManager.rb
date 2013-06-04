@@ -47,21 +47,22 @@ class DatabaseMgr
     # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
     # end
     # @db.exec("delete from matches where gender is null")
-    begin
-      @db.exec("create index users_by_account on matches (account, name, counts, last_visit, gender, distance)")
-    rescue
+    # begin
+    #   @db.exec("create index users_by_account on matches (account, name, counts, last_visit, gender, distance)")
+    # rescue
 
-    end
-    begin
-      @db.exec("alter table matches add column flag integer")
-      @db.exec("update table matches set flag = -1 where account=$1", [@login])
-    rescue
-    end
-    @db.exec("update matches set ignore_list=1 where account=$1 and gender <> $2", [@login, @settings.gender])
-    begin
-      @db.exec("create index ignored_users on matches (account, name, ignore_list)")
-    rescue
-    end
+    # end
+    # begin
+    #   @db.exec("alter table matches add column flag integer")
+    #   @db.exec("update table matches set flag = -1 where account=$1", [@login])
+    # rescue
+    # end
+    # @db.exec("update matches set ignore_list=1 where account=$1 and gender <> $2", [@login, @settings.gender])
+    # begin
+    #   @db.exec("create index ignored_users on matches (account, name, ignore_list)")
+    # rescue
+    # end
+    # @db.exec("alter table matches add column added_from text")
   end
 
   def action(stmt)
@@ -169,11 +170,11 @@ class DatabaseMgr
     result[0]["total_messages"].to_i
   end
 
-  def add_user(username, gender)
+  def add_user(username, gender, added_from)
     unless existsCheck(username) || username == "pictures"
       puts "Adding user:        #{username}" if verbose
       # @db.transaction
-      @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender) values ($1, $2, $3, $4, $5, $6)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender])
+      @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from) values ($1, $2, $3, $4, $5, $6, $7)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender, added_from])
       # @db.commit
       stats_add_new_user
     else
@@ -782,7 +783,7 @@ class DatabaseMgr
 
   def ignore_user(username)
     unless existsCheck(username)
-      add_user(username, "Q")
+      add_user(username, "Q", "hidden_users")
     end
     unless is_ignored(username)
       puts "Added to ignore list: #{username}" if verbose
@@ -794,6 +795,10 @@ class DatabaseMgr
 
   def unignore_user(username)
     @db.exec( "update matches set ignore_list=0 where name=$1 and account=$2", [username, @login])
+  end
+
+  def added_from(username, method)
+    @db.exec("update matches set added_from=$1 where name=$2 and account=$3", [method, username, @login])
   end
 
   def existsCheck(username)

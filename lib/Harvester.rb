@@ -125,14 +125,14 @@ class Harvester
       @body = user_[:body]
       puts "Scraping: leftbar" if verbose
       array = @body.scan(/\/([\w\d_-]+)\?leftbar_match/)
-      array.each { |user| @database.add_user(user.shift, @settings.gender) }
+      array.each { |user| @database.add_user(user.shift, @settings.gender, "leftbar") }
       puts "Scraping: similar users" if verbose
       similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)
       similars = similars.to_set
       similars.each do |similar_user|
         similar_user = similar_user.shift
         if user_[:gender] == @settings.gender
-          @database.add_user(similar_user, user_[:gender])
+          @database.add_user(similar_user, user_[:gender], "similar_users")
           @database.set_state(:username => similar_user, :state => @user.state)
           # @database.set_gender(:username => similar_user, :gender => @user.gender)
           @database.set_distance(:username => similar_user, :distance => @user.relative_distance)
@@ -198,8 +198,8 @@ class Harvester
     @count  = 0
     matches_list.each do |username, zindex|
 
-      @database.add_user(username)
-      @database.set_gender(:username => username, :gender => "F")
+      @database.add_user(username, gender, "match_search")
+      @database.set_gender(:username => username, :gender => gender)
       @database.set_age(username, @age[username])
       @database.set_city(username, @city[username])
       @database.set_sexuality(username, @sexuality[username])
@@ -221,7 +221,7 @@ class Harvester
       sexuality   = user[3]
       city        = user[4]
       state       = user[5]
-      @database.add_user(handle)
+      @database.add_user(handle, gender, "homepage")
       @database.set_gender(:username => handle, :gender => gender)
       # @database.set_age(:username => handle, :age => age)
       @database.set_state(:username => handle, :state => state)

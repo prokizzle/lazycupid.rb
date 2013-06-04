@@ -222,7 +222,7 @@ class DatabaseMgr
     # if existsCheck(new_name)
     # update_visit_count(new_name, get_visit_count(old_name) + get_visit_count(new_name) + 1)
     # else
-    add_user(new_name, get_gender(old_name))
+    add_user(new_name, get_gender(old_name), "a_list_rename")
     # update_visit_count(new_name, get_visit_count(old_name))
     # set_gender(:username => new_name, :gender => get_gender(old_name))
     # set_age(new_name, get_age(old_name))
@@ -799,6 +799,11 @@ class DatabaseMgr
 
   def added_from(username, method)
     @db.exec("update matches set added_from=$1 where name=$2 and account=$3", [method, username, @login])
+  end
+
+  def get_added_from(username)
+    row = @db.exec("select added_from from matches where account=$1 and name=$2", [@login, username])
+    row[0]["added_from"].to_s
   end
 
   def existsCheck(username)

@@ -114,13 +114,17 @@ class SmartRoll
     puts "","Running..." unless verbose
   end
 
+  def added_from(username)
+    @db.get_added_from(username)
+  end
+
   def visit_user(user)
     response = @user.profile(user)
     if response[:inactive]
       remove_match(user)
     else
       # puts response
-      @console.log(response) if verbose
+      @console.log(response, added_from(user)) if verbose
       @tally += 1
       @db.log2(response)
       # @harvester.body = @user.body

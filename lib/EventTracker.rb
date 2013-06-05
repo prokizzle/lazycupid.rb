@@ -108,7 +108,7 @@ class EventTracker
     @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
     unless @stored_timestamp == timestamp
-      puts "*****************","New visitor: #{visitor}","*****************"
+      puts "* New visitor: #{visitor} *"
 
 
       @db.add_user(visitor, gender, "api_visitor")

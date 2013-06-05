@@ -259,6 +259,16 @@ class DatabaseMgr
   end
 
   def focus_query_new_users
+    desired_gender      = @settings.gender
+    min_age             = @settings.min_age
+    max_age             = @settings.max_age
+    max_distance        = @settings.max_distance
+    age_sort            = @settings.age_sort
+    height_sort         = @settings.height_sort
+    last_online_cutoff  = @settings.last_online_cutoff
+    min_counts          = 1
+    max_counts          = @settings.max_followup
+    min_percent         = @settings.min_percent
     time = Time.now.to_i
     date_range_min = time - 1209600
     date_range_max = time - 604800
@@ -267,12 +277,18 @@ class DatabaseMgr
       and (last_visit >= $2 or last_visit is null)
       and time_added between $3 and $4
       and ignore_list=0
+      and age between $6 and $7
+      and distance <= $8
       and gender=$5",
       [@login, #1
       time - 86400, #2
       date_range_min, #3
       date_range_max, #4
-      @settings.gender]) #5
+      @settings.gender, #5
+      min_age, #6
+      max_age, #7
+      max_distance #8
+      ])
   end
 
   def count_new_user_smart_query

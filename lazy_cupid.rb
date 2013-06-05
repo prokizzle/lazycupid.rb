@@ -216,7 +216,7 @@ class Application
   end
 
   def run_new_user_focus_crawl
-    @smarty.alt_reload = true
+    # @smarty.alt_reload = true
   end
 
 end
@@ -285,9 +285,9 @@ app.scheduler.every '5m', :mutex => 'tracker' do
   app.scrape_ajax_matches
 end
 
-app.scheduler.every '2h', :mutex => 'tracker' do
-  app.scrape_ajax_new_matches
-end
+# app.scheduler.every '2h', :mutex => 'tracker' do
+#   app.scrape_ajax_new_matches
+# end
 
 app.scheduler.every '6h', :mutex => 'that_mutex' do
   app.run_new_user_focus_crawl

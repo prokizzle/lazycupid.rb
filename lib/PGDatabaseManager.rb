@@ -758,7 +758,7 @@ class DatabaseMgr
 
   def is_ignored(username, gender="Q")
     array = Array.new
-    add_user(username, "Q") unless existsCheck(username)
+    add_user(username, "Q", "ignore_list") unless existsCheck(username)
     result = @db.exec( "select ignore_list from matches where name=$1 and account=$2", [username, @login])
     result.each do |man|
       array.push(man)

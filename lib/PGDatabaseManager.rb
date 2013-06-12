@@ -32,37 +32,7 @@ class DatabaseMgr
   end
 
   def db_tasks
-    # Exceptional.rescue do
-    # @db.exec("alter table matches add column account text")
-    # @db.exec("alter table stats add column account text")
-    #   @db.exec("update matches set ignore_list=0 where ignored='false'")
-    #   @db.exec("update matches set ignore_list=1 where ignored='true'")
-    # end
-    # @db.exec("alter table stats add column total_messages integer")
-    # @db.exec("update stats set total_messages=0 where id=1")
-    # @db.exec("delete from matches where gender=?", "Q")
-    # begin
-    # stats_get_visitor_count
-    # rescue
-    # @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
-    # end
-    # @db.exec("delete from matches where gender is null")
-    # begin
-    #   @db.exec("create index users_by_account on matches (account, name, counts, last_visit, gender, distance)")
-    # rescue
 
-    # end
-    # begin
-    #   @db.exec("alter table matches add column flag integer")
-    #   @db.exec("update table matches set flag = -1 where account=$1", [@login])
-    # rescue
-    # end
-    # @db.exec("update matches set ignore_list=1 where account=$1 and gender <> $2", [@login, @settings.gender])
-    # begin
-    #   @db.exec("create index ignored_users on matches (account, name, ignore_list)")
-    # rescue
-    # end
-    # @db.exec("alter table matches add column added_from text")
   end
 
   def action(stmt)

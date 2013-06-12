@@ -33,6 +33,7 @@ class DatabaseMgr
 
   def db_tasks
     puts "Executing db tasks..."
+    @db.exec("alter table matches add column prev_visit integer")
   end
 
   def action(stmt)
@@ -692,6 +693,7 @@ class DatabaseMgr
   end
 
   def set_my_last_visit_date(user, date=Time.now.to_i)
+    @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
     @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [date, user, @login])
   end
 

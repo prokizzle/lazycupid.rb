@@ -221,87 +221,95 @@ class Application
 
 end
 
-login_message = "Please login."
-quit          = false
-logged_in     = false
+class Main
+
+  def run
+    login_message = "Please login."
+    quit          = false
+    logged_in     = false
 
 
-until logged_in
-  unless ARGV.size > 0
-    print "\e[2J\e[f"
-    puts "LazyCupid Main Menu","--------------------",""
-    puts "#{login_message}",""
-    print "Username: "
-    username = gets.chomp
-    password = ask("password: ") { |q| q.echo = false }
-  else
-    # puts "#{login_message}",""
-    username = ARGV[0]
-    password = ARGV[1]
+    until logged_in
+      unless ARGV.size > 0
+        print "\e[2J\e[f"
+        puts "LazyCupid Main Menu","--------------------",""
+        puts "#{login_message}",""
+        print "Username: "
+        username = gets.chomp
+        password = ask("password: ") { |q| q.echo = false }
+      else
+        # puts "#{login_message}",""
+        username = ARGV[0]
+        password = ARGV[1]
+      end
+      # Exceptional.rescue do
+      app = Application.new(username: username, password: password)
+      # end
+      if app.login
+        logged_in = true
+        login_message = "Success. Initializing."
+        print "\e[2J\e[f"
+      else
+        login_message = "Incorrect password. Try again."
+      end
+    end
+    # rescue Exception => e
+    # puts e.message
+    # puts e.backtrace
+    # Exceptional.handle(e, 'Login workflow')
+    # rescue SystemExit, Interrupt
+    # quit = true
+    # logout = false
+    # puts "","","Goodbye."
+    # end
+    #
+
+    # app.set_stop_time
+
+    app.pre_roll_actions
+
+    app.scheduler.every '30m', :mutex => 'tracker' do
+      # if @has_unread_messages is true
+      app.scrape_inbox
+      #   @has_unread_messages = false
+      # end
+    end
+    #
+    # app.scheduler.every '3h', :mutex => 'that_mutex' do
+    # app.check_visitors
+    # end
+
+    app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
+      app.check_events
+      # @has_unread_messages = true if app.unread_messages > 0
+    end
+
+    app.scheduler.every '5m', :mutex => 'tracker' do
+      app.scrape_ajax_matches
+    end
+
+    # app.scheduler.every '2h', :mutex => 'tracker' do
+    #   app.scrape_ajax_new_matches
+    # end
+
+    app.scheduler.every '6h', :mutex => 'that_mutex' do
+      app.run_new_user_focus_crawl
+    end
+
+    app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
+      # if Time.now.to_i >= @stop_time.to_i
+      # puts "Roll session complete."
+      # job.unschedule
+      # else
+      # loop do
+      app.roll
+      # end
+      # end
+    end
+
+    app.scheduler.join
   end
-  # Exceptional.rescue do
-  app = Application.new(username: username, password: password)
-  # end
-  if app.login
-    logged_in = true
-    login_message = "Success. Initializing."
-    print "\e[2J\e[f"
-  else
-    login_message = "Incorrect password. Try again."
-  end
-end
-# rescue Exception => e
-# puts e.message
-# puts e.backtrace
-# Exceptional.handle(e, 'Login workflow')
-# rescue SystemExit, Interrupt
-# quit = true
-# logout = false
-# puts "","","Goodbye."
-# end
-#
-
-# app.set_stop_time
-
-app.pre_roll_actions
-
-app.scheduler.every '30m', :mutex => 'tracker' do
-  # if @has_unread_messages is true
-    app.scrape_inbox
-  #   @has_unread_messages = false
-  # end
-end
-#
-# app.scheduler.every '3h', :mutex => 'that_mutex' do
-# app.check_visitors
-# end
-
-app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
-  app.check_events
-  # @has_unread_messages = true if app.unread_messages > 0
 end
 
-app.scheduler.every '5m', :mutex => 'tracker' do
-  app.scrape_ajax_matches
-end
-
-# app.scheduler.every '2h', :mutex => 'tracker' do
-#   app.scrape_ajax_new_matches
-# end
-
-app.scheduler.every '6h', :mutex => 'that_mutex' do
-  app.run_new_user_focus_crawl
-end
-
-app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
-  # if Time.now.to_i >= @stop_time.to_i
-  # puts "Roll session complete."
-  # job.unschedule
-  # else
-  # loop do
-  app.roll
-  # end
-  # end
-end
-
-app.scheduler.join
+main = Main.new
+main.run

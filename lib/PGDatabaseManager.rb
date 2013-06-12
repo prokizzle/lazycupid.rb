@@ -32,7 +32,7 @@ class DatabaseMgr
   end
 
   def db_tasks
-
+    puts "Executing db tasks..."
   end
 
   def action(stmt)

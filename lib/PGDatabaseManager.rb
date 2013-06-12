@@ -99,7 +99,6 @@ class DatabaseMgr
     rescue Exception => e
       puts e.message if verbose
     end
-    db_tasks
     @did_migrate = true
   end
 

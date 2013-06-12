@@ -251,15 +251,15 @@ class DatabaseMgr
       and age between $6 and $7
       and distance <= $8
       and gender=$5",
-      [@login, #1
-      time - 86400, #2
-      date_range_min, #3
-      date_range_max, #4
-      @settings.gender, #5
-      min_age, #6
-      max_age, #7
-      max_distance #8
-      ])
+             [@login, #1
+              time - 86400, #2
+              date_range_min, #3
+              date_range_max, #4
+              @settings.gender, #5
+              min_age, #6
+              max_age, #7
+              max_distance #8
+              ])
   end
 
   def count_new_user_smart_query

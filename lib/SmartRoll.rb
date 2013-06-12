@@ -46,6 +46,12 @@ class SmartRoll
       @query_name = "new users"
 
       queue = build_user_list(results)
+      if queue.size == 0
+        # puts "Idling..."
+        # sleep 120
+      end
+
+    queue
     end
     # puts "#{@query_name} query returned results" if queue.size > 0
     remove_duplicates(queue)

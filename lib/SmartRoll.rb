@@ -96,7 +96,9 @@ class SmartRoll
 
   def payload
     puts "Getting new matches..." unless verbose
-    @tracker.test_more_matches
+    2.times do
+      @tracker.test_more_matches
+    end
     puts "Checking for new messages..." unless verbose
     @tracker.scrape_inbox
     # check_visitors

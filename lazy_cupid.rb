@@ -288,5 +288,9 @@ class Main
   end
 end
 
-main = Main.new
-main.run
+if ARGV[0] == "-i"
+  puts "Interactive Mode"
+else
+  main = Main.new
+  main.run
+end

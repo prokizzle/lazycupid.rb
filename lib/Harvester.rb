@@ -4,7 +4,7 @@ require 'rubygems'
 # A class for gathering usernames to visit via various scraped portions of the site
 #
 class Harvester
-  attr_reader :type, :user
+  attr_reader :type, :user, :verbose, :debug
   attr_accessor :type, :user, :body
 
   def initialize(args)
@@ -33,12 +33,6 @@ class Harvester
     @browser.current_user
   end
 
-  def verbose
-    @verbose
-  end
-
-  def debug
-    @debug
   end
 
   def min_match_percentage
@@ -144,6 +138,8 @@ class Harvester
 
 
   end
+
+
 
   def location_array(location)
     result    = location.scan(/,/)

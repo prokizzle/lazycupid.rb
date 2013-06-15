@@ -24,4 +24,10 @@ class Lookup
       "never"
     end
   end
+
+  def prev_visit(user)
+    result = @db.get_prev_visit(user)
+    # Time.at(result).ago.to_words unless result == 0
+    result
+  end
 end

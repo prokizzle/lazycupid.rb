@@ -287,37 +287,12 @@ class DatabaseMgr
     min_counts          = 1
     max_counts          = @settings.max_followup
     min_percent         = @settings.min_percent
+    visit_gay           = @settings.visit_gay
+    visit_bisexual      = @settings.visit_bisexual
+    visit_straight      = @settings.visit_straight
+    distance            = @settings.max_distance
 
-    case @settings.distance_filter_type
-    when "state"
-      location_filter     = "#{@settings.preferred_state}"
-      preferred_state_alt = "#{location_filter} "
-      result              = @db.exec("
-        select name from matches
-        where account=$10
-        and(last_visit <= $1 or last_visit is null)
-        and counts between $2 and $3
-        and (state = $4 or state = $5 or state is null)
-        and ignore_list = 0
-        and (age between $6 and $7 or age is null)
-        and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-        and (gender=$9)
-        and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
-        order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
-                                     [min_time.to_i,
-                                      min_counts,
-                                      max_counts,
-                                      location_filter,
-                                      preferred_state_alt,
-                                      min_age,
-                                      max_age,
-                                      min_percent,
-                                      desired_gender,
-                                      @login])
-
-    when "distance"
-      location_filter = @settings.max_distance
-      result          = @db.exec("
+    result          = @db.exec("
         select name from matches
          where account=$9
         and (last_visit <= $1 or last_visit is null)
@@ -329,41 +304,15 @@ class DatabaseMgr
          and (gender=$8)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
          order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
-                                 [min_time.to_i,
-                                  min_counts,
-                                  max_counts,
-                                  location_filter,
-                                  min_age,
-                                  max_age,
-                                  min_percent,
-                                  desired_gender,
-                                  @login])
-    when "city"
-      location_filter     = "#{@settings.preferred_city}"
-      preferred_city_alt  = "#{location_filter} "
-      result              = @db.exec("
-        select name from matches
-          where account=$10
-          and (last_visit <= $1 or last_visit is null)
-          and counts between $2 and $3
-          and (city = $4 or city = $5 or city is null)
-          and ignore_list = 0
-          and (age between $6 and $7 or age is null)
-          and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-          and (gender=$9)
-          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
-          order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
-                                     [min_time.to_i,
-                                      min_counts,
-                                      max_counts,
-                                      location_filter,
-                                      preferred_city_alt,
-                                      min_age,
-                                      max_age,
-                                      min_percent,
-                                      desired_gender,
-                                      @login])
-    end
+                               [min_time.to_i,
+                                min_counts,
+                                max_counts,
+                                distance,
+                                min_age,
+                                max_age,
+                                min_percent,
+                                desired_gender,
+                                @login])
     result
   end
 
@@ -376,59 +325,9 @@ class DatabaseMgr
     min_counts      = 1
     max_counts      = @settings.max_followup
     min_percent     = @settings.min_percent
+    distance        = @settings.max_distance
 
-    case @settings.distance_filter_type
-    when "state"
-      location_filter     = "#{@settings.preferred_state}"
-      preferred_state_alt = "#{@settings.preferred_state} "
-      result              = @db.exec("
-        select count(name)
-        from matches
-        where account=$1
-        and (last_visit <= $2 or last_visit is null)
-        and counts between $3 and $4
-        and (state = $5 or state = $6 or state is null)
-        and ignore_list = 0
-        and (age between $7 and $8 or age is null)
-        and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender=$10)",
-                                     [@login,
-                                      min_time.to_i,
-                                      min_counts,
-                                      max_counts,
-                                      location_filter,
-                                      preferred_state_alt,
-                                      min_age,
-                                      max_age,
-                                      min_percent,
-                                      desired_gender])
-    when "city"
-      location_filter     = "#{@settings.preferred_city}"
-      preferred_city_alt = "#{@settings.preferred_city} "
-      result              = @db.exec("
-        select count(name)
-        from matches
-        where account=$1
-        and (last_visit <= $2 or last_visit is null)
-        and counts between $3 and $4
-        and (city = $5 or city = $6 or city is null)
-        and ignore_list = 0
-        and (age between $7 and $8 or age is null)
-        and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender=$10)",
-                                     [@login,
-                                      min_time.to_i,
-                                      min_counts,
-                                      max_counts,
-                                      location_filter,
-                                      preferred_city_alt,
-                                      min_age,
-                                      max_age,
-                                      min_percent,
-                                      desired_gender])
-    when "distance"
-      location_filter     = "#{@settings.max_distance}"
-      result              = @db.exec("
+    result          = @db.exec("
         select count(name)
         from matches
         where account=$1
@@ -439,40 +338,18 @@ class DatabaseMgr
         and (age between $6 and $7 or age is null)
         and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
         and (gender=$9)",
-                                     [@login,
-                                      min_time.to_i,
-                                      min_counts,
-                                      max_counts,
-                                      location_filter,
-                                      min_age,
-                                      max_age,
-                                      min_percent,
-                                      desired_gender])
+                                   [@login,
+                                    min_time.to_i,
+                                    min_counts,
+                                    max_counts,
+                                    distance,
+                                    min_age,
+                                    max_age,
+                                    min_percent,
+                                    desired_gender])
 
-    end
     # result.close
     result[0][0].to_i
-  end
-
-  def range_smart_query_by_state(
-      min_time,
-      min_counts,
-      max_counts,
-      preferred_state,
-      min_age,
-      max_age,
-      min_percent,
-    desired_gender=@settings.gender)
-    preferred_state_alt = "#{preferred_state} "
-    @db.exec("select name, visit_count from matches
-        where account=$1
-        and (last_visit <= $2 or last_visit is null)
-        and counts between $3 and $4
-        and (state = $5 or state = $6 or state is null)
-        and ignored is not 'true'
-        and (age between $7 and $8 or age is null)
-        and (match_percent between $9 and 100 or match_percent is null or match_percent=0)
-        and (gender=$10)", [@login, min_time, min_counts, max_counts, preferred_state, preferred_state_alt, min_age, max_age, min_percent, desired_gender])
   end
 
   def user_record_exists(user)

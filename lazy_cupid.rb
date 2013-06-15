@@ -107,33 +107,10 @@ class Application
   end
 
   def login
-    # until browsers.size == 0
-    #   browsers.shift.login
-    # end
-    # @browser.login
-    # @browser.login
-    # secondary_login
     @browser.login
-  end
-
-  def secondary_login
-    # temp = browsers_array
-    # until temp.size == 0
-    #   temp.shift.login
-    # end
-    @browser.login
-    @browser.login
-  end
-
-  def secondary_logout
-    temp = browsers_array
-    until temp.size == 0
-      temp.shift.logout
-    end
   end
 
   def logout
-    secondary_logout
     @browser.logout
   end
 

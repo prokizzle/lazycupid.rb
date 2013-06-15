@@ -33,6 +33,9 @@ class Harvester
     @browser.current_user
   end
 
+  def add_user(user, gender)
+    method_name = caller[0][/`.*'/].to_s.match(/`(.+)'/)[1]
+    @database.add_user(user, gender, method_name)
   end
 
   def min_match_percentage
@@ -194,7 +197,7 @@ class Harvester
     @count  = 0
     matches_list.each do |username, zindex|
 
-      @database.add_user(username, gender, "match_search")
+      add_user(username, gender)
       @database.set_gender(:username => username, :gender => gender)
       @database.set_age(username, @age[username])
       @database.set_city(username, @city[username])
@@ -217,7 +220,7 @@ class Harvester
       sexuality   = user[3]
       city        = user[4]
       state       = user[5]
-      @database.add_user(handle, gender, "homepage")
+      add_user(handle, gender)
       @database.set_gender(:username => handle, :gender => gender)
       # @database.set_age(:username => handle, :age => age)
       @database.set_state(:username => handle, :state => state)

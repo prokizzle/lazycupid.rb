@@ -629,9 +629,9 @@ class DatabaseMgr
 
   def set_user_details(user)
     @db.exec("update matches
-      set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online) =
-      ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      where name=$10",
+      set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online, last_visit) =
+      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      where name=$11",
              [user[:gender],
               user[:sexuality],
               user[:match_percentage],

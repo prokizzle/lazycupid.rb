@@ -33,8 +33,11 @@ class DatabaseMgr
 
   def db_tasks
     puts "Executing db tasks..."
-    @db.exec("delete from matches where distance > 200")
-    @db.exec("alter table matches add column prev_visit integer")
+    @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
+    begin
+      @db.exec("alter table matches add column prev_visit integer")
+    rescue
+    end
   end
 
   def action(stmt)

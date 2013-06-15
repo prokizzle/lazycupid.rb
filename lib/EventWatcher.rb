@@ -1,5 +1,4 @@
 
-require './includes'
 class EventWatcher
   attr_reader :debug, :verbose
 

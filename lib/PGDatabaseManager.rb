@@ -562,16 +562,30 @@ class DatabaseMgr
 
   def get_my_last_visit_date(user)
     result = @db.exec("select last_visit from matches where name=$1 and account=$2", [user, @login])
+    # begin
+    result[0]["last_visit"].to_i
+    # rescue
+    #   0
+    # end
+  end
+
+  def get_prev_visit(user)
+    result = @db.exec("select prev_visit from matches where account=$1 and name=$2", [@login, user])
     begin
-      result[0]["last_visit"].to_i
+      result[0]["prev_visit"].to_i
     rescue
       0
     end
   end
 
+
   def set_my_last_visit_date(user, date=Time.now.to_i)
+    prev = get_my_last_visit_date(user)
+    now = Time.now.to_i
+    puts "Last visit: #{prev}"
+    puts "Now: #{now}"
     @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
-    @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [date, user, @login])
+    @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
   end
 
   def set_visitor_timestamp(visitor, timestamp)

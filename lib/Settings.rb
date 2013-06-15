@@ -21,30 +21,33 @@ class Settings
     @browser     = args[ :browser]
     unless File.exists?(@filename)
       config = {geo: {
-                  :distance_filter_type => "distance",
-                  :preferred_state => " ",
-                  :preferred_city => " ", #match_preferences[:my_city],
-                  :distance => 50
+                  distance_filter_type: "distance",
+                  preferred_state: " ",
+                  preferred_city: " ", #match_preferences[:my_city],
+                  distance: 50
                 },
                 matching: {
-                  :min_percent => 50,
-                  :friend_percent => 0,
-                  :enemy_percent => 0,
-                  :min_age => 18, #match_preferences[:min_age],
-                  :max_age => 50, #match_preferences[:max_age],
-                  :age_sort => "ASC", #prefer younger
-                  :gender => "F",
-                  :min_height => 0, #flatlanders!
-                  :max_height => 300, #giants!
-                  :height_sort => "ASC", #prefer shorter
-                  :last_online_cutoff => 365 #ignore users not online in X days
+                  min_percent: 50,
+                  friend_percent: 0,
+                  enemy_percent: 0,
+                  min_age: 18, #match_preferences[:min_age],
+                  max_age: 50, #match_preferences[:max_age],
+                  age_sort: "ASC", #prefer younger
+                  gender: "F",
+                  min_height: 0, #flatlanders!
+                  max_height: 300, #giants!
+                  height_sort: "ASC", #prefer shorter
+                  last_online_cutoff: 365, #ignore users not online in X days
+                  visit_gay: false,
+                  visit_straight: true,
+                  visit_bisexual: true
                 },
                 visit_freq: {
-                  :days_ago => 3,
-                  :max_followup => 15
+                  days_ago: 5,
+                  max_followup: 25
                 },
                 scraping: {
-                  :autodiscover_on => true
+                  autodiscover_on: true
                 },
                 growl: {
                   new_visits: false,
@@ -54,8 +57,8 @@ class Settings
                   new_im: false
                 },
                 development: {
-                  :verbose => true,
-                  :debug => false
+                  verbose: true,
+                  debug: false
                 }
                 }
       File.open(@filename, "w") do |f|
@@ -103,6 +106,18 @@ class Settings
 
   def preferred_state
     @settings[:geo][:preferred_state].to_s
+  end
+
+  def visit_bisexual
+    @settings[:matching][:visit_bisexual]
+  end
+
+  def visit_straight
+    @settings[:matching][:visit_straight]
+  end
+
+  def visit_gay
+    @settings[:matching][:visit_gay]
   end
 
   def preferred_city

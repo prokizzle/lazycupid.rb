@@ -18,14 +18,6 @@ class SmartRoll
     @alt_reload = false
   end
 
-  # def verbose
-  #   @verbose
-  # end
-
-  # def debug
-  #   @debug
-  # end
-
   def reload
     if @alt_reload
       # puts "Checking for focus" if verbose

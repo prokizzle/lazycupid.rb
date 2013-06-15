@@ -374,10 +374,6 @@ class DatabaseMgr
     @db.exec("select friend_percent from matches where name=$1 and account=$2", [user, @login])
   end
 
-  def test_this
-    @db.exec("select new_users from stats where account=$1", [@login])
-  end
-
   def set_enemy_percentage(user, percent)
     @db.exec("update matches set friend_percentage=$1 where name=$2 and account=$3", [percent, user, @login])
   end
@@ -631,12 +627,8 @@ class DatabaseMgr
               user[:city],
               user[:height],
               user[:last_online],
+              Time.now.to_i,
               user[:handle]])
-  end
-
-  def reset_ignored_list
-    @db.exec("update matches set ignored='false' where ignored='true' and account=$1", [@login])
-    @db.exec("update matches set ignored='true' where gender='M' and account=$1", [@login])
   end
 
   def is_ignored(username, gender="Q")

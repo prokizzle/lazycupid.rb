@@ -214,10 +214,6 @@ class DatabaseMgr
     delete_user(old_name)
   end
 
-  def no_gender(days)
-    @db.exec( "select name from matches where gender is null and last_visit<$1 and account=$2", [days, @login] )
-  end
-
   def toggle_flag(name)
     @db.exec("update matches set flag=flag * -1 where name=$1 and account=$2", [name, @login])
   end
@@ -229,7 +225,6 @@ class DatabaseMgr
     and (ignore_list=0 or ignore_list is null)
     and (gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
-
   end
 
   def focus_query_new_users
@@ -701,10 +696,6 @@ class DatabaseMgr
 
   def remove_unknown_gender
     @db.exec("delete from matches where gender=$1 and account=$2", ["Q", @login])
-  end
-
-  def to_boolean(str)
-    str == 'true'
   end
 
   def close

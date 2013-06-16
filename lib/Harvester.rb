@@ -97,12 +97,18 @@ class Harvester
     (@user.height.to_f >= min_height && @user.height.to_f <= max_height) || @user.height == 0
   end
 
+  def sexuality_criteria_met?
+    (@user.sexuality == "Gay" if @settings.visit_gay) ||
+    (@user.sexuality == "Straight" if @settings.visit_straight) ||
+    (@user.sexuality == "Bisexual" if @settings.visit_bisexual)
+  end
 
   def meets_preferences?
     puts "Match met:    #{match_percent_criteria_met?}" if verbose
     puts "Distance met: #{distance_criteria_met?}" if verbose
     puts "Age met:      #{age_criteria_met?}" if verbose
     puts "Height met:   #{height_criteria_met?}" if verbose
+    puts "Sexuality met:   #{sexuality_criteria_met?}" if verbose
 
     unless height_criteria_met?
       puts "Ignoring #{@user.handle} based on their height." if verbose
@@ -111,7 +117,8 @@ class Harvester
 
     match_percent_criteria_met? &&
       distance_criteria_met? &&
-      age_criteria_met?
+      age_criteria_met? &&
+      sexuality_criteria_met?
   end
 
   def scrape_from_user(user_body)

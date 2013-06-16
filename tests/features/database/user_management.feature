@@ -18,8 +18,3 @@ Scenario: Delete user
 Given Username "fake_user" exists
 When I execute the delete_user method on "fake_user"
 Then the user exists check should return "false"
-
-Scenario: Followup query returns accurate data
-Given I execute a followup_query
-When I query each result for additional info
-Then Each result should obey config file rules

@@ -219,7 +219,7 @@ class DatabaseMgr
   end
 
   def new_user_smart_query
-    @db.exec("select name from matches
+    @db.exec("select * from matches
     where account=$2
     and counts = 0
     and (ignore_list=0 or ignore_list is null)
@@ -288,7 +288,7 @@ class DatabaseMgr
     distance            = @settings.max_distance
 
     result          = @db.exec("
-        select name from matches
+        select * from matches
          where account=$9
         and (last_visit <= $1 or last_visit is null)
          and counts between $2 and $3

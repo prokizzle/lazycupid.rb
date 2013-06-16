@@ -100,13 +100,26 @@ class SmartRoll
     @db.get_added_from(username)
   end
 
-  def visit_user(user)
+  def sexuality_filter(user, sexuality)
+    case sexuality
+    when "Gay"
+      @db.ignore_user(user) unless @settings.visit_gay == true
+    when "Bisexual"
+      @db.ignore_user(user) unless @settings.visit_bisexual == true
+    when "Straight"
+      @db.ignore_user(user) unless @settings.visit_straight == true
+    end
+  end
+
+
+  def visit_user(user, roll_type)
     response = @user.profile(user)
     if response[:inactive]
       remove_match(user)
     else
       # puts response
-      @console.log(response, added_from(user)) if verbose
+      sexuality_filter(response[:handle], response[:sexuality])
+      @console.log(response, added_from(user), roll_type) if verbose
       @tally += 1
       @db.log2(response)
       # @harvester.body = @user.body

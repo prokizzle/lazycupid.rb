@@ -24,6 +24,7 @@
   :max_followup: 15
 :scraping:
   :autodiscover_on: true
+  :import_hidden_users: false
 :growl:
     :new_visits: false
     :new_mail: true

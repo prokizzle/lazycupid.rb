@@ -184,7 +184,7 @@ class Application
   end
 
   def pre_roll_actions
-    @blocklist.import_hidden_users
+    @blocklist.import_hidden_users if @config.import_hidden_users
     @smarty.pre_roll_actions
   end
 

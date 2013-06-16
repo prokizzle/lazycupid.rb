@@ -47,7 +47,8 @@ class Settings
                   max_followup: 25
                 },
                 scraping: {
-                  autodiscover_on: true
+                  autodiscover_on: true,
+                  import_hidden_users: false
                 },
                 growl: {
                   new_visits: false,
@@ -126,6 +127,10 @@ class Settings
 
   def max_distance
     @settings[:geo][:distance].to_i
+  end
+
+  def import_hidden_users
+    @settings[:scraping][:import_hidden_users]
   end
 
   def min_percent

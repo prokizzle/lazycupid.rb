@@ -15,7 +15,7 @@ class Output
     print "\e[2J\e[f"
   end
 
-  def output(user, added_from)
+  def output(user, added_from, roll_type)
 
 
     clear_screen
@@ -34,9 +34,9 @@ class Output
     puts "to quit press ctrl-c"
   end
 
-  def log(user, added_from)
+  def log(user, added_from, roll_type)
     print @username
-    result = {user: user[:handle], match_percent: user[:match_percentage], age: user[:age], city: user[:city], state: user[:state], distance: user[:distance], enemy: user[:enemy_percentage], count: @you.visited(user[:handle]), last_online: Time.at(user[:last_online]||0).ago.to_words, added_from: added_from, prev_visit: @you.prev_visit(user[:handle])}
+    result = {user: user[:handle], match_percent: user[:match_percentage], age: user[:age], city: user[:city], state: user[:state], distance: user[:distance], enemy: user[:enemy_percentage], count: @you.visited(user[:handle]), last_online: Time.at(user[:last_online]||0).ago.to_words, added_from: added_from, prev_visit: @you.prev_visit(user[:handle]), roll_type: roll_type}
     puts result
   end
 

@@ -19,34 +19,16 @@ class SmartRoll
   end
 
   def reload
-    if @alt_reload
-      # puts "Checking for focus" if verbose
-      results = @db.focus_query_new_users
-      @query_name = "focus"
-      @alt_reload = false
-    else
-      # puts "Checking for follow up" if verbose
-      results = @db.followup_query
-      @query_name = "followup"
-
-    end
-
+    results = @db.followup_query
     queue = build_user_list(results)
+    roll_type  = "followup"
     if queue.size == 0
       # puts "Checking for new user" if verbose
       results = @db.new_user_smart_query
-      @query_name = "new users"
-
       queue = build_user_list(results)
-      if queue.size == 0
-        # puts "Idling..."
-        # sleep 120
-      end
-
-    queue
+      roll_type  = "new_users"
     end
-    # puts "#{@query_name} query returned results" if queue.size > 0
-    remove_duplicates(queue)
+    {queue: remove_duplicates(queue), roll: roll_type}
   end
 
   def build_user_list(results)
@@ -75,7 +57,7 @@ class SmartRoll
   end
 
   def next_user
-    cache.shift.to_s
+    {user: cache[:queue].shift.to_s, roll: cache[:roll]}
   end
 
   def autodiscover_new_users(user)
@@ -133,13 +115,15 @@ class SmartRoll
   end
 
   def roll
-    current_user = next_user
+    resp = next_user
+    current_user = resp[:user]
+    roll_type = resp[:roll]
     # puts "Waiting..."
     # wait = gets.chomp
     unless current_user == @db.login
       unless current_user == nil || current_user == ""
         puts ".#{current_user}." if debug
-        visit_user(current_user)
+        visit_user(current_user, roll_type)
         @already_idle == false
       else
         puts "Idle..." unless @already_idle

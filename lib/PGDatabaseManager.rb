@@ -33,9 +33,12 @@ class DatabaseMgr
 
   def db_tasks
     puts "Executing db tasks..."
-    @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
+    # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
+    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
+    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
+    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
     begin
-      @db.exec("alter table matches add column prev_visit integer")
+      # @db.exec("alter table matches add column prev_visit integer")
     rescue
     end
   end
@@ -158,6 +161,10 @@ class DatabaseMgr
 
   def delete_user(username)
     @db.exec("delete from matches where name=$1 and account=$2", [username, @login])
+  end
+
+  def get_user_info(username)
+    @db.exec("select * from matches where name=$1 and account=$2", [username, @login])
   end
 
   def get_match_names
@@ -533,16 +540,19 @@ class DatabaseMgr
   end
 
   def set_last_received_message_date(user, date)
-    puts "Last Msg date updated: #{user}" if verbose
-    @db.exec("update matches set last_msg_time=$1 where name=$2 and account=$3", [date, user, @login])
+    puts "Last Msg date updated: #{user}:#{date}" if verbose
+    @db.exec("update matches set last_msg_time=$1 where name=$2 and account=$3", [date.to_i, user, @login])
   end
 
   def get_last_received_message_date(user)
     result = @db.exec("select last_msg_time from matches where name=$1 and account=$2", [user, @login])
     begin
-      result[0]["last_msg_time"].to_i
-    rescue
-      puts result
+      result.first["last_msg_time"].to_i
+    rescue Exception => e
+      # puts e.message
+      # puts e.backtrace
+      # sleep 10
+      0
     end
   end
 
@@ -593,7 +603,7 @@ class DatabaseMgr
       result = @db.exec("select visitor_timestamp from matches where name=$1 and account=$2", [visitor, @login])
       result[0]["visitor_timestamp"].to_i
     else
-      @db.exec("insert into matches(name, counts, visitor_timestamp, ignored, account, added_from) values ($1, $2, $3, $4, $5, $6)", [visitor, 0, Time.now.to_i, 'false', @login, "visitors"])
+      @db.exec("insert into matches(name, counts, visitor_timestamp, ignore_list, account, added_from) values ($1, $2, $3, $4, $5, $6)", [visitor, 0, Time.now.to_i, 0, @login, "visitors"])
       set_visitor_timestamp(visitor, Time.now.to_i)
       Time.now.to_i
     end

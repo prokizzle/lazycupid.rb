@@ -19,15 +19,14 @@ class SmartRoll
   end
 
   def reload
-    results = @db.followup_query
-    queue = build_user_list(results)
-    roll_type  = "followup"
-    if queue.size == 0
-      # puts "Checking for new user" if verbose
-      results = @db.new_user_smart_query
-      queue = build_user_list(results)
-      roll_type  = "new_users"
-    end
+    queue = build_user_list(@db.new_user_smart_query)
+    # roll_type  = "followup"
+    # if queue.size == 0
+    puts "Checking for new user" if verbose
+    queue = queue.concat(build_user_list(@db.followup_query))
+    # roll_type  = "new_users"
+    roll_type  = "mixed"
+    # end
     {queue: remove_duplicates(queue), roll: roll_type}
   end
 

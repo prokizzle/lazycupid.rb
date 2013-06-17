@@ -104,11 +104,11 @@ class Harvester
   end
 
   def meets_preferences?
-    puts "Match met:    #{match_percent_criteria_met?}" if verbose
-    puts "Distance met: #{distance_criteria_met?}" if verbose
-    puts "Age met:      #{age_criteria_met?}" if verbose
-    puts "Height met:   #{height_criteria_met?}" if verbose
-    puts "Sexuality met:   #{sexuality_criteria_met?}" if verbose
+    puts "Match met:        #{match_percent_criteria_met?}" if verbose
+    puts "Distance met:     #{distance_criteria_met?}" if verbose
+    puts "Age met:          #{age_criteria_met?}" if verbose
+    puts "Height met:       #{height_criteria_met?}" if verbose
+    puts "Sexuality met:    #{sexuality_criteria_met?}" if verbose
 
     unless height_criteria_met?
       puts "Ignoring #{@user.handle} based on their height." if verbose

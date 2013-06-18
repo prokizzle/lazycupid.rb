@@ -160,15 +160,20 @@ class EventTracker
   end
 
   def register_message(sender, timestamp, gender)
-    @stored_time     = @db.get_last_received_message_date(sender)
+    @stored_time     = @db.get_last_received_message_date(sender).to_i
 
     @db.add_user(sender, gender, "inbox")
     @db.ignore_user(sender)
 
-    unless @stored_time == timestamp
+    unless @stored_time == timestamp.to_i
       puts "New message found: #{sender} at #{Time.at(timestamp)}"
+      p "Old timestamp: #{@stored_time}"
+      p "New timestamp: #{timestamp}"
       @db.increment_received_messages_count(sender)
-      @db.set_last_received_message_date(sender, timestamp)
+      @db.set_last_received_message_date(sender, timestamp.to_i)
+      # unless @db.get_user_info(sender)[0]["last_msg_time"] == timestamp
+        # @db.delete_user(sender)
+      # end
       @db.stats_add_new_message
     end
   end
@@ -246,28 +251,20 @@ class EventTracker
   def scrape_inbox
     puts "Scraping inbox" if verbose
     items_per_page = 30
-    result = Hash.new
-    result[:hash] = 0
 
     result = async_response("http://www.okcupid.com/messages")
 
-    all_lows    = result[:body].scan(/<a href=.\/messages\?low=(\d+)&amp.folder.\d.>/)
-    highest     = 0
+    total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
+    pages = (total_msg/30).to_i
 
-    all_lows.each do |item|
-      highest   = item[0].to_i if item[0].to_i > highest.to_i
-    end
+    puts "Total messages: #{total_msg}"
+    sleep 2
 
-    total       = highest
-    puts "Total messages: #{total}" if verbose
-    # @bar         = ProgressBar.new(total, :counter) unless verbose
-    # @bar.increment! 1 unless verbose
     track_msg_dates("http://www.okcupid.com/messages")
 
-    low         = items_per_page + 1
-
-    until low >= total
-      low += items_per_page
+    low         = 31
+    until low >= total_msg
+      low += 30
       track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
       sleep 2
     end

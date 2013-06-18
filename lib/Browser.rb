@@ -1,6 +1,6 @@
 class Browser
-  attr_reader :agent, :body, :current_user, :url, :hash
-  attr_accessor :agent, :body, :current_user, :url, :hash
+  attr_reader :agent, :body, :current_user, :url, :hash, :page
+  attr_accessor :agent, :body, :current_user, :url, :hash, :page
 
 
   def initialize(args)
@@ -20,12 +20,18 @@ class Browser
       form['username']=@username
       form['password']=@password
       page = form.submit
+      @page = page
       sleep 1
     rescue Exception => e
       puts e.backtrace
       puts "Invalid password. Please try again"
     end
     is_logged_in
+  end
+
+  def recaptcha?
+    result = @page.parser.xpath("//body").to_html
+    result.match(/recaptcha_only_if_image/)
   end
 
   def logout

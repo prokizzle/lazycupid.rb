@@ -27,7 +27,7 @@ class SmartRoll
     # roll_type  = "new_users"
     roll_type  = "mixed"
     # end
-    {queue: remove_duplicates(queue), roll: roll_type}
+    remove_duplicates(queue)
   end
 
   def build_user_list(results)
@@ -56,7 +56,7 @@ class SmartRoll
   end
 
   def next_user
-    {user: cache[:queue].shift.to_s, roll: cache[:roll]}
+    cache.shift.to_s
   end
 
   def autodiscover_new_users(user)
@@ -127,15 +127,13 @@ class SmartRoll
   end
 
   def roll
-    resp = next_user
-    current_user = resp[:user]
-    roll_type = resp[:roll]
+    current_user = next_user
     # puts "Waiting..."
     # wait = gets.chomp
     unless current_user == @db.login
       unless current_user == nil || current_user == ""
         puts ".#{current_user}." if debug
-        visit_user(current_user, roll_type)
+        visit_user(current_user, "disabled")
         @already_idle == false
       else
         puts "Idle..." unless @already_idle

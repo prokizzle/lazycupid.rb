@@ -21,6 +21,7 @@ class APIEvents
     @event = event
     @people = people
     @key = key
+    @api_event = Hash.new(event: event, people: people, key:key)
     type = event["type"]
     self.send(type)
   end
@@ -31,8 +32,8 @@ class APIEvents
       key = "#{@event['server_gmt']}#{@event['from']}"
       p key
       unless @messages.has_key?(key)
-        @g.notify "lazy-cupid-notification", "New Message", "#{@people['screenname']}"
-        puts "New message from #{@event["from"]}" if @settings.growl_new_mail
+        @g.notify "lazy-cupid-notification", "New Message", "#{@people['screenname']}" if @settings.growl_new_mail
+        puts "New message from #{@event["from"]}"
         @tracker.register_message(@event["from"], this_event_time)
       end
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
@@ -58,12 +59,14 @@ class APIEvents
   end
 
   def stalk
-    unless @stalks.has_key?(@event["server_gmt"])
+    people = @people
+    event = @event
+    unless @stalks.has_key?(event["server_gmt"])
       # puts "New visit from #{@event['screenname']}"
-      @tracker.register_visit(@people)
-      @g.notify "lazy-cupid-notification", "New visitor", "#{@people['screenname']}" if @settings.growl_new_visits
+      @tracker.register_visit(people)
+      @g.notify "lazy-cupid-notification", "New visitor", "#{people['screenname']}" if @settings.growl_new_visits
     end
-    @stalks[@event["server_gmt"]] = @people["screenname"]
+    @stalks[event["server_gmt"]] = people["screenname"]
   end
 
   def new_spotlight_user

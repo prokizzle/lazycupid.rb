@@ -196,6 +196,10 @@ class Application
     # @smarty.alt_reload = true
   end
 
+  def recaptcha?
+    @browser.recaptcha?
+  end
+
 end
 
 class Main
@@ -205,9 +209,9 @@ class Main
     quit          = false
     logged_in     = false
 
-
+    cli_login = true if ARGV.size > 0
     until logged_in
-      unless ARGV.size > 0
+      unless cli_login
         print "\e[2J\e[f"
         puts "LazyCupid Main Menu","--------------------",""
         puts "#{login_message}",""
@@ -227,7 +231,14 @@ class Main
         login_message = "Success. Initializing."
         print "\e[2J\e[f"
       else
-        login_message = "Incorrect password. Try again."
+
+        if app.recaptcha?
+          login_message = "CAPTCHA error"
+          exit if cli_login
+        else
+          login_message = "Incorrect password. Try again."
+          exit if cli_login
+        end
       end
     end
     # rescue Exception => e

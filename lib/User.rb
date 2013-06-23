@@ -108,7 +108,7 @@ class Users
 
     unless result == @intended_handle.to_s
       @db.rename_alist_user(@intended_handle, result)
-      puts "A-list bug: #{intended_handle} is now #{result}" if verbose
+      puts "A-list name change: #{intended_handle} is now #{result}" if verbose
     end
 
     # puts result

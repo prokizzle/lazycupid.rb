@@ -16,6 +16,7 @@ class SmartRoll
     @verbose    = @settings.verbose
     @debug      = @settings.debug
     @alt_reload = false
+    @already_idle = true
   end
 
   def reload

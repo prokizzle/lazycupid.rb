@@ -132,11 +132,12 @@ class Users
   end
 
   def friend_percentage
-    begin
+    if />(\d+). Friend.*/.match(@body)
       />(\d+). Friend.*/.match(@body)[1].to_i
-    rescue
+    else
       0
     end
+
   end
 
   def enemy_percentage

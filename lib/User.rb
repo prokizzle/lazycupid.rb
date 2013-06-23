@@ -46,7 +46,7 @@ class Users
       {handle: handle,
        match_percentage: match_percentage,
        age: age,
-       # friend_percentage: friend_percentage,
+       friend_percentage: friend_percentage,
        enemy_percentage: enemy_percentage,
        # ethnicity: ethnicity,
        height: height,

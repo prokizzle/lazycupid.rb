@@ -234,9 +234,11 @@ class Main
 
         if app.recaptcha?
           login_message = "CAPTCHA error"
+          puts login_message if cli_login
           exit if cli_login
         else
           login_message = "Incorrect password. Try again."
+          puts login_message if cli_login
           exit if cli_login
         end
       end

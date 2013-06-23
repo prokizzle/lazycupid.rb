@@ -587,8 +587,8 @@ class DatabaseMgr
   def set_my_last_visit_date(user, date=Time.now.to_i)
     prev = get_my_last_visit_date(user)
     now = Time.now.to_i
-    puts "Last visit: #{prev}"
-    puts "Now: #{now}"
+    puts "Last visit: #{prev}" if debug
+    puts "Now: #{now}" if debug
     @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
     @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
   end
@@ -627,7 +627,7 @@ class DatabaseMgr
       increment_visit_count(user[:handle])
       set_my_last_visit_date(user[:handle])
       set_user_details(user)
-      p "Height: #{user[:height]}"
+      p "Height: #{user[:height]}" if debug
     end
     stats_add_visit
   end

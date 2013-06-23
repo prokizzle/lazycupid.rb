@@ -1,4 +1,6 @@
 class EventTracker
+  # include RegEx
+  # include MatchQueries
 
   attr_reader :verbose, :debug, :body, :account
 
@@ -6,9 +8,11 @@ class EventTracker
     @browser = args[ :browser]
     @db = args[:database]
     @settings = args[ :settings]
-    @regex = RegEx.new
-    @queries = MatchQueries.new
+    # @regex = RegEx.new
     @account = @db.login
+    @prev_total_messages = 0
+    @queries = MatchQueries.new
+    @regex = RegEx.new
   end
 
   def current_user
@@ -46,8 +50,8 @@ class EventTracker
       sexuality = aso.match(/#{age} \/ #{gender} \/ (\w+) \//)[1]
       status = aso.match(/#{age} \/ #{gender} \/ #{sexuality} \/ ([\w\s]+)/)[1]
       location = block.match(/location.+>(.+)/)[1]
-      city = @regex.location_array(location)[:city]
-      state = @regex.location_array(location)[:state]
+      city = @regex.parsed_location(location)[:city]
+      state = @regex.parsed_location(location)[:state]
       @visitors.push({handle: handle, age: age, gender: gender, sexuality: sexuality, status: status, city: city, state: state})
     end
 
@@ -103,8 +107,8 @@ class EventTracker
     age       = person['age']
     sexuality = translate_sexuality(person['orientation'])
     location  = person['location']
-    city      = @regex.location_array(location)[:city]
-    state     = @regex.location_array(location)[:state]
+    city      = @regex.parsed_location(location)[:city]
+    state     = @regex.parsed_location(location)[:state]
     @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
     unless @stored_timestamp == timestamp
@@ -133,8 +137,8 @@ class EventTracker
         :match       => response[:match],
         :sexuality   => response[:sexuality],
         :location    => response[:location],
-        :city        => @regex.location_array(location)[:city],
-        :state       => @regex.location_array(location)[:state]
+        :city        => @regex.parsed_location(location)[:city],
+        :state       => @regex.parsed_location(location)[:state]
       }
 
       track_visitor(person)
@@ -160,30 +164,30 @@ class EventTracker
   end
 
   def register_message(sender, timestamp, gender)
-    @stored_time     = @db.get_last_received_message_date(sender).to_i
+    # @stored_time     = @db.get_last_received_message_date(sender).to_i
 
     @db.add_user(sender, gender, "inbox")
     @db.ignore_user(sender)
 
-    unless @stored_time == timestamp.to_i
-      puts "New message found: #{sender} at #{Time.at(timestamp)}"
-      p "Old timestamp: #{@stored_time}"
-      p "New timestamp: #{timestamp}"
-      @db.increment_received_messages_count(sender)
-      @db.set_last_received_message_date(sender, timestamp.to_i)
-      # unless @db.get_user_info(sender)[0]["last_msg_time"] == timestamp
-        # @db.delete_user(sender)
-      # end
-      @db.stats_add_new_message
-    end
+    # unless @stored_time == timestamp.to_i
+    # puts "New message found: #{sender} at #{Time.at(timestamp)}"
+    # p "Old timestamp: #{@stored_time}"
+    # p "New timestamp: #{timestamp}"
+    # @db.increment_received_messages_count(sender)
+    # @db.set_last_received_message_date(sender, timestamp.to_i)
+    # unless @db.get_user_info(sender)[0]["last_msg_time"] == timestamp
+    # @db.delete_user(sender)
+    # end
+    # @db.stats_add_new_message
+    # end
   end
 
   def default_match_search
-    @queries.default
+    test_more_matches(@queries.default_query)
   end
 
   def focus_new_users
-    @queries.focus_new_users
+    @queries.focus_new_users_query
   end
 
 
@@ -220,8 +224,8 @@ class EventTracker
           city = ""
           state = ""
           location = /location.>(.+)</.match(result)[1]
-          city = @regex.location_array(location)[:city]
-          state = @regex.location_array(location)[:state]
+          city = @regex.parsed_location(location)[:city]
+          state = @regex.parsed_location(location)[:state]
           @db.set_city(username, city)
           @db.set_state(:username => username, :state => state)
         rescue Exception => e
@@ -254,21 +258,23 @@ class EventTracker
 
     result = async_response("http://www.okcupid.com/messages")
 
-    total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
-    pages = (total_msg/30).to_i
+    @total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
+    pages = (@total_msg/30).to_i
 
-    puts "Total messages: #{total_msg}"
+    puts "Total messages: #{@total_msg}" if verbose
     sleep 2
+    unless @total_msg == @prev_total_messages
+      puts "#{@total_msg - @prev_total_messages} new messages..." if @total_msg > 0
+      track_msg_dates("http://www.okcupid.com/messages")
 
-    track_msg_dates("http://www.okcupid.com/messages")
-
-    low         = 31
-    until low >= total_msg
-      low += 30
-      track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
-      sleep 2
+      low         = 31
+      until low >= @total_msg
+        low += 30
+        track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
+        sleep 2
+      end
+      @prev_total_messages = @total_msg
     end
-
   end
 
 end

@@ -61,11 +61,24 @@ class Browser
   end
 
   def body_of(link, request_id)
+    @hash[request_id] = {ready: false}
     url = link
     @agent.read_timeout=30
     temp = @agent.get(url)
     @log.debug "#{@url}"
     returned_body = temp.parser.xpath("//body").to_html
+    @hash[request_id] = {url: url.to_s, body: returned_body.to_s, html: temp, ready: true}
+    {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
+  end
+
+  def request(link, request_id)
+    @hash[request_id] = {ready: false}
+    url = link
+    @agent.read_timeout=30
+    temp = @agent.get(url)
+    @log.debug "#{@url}"
+    returned_body = temp.parser.xpath("//body").to_html
+    @hash[request_id] = {url: url.to_s, body: returned_body.to_s, html: temp, ready: true}
     {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
   end
 

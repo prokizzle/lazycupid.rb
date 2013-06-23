@@ -22,7 +22,7 @@ class SmartRoll
     queue = build_user_list(@db.new_user_smart_query)
     # roll_type  = "followup"
     # if queue.size == 0
-    puts "Checking for new user" if verbose
+    # puts "Checking for new user" if verbose
     queue = queue.concat(build_user_list(@db.followup_query))
     # roll_type  = "new_users"
     roll_type  = "mixed"

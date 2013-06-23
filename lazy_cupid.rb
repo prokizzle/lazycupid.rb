@@ -217,7 +217,7 @@ class Main
         puts "#{login_message}",""
         print "Username: "
         username = gets.chomp
-        password = ask("password: ") { |q| q.echo = false }
+        password = ask("password: ") { |q| q.echo = "*" }
       else
         # puts "#{login_message}",""
         username = ARGV[0]

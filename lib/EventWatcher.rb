@@ -25,13 +25,17 @@ class EventWatcher
   end
 
   def long_poll_result
+    response = async_response(api_url)
+    response[:body]
+  end
+
+  def async_response(url)
     request_id = Time.now.to_i
-    response = @browser.body_of(api_url, request_id)
+    @browser.request(url, request_id)
     until @browser.hash[request_id][:ready]
       sleep 0.1
     end
-    returned = @browser.hash[request_id]
-    returned[:body]
+    @browser.hash[request_id]
   end
 
   def login

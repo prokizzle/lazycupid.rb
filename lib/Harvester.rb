@@ -149,22 +149,6 @@ class Harvester
 
   end
 
-
-
-  def location_array(location)
-    result    = location.scan(/,/)
-    if result.size == 2
-      city    = location.match(/(.+), (.+), (.+)/)[1]
-      state   = location.match(/(.+), (.+), (.+)/)[2]
-      country = location.match(/(.+), (.+), (.+)/)[3]
-    elsif result.size == 1
-      city    = location.match(/(.+), (.+)/)[1]
-      state   = location.match(/(.+), (.+)/)[2]
-    end
-    {:city => city, :state => state}
-  end
-
-
   def log_this(item)
     File.open("scraped.log", "w") do |f|
       f.write(item)

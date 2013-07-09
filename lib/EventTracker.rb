@@ -56,7 +56,7 @@ class EventTracker
     end
 
 
-    until @visitors.size == 0
+    until @visitors.empty?
       user = @visitors.shift
       block = @html.parser.xpath("//div[@id='usr-#{user[:handle]}-info']/p[1]/script/text()
     ").text
@@ -67,7 +67,7 @@ class EventTracker
       # puts block
     end
     @count = 0
-    until @final_visitors.size == 0
+    until @final_visitors.empty?
 
       user = @final_visitors.shift
       @stored_timestamp = @db.get_visitor_timestamp(user[:handle]).to_i
@@ -254,24 +254,18 @@ class EventTracker
 
   def scrape_inbox
     puts "Scraping inbox" if verbose
-    items_per_page = 30
-
     result = async_response("http://www.okcupid.com/messages")
-
     @total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
-    pages = (@total_msg/30).to_i
-
     puts "Total messages: #{@total_msg}" if verbose
     sleep 2
     unless @total_msg == @prev_total_messages
       puts "#{@total_msg - @prev_total_messages} new messages..." if @total_msg > 0
       track_msg_dates("http://www.okcupid.com/messages")
-
-      low         = 31
+      low = 31
       until low >= @total_msg
         low += 30
         track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
-        sleep 2
+        sleep (1..6).to_a.sample.to_i
       end
       @prev_total_messages = @total_msg
     end

@@ -78,18 +78,21 @@ class EventWatcher
     temp              = poll_response
     index             = 0
     begin
-      temp["people"].each do |user|
-        unless @people_hash.has_key?(user["screenname"])
-          @people_hash[user["screenname"]] = user
+      if temp.has_key?("people")
+        temp["people"].each do |user|
+          unless @people_hash.has_key?(user["screenname"])
+            @people_hash[user["screenname"]] = user
+          end
         end
       end
 
       begin
         temp["events"].each do |event|
-          key = "#{event['server_gmt']}#{event['type']}"
-          unless @hash[key] == event["server_seqid"]
-            @api.process(event, @people_hash[event['from']], key)
-            @hash[key] = event["server_seqid"]
+          key = "#{event['server_seqid']}#{event['type']}"
+          unless @hash[key] == event["server_gmt"]
+            # puts event
+            @api.process(event, @people_hash[event['from']]||nil, key)
+            @hash[key] = event["server_gmt"]
           end
 
         end
@@ -99,7 +102,7 @@ class EventWatcher
         # puts "*****"
       end
     rescue Exception => e
-      puts e.message
+      puts e.message, e.backtrace
     end
 
   end

@@ -85,14 +85,18 @@ class APIEvents
     # print_event_info
   end
 
+
+  # needs @event
   def orbit_user_signoff
     @log.debug "orbit_user_signoff: #{@event['screenname']}"
   end
 
+  # needs @event
   def orbit_user_signon
     @log.debug "orbit_user_signon: #{@event['screenname']}"
   end
 
+  # needs @event
   def orbit_nth_question
     @log.debug "orbit_nth_question: #{@event['screenname']}"
   end

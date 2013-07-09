@@ -9,4 +9,5 @@ else
   app = Main.new
   app.login
   app.run
+  exit
 end

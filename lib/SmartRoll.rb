@@ -111,12 +111,21 @@ class SmartRoll
     end
   end
 
+  def enemy_blocker(user)
+    if user[:enemy_percentage] > user[:match_percentage]
+      @db.ignore_user(user[:handle])
+    end
+  end
+
+
 
   def visit_user(user, roll_type)
     response = @user.profile(user)
     if response[:inactive]
       remove_match(user)
     else
+
+        @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
       # puts response
       sexuality_filter(response[:handle], response[:sexuality])
       @console.log(response, added_from(user), roll_type) if verbose

@@ -285,7 +285,7 @@ class Main
   def menu
     puts "Menu"
     puts "1. Rolls"
-    puts "2. Monitor"
+    print "2. Monitor"
     choice = ask(":") {|q| q.echo = true}
     case choice
     when "1"

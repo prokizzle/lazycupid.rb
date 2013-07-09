@@ -76,20 +76,23 @@ class APIEvents
     people = @people
     event = @event
     unless @stalks.has_key?(event["server_gmt"])
-      # puts "New visit from #{@event['screenname']}"
+      puts "New visitor: #{@event['screenname']}"
       @tracker.register_visit(people)
-      @g.notify "lazy-cupid-notification", "New visitor", "#{people['screenname']}" if @settings.growl_new_visits
+      # @g.notify "lazy-cupid-notification", "New visitor", "#{people['screenname']}" if @settings.growl_new_visits
     end
     @stalks[event["server_gmt"]] = people["screenname"]
   end
 
+
+  # needs @people, @event, @spotlight, @tracker
   def new_spotlight_user
     handle_ = @people["screenname"]
     gmt_ = @event["server_gmt"]
-    unless @spotlight.has_key?(gmt_)
+    seqid = @event["server_seqid"]
+    unless @spotlight.has_key?(seqid)
       # puts "New spotlight user: #{handle_} (#{@people["gender"]})" #if verbose
-      @tracker.add_user(handle_, @people["gender"], "spotlight_user")
-      @spotlight[gmt_] = handle_
+      @tracker.add_user(handle_, @people["gender"])
+      @spotlight[seqid] = handle_
     end
     # print_event_info
   end

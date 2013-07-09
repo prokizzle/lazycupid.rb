@@ -14,7 +14,8 @@ class Browser
 
   def login
     begin
-      @agent.user_agent_alias = ['Mac Safari', 'Windows IE 7', 'Mac Firefox', 'Mac Mozilla', 'iPhone'].sample
+      @agent.idle_timeout = 0.5
+      @agent.user_agent_alias = ['Mac Safari', 'Windows IE 7', 'Mac Firefox', 'Mac Mozilla'].sample
       page = @agent.get("http://www.okcupid.com/")
       form = page.forms.first
       form['username']=@username

@@ -11,8 +11,8 @@ class APIEvents
     @stalks     = Hash.new
     @settings   = args[:settings]
 
-    @g = Growl.new "localhost", "#{@tracker.account}"
-    @g.add_notification "lazy-cupid-notification"
+    # @g = Growl.new "localhost", "#{@tracker.account}"
+    # @g.add_notification "lazy-cupid-notification"
 
 
   end

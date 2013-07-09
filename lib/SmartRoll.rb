@@ -11,8 +11,8 @@ class SmartRoll
     @settings   = args[:settings]
     @console    = args[:gui]
     @tracker    = args[:tracker]
-    @selection  = Array.new
-    @selection  = reload
+    @roll_list  = Array.new
+    @roll_list  = reload
     @verbose    = @settings.verbose
     @debug      = @settings.debug
     @alt_reload = false
@@ -22,7 +22,7 @@ class SmartRoll
   def reload
     queue = build_user_list(@db.new_user_smart_query)
     # roll_type  = "followup"
-    # if queue.size == 0
+    # if queue.empty?
     # puts "Checking for new user" if verbose
     queue = queue.concat(build_user_list(@db.followup_query))
     # roll_type  = "new_users"
@@ -49,10 +49,10 @@ class SmartRoll
   end
 
   def cache
-    if @selection.size == 0
-      @selection = reload
+    if @roll_list.empty?
+      @roll_list = reload
     else
-      @selection
+      @roll_list
     end
   end
 
@@ -87,7 +87,7 @@ class SmartRoll
   end
 
   def pre_roll_actions
-    # @console.progress(@selection.size)
+    # @console.progress(@roll_list.size)
     @tally = 0
     @total_visitors = 0
     @total_visits = 0

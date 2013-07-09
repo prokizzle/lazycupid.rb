@@ -4,17 +4,17 @@ class DatabaseMgr
 
   def initialize(args)
     @did_migrate = false
-    @login    = args[ :login_name]
-    @settings = args[ :settings]
+    @login    = args[:login_name]
+    @settings = args[:settings]
     @db = PGconn.connect( :dbname => @settings.db_name,
                           :password => @settings.db_pass,
                           :user => @settings.db_user
                           )
+    tasks     = args[:tasks]
     open_db
-    db_tasks
+    db_tasks if tasks
     @verbose  = @settings.verbose
     @debug    = @settings.debug
-    # delete_self_refs
   end
 
   def db
@@ -33,6 +33,7 @@ class DatabaseMgr
 
   def db_tasks
     puts "Executing db tasks..."
+    delete_self_refs
     # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
     @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
     @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight

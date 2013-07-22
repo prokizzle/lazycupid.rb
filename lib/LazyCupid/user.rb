@@ -40,7 +40,7 @@ module LazyCupid
       # wait = gets.chomp
       @url = result[:url]
       inactive = @body.match(/Uh\-oh/)
-      @intended_handle = /\/profile\/(.+)/.match(@url)[1]
+      @intended_handle = URI.decode(/\/profile\/(.+)/.match(@url)[1])
       if inactive
         {inactive: inactive}
       else

@@ -70,6 +70,7 @@ module LazyCupid
          body: @body,
          html: @html }
       end
+      @browser.delete_response(request_id)
     end
 
     def display_code

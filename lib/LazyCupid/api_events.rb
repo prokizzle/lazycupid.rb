@@ -1,12 +1,22 @@
 module LazyCupid
+  class Log
+    def debug(args)
+      #
+    end
+  end
   class APIEvents
 
     # if you come across an unknown API event, add it to attr_reader as a workaround
     attr_reader :orbit_vote, :verbose, :debug
 
     def initialize(args)
+      log_errors = false
       @tracker = args[ :tracker]
-      @log     = args[ :logger]
+      if log_errors
+        @log   = args[ :logger]
+      else
+        @log        = Log.new
+      end
       @spotlight  = Hash.new
       @messages   = Hash.new
       @stalks     = Hash.new

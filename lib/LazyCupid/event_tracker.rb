@@ -166,6 +166,9 @@ module LazyCupid
 
     def register_message(sender, timestamp, gender)
       # @stored_time     = @db.get_last_received_message_date(sender).to_i
+      if timestamp.to_i >= Time.now.to_i - 1800
+        puts "New message from #{sender}"
+      end
 
       @db.add_user(sender, gender, "inbox")
       @db.ignore_user(sender)

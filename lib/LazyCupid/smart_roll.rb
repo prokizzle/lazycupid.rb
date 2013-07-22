@@ -22,13 +22,8 @@ module LazyCupid
 
     def reload
       queue = build_user_list(@db.new_user_smart_query)
-      # roll_type  = "followup"
-      # if queue.empty?
-      # puts "Checking for new user" if verbose
       queue = queue.concat(build_user_list(@db.followup_query))
-      # roll_type  = "new_users"
       roll_type  = "mixed"
-      # end
       remove_duplicates(queue)
     end
 

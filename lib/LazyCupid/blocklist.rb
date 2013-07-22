@@ -38,8 +38,9 @@ module LazyCupid
     end
 
     def import_hidden_users
-
-      @response = @browser.body_of("http://www.okcupid.com/hidden-users", Time.now.to_i)
+      request_id = Time.now.to_i
+      @response = @browser.body_of("http://www.okcupid.com/hidden-users", request_id)
+      @browser.delete_response(request_id)
       # puts @response[:body]
       # sleep 50
       low = 25
@@ -55,7 +56,9 @@ module LazyCupid
         # puts @response[:body]
         until low > total
           low += 25
-          @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", Time.now.to_i)
+          request_id = Time.now.to_i
+          @response = @browser.body_of("http://www.okcupid.com/hidden-users?low=#{low}", request_id)
+          @browser.delete_response(request_id)
           scrape_users
           sleep [2,3,4,5,6].sample
         end

@@ -55,10 +55,9 @@ module LazyCupid
       # unless Time.now.to_i - @last_call <= 1
       p @event
       key = "#{@event['server_gmt']}#{@event['from']}"
-      p key
+      # p key
       unless @messages.has_key?(key)
-        # @g.notify "lazy-cupid-notification", "New Message", "#{@people['screenname']}" if @settings.growl_new_mail
-        puts "New message from #{@event["from"]}"
+        # puts "New message from #{@event["from"]}"
         @tracker.register_message(@event["from"], @event["server_gmt"], @people["gender"])
       end
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"

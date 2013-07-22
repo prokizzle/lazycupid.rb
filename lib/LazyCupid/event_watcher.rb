@@ -21,7 +21,7 @@ module LazyCupid
       @people_hash = Hash.new
       @hash = Hash.new { |hash, key| hash[key] = 0 }
       @events_hash = Hash.new { |hash, key| hash[key] = 0 }
-      @instant = 2
+      @instant = [1,2,3,4]
     end
 
     def long_poll_result
@@ -47,13 +47,10 @@ module LazyCupid
     end
 
     def api_url
-      case @instant
-      when @instant < 4
-        @instant += 1
-      else
-        @instant = 1
+      if @instant.empty?
+        @instant = [1,2,3,4]
       end
-      i = @instant
+      i = @instant.shift
       "http://#{i}-instant.okcupid.com/instantevents?random=#{rand}&server_gmt=#{Time.now.to_i}"
     end
 
@@ -69,12 +66,11 @@ module LazyCupid
       begin
         JSON.parse(content.gsub('\"', '"')).to_hash
       rescue JSON::ParserError
-        # content.to_hash
+        {}
       end
     end
 
     def check_events
-
       temp              = poll_response
       index             = 0
       begin

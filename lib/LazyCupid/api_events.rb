@@ -73,13 +73,15 @@ module LazyCupid
       @event
     end
 
+    def orbit_picture_upload
+      #something
+    end
+
     def stalk
       people = @people
       event = @event
       unless @stalks.has_key?(event["server_gmt"])
-        puts "New visitor: #{@event['screenname']}"
         @tracker.register_visit(people)
-        # @g.notify "lazy-cupid-notification", "New visitor", "#{people['screenname']}" if @settings.growl_new_visits
       end
       @stalks[event["server_gmt"]] = people["screenname"]
     end

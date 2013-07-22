@@ -19,6 +19,8 @@ _An intelligent auto-visitor bot for OKCupid._
 
     bundle install
 
+On first run, after successful login, LzC automatically creates config files in config/ with default values. Make changes to database.yml to reflect your postgres configuration, and also _your_user_name_.yml for your match preferences. You will need to restart LazyCupid for changes in config to take effect.
+
 
 ##Usage:
 

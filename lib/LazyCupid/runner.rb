@@ -10,6 +10,7 @@ module LazyCupid
       config_path   = File.dirname($0) + '/../config/'
       log_path      = File.dirname($0) + '/../logs/'
       @log          = Logger.new("#{log_path}#{@username}_#{Time.now}.log")
+      BloatCheck.logger = Logger.new("#{log_path}bloat_#{Time.now}.log")
       @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
       @config       = Settings.new(username: username, path: config_path, browser: @browser)
       @db           = DatabaseMgr.new(login_name: @username, settings: @config, tasks: true)
@@ -280,6 +281,10 @@ module LazyCupid
         @app.roll
         # end
         # end
+      end
+
+      @app.scheduler.every '1m', :allow_overlapping => false, :mutex => 'bloat' do
+        BloatCheck.log("some label")
       end
 
       @app.scheduler.join

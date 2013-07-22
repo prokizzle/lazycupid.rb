@@ -1,10 +1,22 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "includes.rb"))
+# require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "includes.rb"))
+require_relative '../../../lib/LazyCupid/includes'
 
 Before do
   @account = "***REMOVED***"
-  @settings = Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
-  @db = DatabaseMgr.new(login_name: @account, settings: @settings)
+  @password = "***REMOVED***"
+  url = "http://www.okcupid.com/profile/---nick"
+  @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
+  @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
   @db.delete_user("fake_user")
+  @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
+  @browser.login
+  request_id = Time.now.to_i
+  @browser.request(url, request_id)
+  until @browser.hash[request_id][:ready]
+    sleep 0.1
+  end
+  @html = @browser.hash[request_id][:html]
+  @body = @browser.hash[request_id][:body]
 end
 
 Given(/^Username "(.*?)" is not in the database$/) do |user|
@@ -112,4 +124,136 @@ Then(/^There should not be any values of ignore_list = (\d+)$/) do |arg1|
     end
   end
   @bad == 0
+end
+
+Given(/^I load a sample profile$/) do
+  puts "Sample profile loaded"
+end
+
+When(/^I isolate the username field$/) do
+  @result = @html.parser.xpath("//p[@class='username']").text
+end
+
+Then(/^The parser should return a username string$/) do
+  puts @result
+  @result == "---Nick"
+end
+
+When(/^I isolate the match percent field$/) do
+  @result = @html.parser.xpath("//span[@class='match']").text
+end
+
+Then(/^The parser should return a match percent string$/) do
+  puts @result
+  @result == "70% Match"
+end
+
+When(/^I isolate the age field$/) do
+  @result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
+end
+
+Then(/^The parser should return a age string$/) do
+  p @result
+  puts @result == 27
+end
+
+When(/^I isolate the height field$/) do
+  @result = @html.parser.xpath("//dd[@id='ajax_height']").text
+end
+
+Then(/^The parser should return a height string$/) do
+  puts @result
+end
+
+When(/^I isolate the smoking field$/) do
+  @result = @html.parser.xpath("//dd[@id='ajax_smoking']").text
+end
+
+Then(/^The parser should return a smoking string$/) do
+  puts @result
+end
+
+When(/^I isolate the drinking field$/) do
+  @result = @html.parser.xpath("//dd[@id='ajax_drinking']").text
+end
+
+Then(/^The parser should return a drinking string$/) do
+  puts @result
+end
+
+When(/^I isolate the location field$/) do
+  @result = @html.parser.xpath("//span[@id='ajax_location']").text
+end
+
+Then(/^The parser should return a location string$/) do
+  puts @result
+end
+
+When(/^I isolate the orientation field$/) do
+  @result = @html.parser.xpath("//span[@id='ajax_orientation']").text
+end
+
+
+Then(/^The parser should return a orientation string$/) do
+  puts @result
+end
+
+When(/^I isolate the gender field$/) do
+  @result = @html.parser.xpath("//span[@id='ajax_gender']").text
+end
+
+Then(/^The parser should return a gender string$/) do
+  puts @result
+end
+
+When(/^I isolate the status field$/) do
+  @result = @html.parser.xpath("//span[@id='ajax_status']").text
+end
+
+Then(/^The parser should return a status string$/) do
+  puts @result
+end
+
+When(/^I isolate the friend_percent field$/) do
+  @result = />(\d+). Friend.*/.match(@body)[1].to_i
+end
+
+Then(/^The parser should return a friend_percent string$/) do
+  puts @result
+end
+
+When(/^I isolate the enemy_percent field$/) do
+  @result = />(\d+). Enemy.*/.match(@body)[1].to_i
+end
+
+Then(/^The parser should return a enemy_percent string$/) do
+  puts @result
+end
+
+When(/^I isolate the ethnicity field$/) do
+  @result = /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
+end
+
+Then(/^The parser should return a ethnicity string$/) do
+  puts @result
+end
+
+When(/^I isolate the kids field$/) do
+  @result = /children.>(.+)<\/dd>/.match(@body)[1].to_s
+end
+
+Then(/^The parser should return something$/) do
+  puts @result
+end
+
+When(/^I isolate the drugs field$/) do
+  @result = /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
+end
+
+When(/^I isolate the last_online field$/) do
+  @result = /(\d{10}),..JOURNAL_FORMAT./.match(@body)[1].to_i
+end
+
+When(/^I isolate the relative_distance field$/) do
+  @result = /\((\d+) miles*\)/.match(@body)[1].to_i
 end

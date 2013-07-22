@@ -21,7 +21,9 @@ module LazyCupid
     end
 
     def body_of(url)
-      result = @browser.body_of("http://www.okcupid.com/visitors", Time.now.to_i)
+      request_id = Time.now.to_i
+      result = @browser.body_of("http://www.okcupid.com/visitors", request_id)
+      @browser.delete_response(request_id)
       @html = result[:html]
       @body = result[:body]
       result
@@ -35,10 +37,11 @@ module LazyCupid
       @db.remove_unknown_gender
       @visitors = Array.new
       @final_visitors = Array.new
-
-      result = @browser.body_of("http://www.okcupid.com/visitors", Time.now.to_i)
+      request_id = Time.now.to_i
+      result = @browser.body_of("http://www.okcupid.com/visitors", request_id)
       @html = result[:html]
       @body = result[:body]
+      @browser.delete_response(request_id)
 
       page = @html.parser.xpath("//div[@id='main_column']/div").to_html
       users = page.scan(/.p.class=.user_name.>(.+)<\/p>/)
@@ -248,11 +251,12 @@ module LazyCupid
     def async_response(url)
       result = Hash.new
       result[:hash] = 0
-      timekey = Time.now.to_i
-      until result[:hash] == timekey
-        result = @browser.body_of(url, timekey)
+      request_id = Time.now.to_i
+      until result[:hash] == request_id
+        result = @browser.body_of(url, request_id)
       end
       # p result
+      @browser.delete_response(request_id)
       result
     end
 

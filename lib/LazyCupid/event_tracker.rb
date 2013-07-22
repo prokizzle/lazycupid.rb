@@ -260,10 +260,35 @@ module LazyCupid
       result
     end
 
+    def parse_inbox_page(url)
+      result = async_response(url)
+      message_list = result[:body].scan(/id\="message_(\d+)"/)
+      message_list.each do |id|
+        thread = result[:html].parser.xpath("//li[@id='message_#{id[0]}']")
+        info = thread.to_html.match(/([-\w\d_]+)\?cf=messages..class="photo">.+src="(.+)" border.+threadid.(\d+).+fancydate_\d+.. (\d+),/)
+        @messages.push({handle: info[1], photo_thumbnail: info[2], thread_id: info[3], thread_url: "http://www.okcupid.com/messages?readmsg=true&threadid=#{info[3]}&folder=1", message_date: info[4]})
+      end
+    end
+
+    def analyze_message_thread(thread)
+      request = @browser.request(thread[:thread_url], Time.now.to_i)
+      # thread_html = request[:html]
+      thread_page = request[:body]
+      replies = thread_page.scan(/Report this/)
+      thread[:replies] = replies.size
+      # puts "#{thread[:handle]} #{replies.size} replies"
+      # puts "#{thread[:handle]} #{thread[:message_date]}"
+      puts thread
+    end
+
     def scrape_inbox
       puts "Scraping inbox" if verbose
       result = async_response("http://www.okcupid.com/messages")
-      @total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
+      begin
+        @total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
+      rescue
+        @total_msg    = 0
+      end
       puts "Total messages: #{@total_msg}" if verbose
       sleep 2
       unless @total_msg == @prev_total_messages

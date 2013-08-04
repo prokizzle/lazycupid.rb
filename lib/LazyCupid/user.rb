@@ -159,27 +159,26 @@ module LazyCupid
       result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
     end
 
-    def ethnicity
-      /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
-    end
+    # def ethnicity
+    #   /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
+    # end
 
     def height
       # hash = Hash.new
       result = @html.parser.xpath("//dd[@id='ajax_height']").text
       begin
-        # hash[:meters] =
         /(\d+.\d+)../.match(result)[1].to_f
-        # hash[:feet] = /(\d+'\d*"/)/.match(result)[1].to_s
-        # {meters: /(\d+.\d+)../.match(result)[1].to_f, feet: /(\d+'\d*"/)/.match(result)[1].to_s}
-
       rescue
-        # {meters: 0, feet: 0}
         0
       end
     end
 
     def body_type
-      /bodytype.>(.+)<.dd>/.match(@body)[1].to_s
+      @html.parser.xpath("//dd[@id='ajax_bodytype']").text
+    end
+    
+    def religion
+      @html.parser.xpath("//dd[@id='ajax_religion']").text
     end
 
     def smoking
@@ -189,17 +188,30 @@ module LazyCupid
 
     end
 
+    def ethnicity
+      @html.parser.xpath("//dd[@id='ajax_ethnicities']").text
+    end
+
+    def sign
+      @html.parser.xpath("//dd[@id='ajax_sign']").text
+    end
+
+    def pets
+      @html.parser.xpath("//dd[@id='ajax_pets']").text
+    end
+
     def drinking
       # /drinking.>(.+)<.dd>/.match(@body)[1].to_s
       @html.parser.xpath("//dd[@id='ajax_drinking']").text
     end
 
     def drugs
-      /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
+      @html.parser.xpath("//dd[@id='ajax_drugs']").text
+      # /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
     end
 
     def kids
-      /children.>(.+)<\/dd>/.match(@body)[1].to_s
+      @html.parser.xpath("//dd[@id='ajax_children']").text
     end
 
     def last_online

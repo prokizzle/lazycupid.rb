@@ -60,6 +60,12 @@ module LazyCupid
       @browser.delete_response(request_id)
     end
 
+    protected
+
+    def log
+      Logger.new("#{@path}#{@username}_#{Time.now}.log")
+    end
+
     def display_code
       puts body
       puts "","Press any key..."

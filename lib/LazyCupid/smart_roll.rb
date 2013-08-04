@@ -116,7 +116,8 @@ module LazyCupid
 
 
     def visit_user(user, roll_type)
-      response = @user.profile(user)
+      page = http_request
+      response = @user.profile(page)
       if response[:inactive]
         remove_match(user)
       else

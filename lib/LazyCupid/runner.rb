@@ -18,7 +18,7 @@ module LazyCupid
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
       @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
-      @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
+      @user         = User.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
       @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
       @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)

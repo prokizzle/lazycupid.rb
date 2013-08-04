@@ -14,10 +14,6 @@ module LazyCupid
     end
 
 
-    def for_page(page_object)
-      @page = page_object
-    end
-
     def profile(user)
       result = Hash.new { |hash, key| hash[key] = 0 }
       request_id = Time.now.to_i

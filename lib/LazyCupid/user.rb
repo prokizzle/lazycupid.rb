@@ -13,8 +13,9 @@ module LazyCupid
       @debug    = true
     end
 
+    public 
 
-    def profile(user)
+    def self.profile(user)
       result = Hash.new { |hash, key| hash[key] = 0 }
       request_id = Time.now.to_i
       until result[:hash] == request_id

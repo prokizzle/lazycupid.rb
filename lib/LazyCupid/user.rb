@@ -13,17 +13,6 @@ module LazyCupid
       @debug    = true
     end
 
-    # def verbose
-    #   @verbose
-    # end
-
-    # def debug
-    #   @debug
-    # end
-
-    def log
-      Logger.new("#{@path}#{@username}_#{Time.now}.log")
-    end
 
     def for_page(page_object)
       @page = page_object

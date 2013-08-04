@@ -10,30 +10,15 @@ class DatabaseMgr
                           :password => @settings.db_pass,
                           :user => @settings.db_user
                           )
-    tasks     = args[:tasks]
-    open_db
-    db_tasks if tasks
+    migrate unless @did_migrate
+    db_tasks if args[:tasks]
     @verbose  = @settings.verbose
     @debug    = @settings.debug
   end
 
-  def db
-    @db
-  end
-
-  def verbose
-    @verbose
-  end
-
-  def delete_self_refs
-    @db.exec("delete from matches where name = $1", [@login])
-    @db.exec("delete from matches where name = $1", [nil])
-    @db.exec("delete from matches where name = $1", [""])
-  end
-
   def db_tasks
     puts "Executing db tasks..."
-    delete_self_refs
+    import
     # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
     @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
     @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
@@ -42,6 +27,9 @@ class DatabaseMgr
       # @db.exec("alter table matches add column prev_visit integer")
     rescue
     end
+    @db.exec("delete from matches where name = $1", [@login])
+    @db.exec("delete from matches where name = $1", [nil])
+    @db.exec("delete from matches where name = $1", [""])
   end
 
   def action(stmt)
@@ -50,15 +38,7 @@ class DatabaseMgr
     db.commit
   end
 
-  def open_db
-    import unless @did_migrate
-  end
-
-  def open
-    open_db
-  end
-
-  def import
+  def migrate
     begin
       @db.exec("CREATE TABLE matches(
         name text,
@@ -83,6 +63,7 @@ class DatabaseMgr
         height text,
         body_type text,
         distance integer,
+        added_from text,
         match_percent integer,
         friend_percent integer,
         enemy_percent integer,
@@ -108,44 +89,21 @@ class DatabaseMgr
     rescue Exception => e
       puts e.message if verbose
     end
+
+    begin
+      @db.exec("
+        create table my_visits(
+          id integer,
+          account text,
+          username text,
+          visit_time integer
+          )
+        ")
+    rescue Exception => e
+      puts e.message
+    end
+
     @did_migrate = true
-  end
-
-  def stats_add_visit
-    @db.exec("update stats set total_visits=total_visits + 1 where account=$1", [@login])
-  end
-
-  def stats_add_visitor
-    @db.exec("update stats set total_visitors=total_visitors+1 where account=$1", [@login])
-  end
-
-  def stats_add_new_user
-    # updated = stats_get_new_users_count + 1
-    @db.exec("update stats set new_users=new_users + 1 where account=$1", [@login])
-  end
-
-  def stats_add_new_message
-    @db.exec("update stats set total_messages=total_messages + 1 where account=$1", [@login])
-  end
-
-  def stats_get_visitor_count
-    result = @db.exec("select total_visitors from stats where account=$1", [@login])
-    result[0]["total_visitors"].to_i
-  end
-
-  def stats_get_visits_count
-    result = @db.exec("select total_visits from stats where account=$1", [@login])
-    result[0]["total_visits"].to_i
-  end
-
-  def stats_get_new_users_count
-    result = @db.exec("select new_users from stats where account=$1", [@login])
-    result[0]["new_users"].to_i
-  end
-
-  def stats_get_total_messages
-    result = @db.exec("select total_messages from stats where account=$1", [@login])
-    result[0]["total_messages"].to_i
   end
 
   def add_user(username, gender, added_from)
@@ -222,50 +180,16 @@ class DatabaseMgr
     delete_user(old_name)
   end
 
-  def toggle_flag(name)
-    @db.exec("update matches set flag=flag * -1 where name=$1 and account=$2", [name, @login])
-  end
-
   def new_user_smart_query
+    visit_male, visit_female = "N"
+    visit_male = "M" if @settings.visit_male == true
+    visit_female = "F" if @settings.visit_female == true
     @db.exec("select * from matches
-    where account=$2
+    where account=$3
     and counts = 0
     and (ignore_list=0 or ignore_list is null)
-    and (gender=$1)
-    order by last_online desc, time_added asc", [@settings.gender, @login])
-  end
-
-  def focus_query_new_users
-    desired_gender      = @settings.gender
-    min_age             = @settings.min_age
-    max_age             = @settings.max_age
-    max_distance        = @settings.max_distance
-    age_sort            = @settings.age_sort
-    height_sort         = @settings.height_sort
-    last_online_cutoff  = @settings.last_online_cutoff
-    min_counts          = 1
-    max_counts          = @settings.max_followup
-    min_percent         = @settings.min_percent
-    time = Time.now.to_i
-    date_range_min = time - 1209600
-    date_range_max = time - 604800
-    @db.exec("select name from matches
-      where account=$1
-      and (last_visit >= $2 or last_visit is null)
-      and time_added between $3 and $4
-      and ignore_list=0
-      and age between $6 and $7
-      and distance <= $8
-      and gender=$5",
-             [@login, #1
-              time - 86400, #2
-              date_range_min, #3
-              date_range_max, #4
-              @settings.gender, #5
-              min_age, #6
-              max_age, #7
-              max_distance #8
-              ])
+    and (gender=$1 or gender=$2)
+    order by last_online desc, time_added asc", [visit_male, visit_female, @login])
   end
 
   def count_new_user_smart_query
@@ -290,21 +214,34 @@ class DatabaseMgr
     min_counts          = 1
     max_counts          = @settings.max_followup
     min_percent         = @settings.min_percent
+    visit_male          = @settings.visit_male || nil
+    visit_female        = @settings.visit_female || nil
     visit_gay           = @settings.visit_gay
     visit_bisexual      = @settings.visit_bisexual
     visit_straight      = @settings.visit_straight
     distance            = @settings.max_distance
 
+    if visit_male
+      male = "M"
+    else
+      male = "N"
+    end
+    if visit_female
+      female = "F"
+    else
+      female = "N"
+    end
+
     result          = @db.exec("
         select * from matches
-         where account=$9
+         where account=$10
         and (last_visit <= $1 or last_visit is null)
          and counts between $2 and $3
          and (distance <= $4 or distance is null)
          and ignore_list = 0
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
-         and (gender=$8)
+         and (gender=$8 or gender=$9)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
          order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
                                [min_time.to_i,
@@ -314,7 +251,8 @@ class DatabaseMgr
                                 min_age,
                                 max_age,
                                 min_percent,
-                                desired_gender,
+                                male,
+                                female,
                                 @login])
     result
   end
@@ -355,109 +293,6 @@ class DatabaseMgr
     result[0][0].to_i
   end
 
-  def user_record_exists(user)
-    @db.exec( "select exists(select * from matches where name=$1 and account=$2", [user, @login] )
-  end
-
-  def set_match_percentage(user, match_percentage)
-    # begin
-    @db.exec("update matches set match_percent=$1 where name=$2 and account=$3", [match_percentage, user, @login])
-    # rescue
-    #   @db.exec("alter table matches add column match_percent text")
-    #   @db.exec("update matches set match_percent=$1 where name=$2", [match_percentage, user])
-    # end
-
-  end
-
-  def set_friend_percentage(user, percent)
-    @db.exec("update matches set friend_percent=$1 where name=$2 and account=$3", [percent, user, @login])
-  end
-
-  def get_friend_percentage(user)
-    @db.exec("select friend_percent from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_enemy_percentage(user, percent)
-    @db.exec("update matches set friend_percentage=$1 where name=$2 and account=$3", [percent, user, @login])
-  end
-
-  def get_enemy_percentage(user)
-    @db.exec("select enemy_percent from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_slut_test_results(user, value)
-    @db.exec("update matches set slut_test_results=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_slut_test_results(user)
-    @db.exec("select slut_test_results from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_ethnicity(user, value)
-    @db.exec("update matches set ethnicity=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_ethnicity(user)
-    @db.exec("select ethnicity from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_height(user, value)
-    @db.exec("update matches set height=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_height(user)
-    @db.exec("select height from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_body_type(user, value)
-    @db.exec("update matches set body_type=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_body_type(user)
-    @db.exec("select body_type from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_smoking(user, value)
-    @db.exec("update matches set smoking=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_smoking(user)
-    @db.exec("select smoking from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_drinking(user, value)
-    @db.exec("update matches set drinking=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_drinking(user)
-    @db.exec("select drinking from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_drugs(user, value)
-    @db.exec("update matches set drugs=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_drugs(user)
-    @db.exec("select drugs from matches where name=$1 and account=$3", [user, @login])
-  end
-
-  def set_kids(user, value)
-    @db.exec("update matches set kids=$1 where name=$2 and account=$3", [value, user, @login])
-  end
-
-  def get_kids(user)
-    @db.exec("select kids from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def set_last_online(user, date)
-    @db.exec("update matches set last_online=$1 where name=$2 and account=$3", [date, user, @login])
-  end
-
-  def get_last_online(user)
-    result = @db.exec("select last_online from matches where name=$1 and account=$2", [user, @login])
-    result[0]["last_online"].to_i
-  end
-
   def set_distance(args)
     user = args[ :username]
     dist = args[ :distance]
@@ -480,15 +315,6 @@ class DatabaseMgr
     result[0]["state"].to_s
   end
 
-  def set_age(user, age)
-    @db.exec("update matches set age=$1 where name=$2 and account=$3", [age.to_i, user, @login])
-  end
-
-  def get_age(user)
-    result = @db.exec("select age from matches where name=$1 and account=$2", [user, @login])
-    result[0]["age"].to_i
-  end
-
   def set_time_added(args)
     user = args[ :username]
     @db.exec("update matches set time_added=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
@@ -498,32 +324,14 @@ class DatabaseMgr
     @db.exec("update matches set city=$1 where name=$2 and account=$3", [city, user, @login])
   end
 
-  def get_city(user)
-    result = @db.exec("select city from matches where name=$1 and account=$2", [user, @login])
-    result[0]["city"].to_s
-  end
-
   def set_gender(args)
     user = args[ :username]
     gender = args[ :gender]
     @db.exec("update matches set gender=$1 where name=$2 and account=$3", [gender, user, @login])
   end
 
-  def get_gender(user)
-    @db.exec("select gender from matches where name=$1 and account=$2", [user, @login])
-  end
-
   def set_sexuality(user, sexuality)
     @db.exec("update matches set sexuality=$1 where name=$2 and account=$3", [sexuality, user, @login])
-  end
-
-  def get_sexuality(user)
-    @db.exec("select sexuality from matches where name=$1 and account=$2", [user, @login])
-  end
-
-  def get_match_percentage(user)
-    result = @db.exec("select match_percent from matches where name=$1 and account=$2", [user, @login])
-    result[0]["match_percent"].to_i
   end
 
   def increment_visitor_counter(visitor)
@@ -592,6 +400,7 @@ class DatabaseMgr
     puts "Now: #{now}" if debug
     @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
     @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
+    @db.exec("insert into my_visits (username, account, visit_time) values ($1, $2, $3)", [user, @login, Time.now.to_i])
   end
 
   def set_visitor_timestamp(visitor, timestamp)
@@ -626,11 +435,8 @@ class DatabaseMgr
       end
 
       increment_visit_count(user[:handle])
-      set_my_last_visit_date(user[:handle])
       set_user_details(user)
-      p "Height: #{user[:height]}" if debug
     end
-    stats_add_visit
   end
 
   def set_user_details(user)

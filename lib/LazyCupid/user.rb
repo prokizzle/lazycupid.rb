@@ -1,8 +1,9 @@
 module LazyCupid
-  class Users
+  class User
 
     attr_reader :verbose, :debug, :body, :url, :html
 
+    
     def initialize(args)
       @db = args[ :database]
       @browser  = args[ :browser]

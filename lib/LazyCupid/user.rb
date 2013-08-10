@@ -1,9 +1,8 @@
 module LazyCupid
-  class User
+  class Users
 
     attr_reader :verbose, :debug, :body, :url, :html
 
-    
     def initialize(args)
       @db = args[ :database]
       @browser  = args[ :browser]
@@ -13,19 +12,28 @@ module LazyCupid
       @debug    = true
     end
 
-    public 
+    # def verbose
+    #   @verbose
+    # end
 
-    def self.profile(user)
-      result = Hash.new { |hash, key| hash[key] = 0 }
-      request_id = Time.now.to_i
-      until result[:hash] == request_id
-        result = @browser.body_of("http://www.okcupid.com/profile/#{user}", request_id)
-      end
-      @body = result[:body]
-      @html = result[:html]
+    # def debug
+    #   @debug
+    # end
+
+    def log
+      Logger.new("#{@path}#{@username}_#{Time.now}.log")
+    end
+
+    def for_page(page_object)
+      @page = page_object
+    end
+
+    def profile(user_page)
+      @body = user_page[:body]
+      @html = user_page[:html]
       # puts @html
       # wait = gets.chomp
-      @url = result[:url]
+      @url = user_page[:url]
       inactive = @body.match(/Uh\-oh/)
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(@url)[1])
       if inactive
@@ -36,13 +44,13 @@ module LazyCupid
          age: age,
          friend_percentage: friend_percentage,
          enemy_percentage: enemy_percentage,
-         ethnicity: ethnicity,
+         # ethnicity: ethnicity,
          height: height,
-         bodytype: body_type,
-         smoking: smoking,
-         drinking: drinking,
-         drugs: drugs,
-         kids: kids,
+         # bodytype: body_type,
+         # smoking: smoking,
+         # drinking: drinking,
+         # drugs: drugs,
+         # kids: kids,
          last_online: last_online,
          location: location,
          city: city,
@@ -57,13 +65,7 @@ module LazyCupid
          body: @body,
          html: @html }
       end
-      @browser.delete_response(request_id)
-    end
-
-    protected
-
-    def log
-      Logger.new("#{@path}#{@username}_#{Time.now}.log")
+      
     end
 
     def display_code
@@ -151,26 +153,27 @@ module LazyCupid
       result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
     end
 
-    # def ethnicity
-    #   /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
-    # end
+    def ethnicity
+      /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
+    end
 
     def height
       # hash = Hash.new
       result = @html.parser.xpath("//dd[@id='ajax_height']").text
       begin
+        # hash[:meters] =
         /(\d+.\d+)../.match(result)[1].to_f
+        # hash[:feet] = /(\d+'\d*"/)/.match(result)[1].to_s
+        # {meters: /(\d+.\d+)../.match(result)[1].to_f, feet: /(\d+'\d*"/)/.match(result)[1].to_s}
+
       rescue
+        # {meters: 0, feet: 0}
         0
       end
     end
 
     def body_type
-      @html.parser.xpath("//dd[@id='ajax_bodytype']").text
-    end
-    
-    def religion
-      @html.parser.xpath("//dd[@id='ajax_religion']").text
+      /bodytype.>(.+)<.dd>/.match(@body)[1].to_s
     end
 
     def smoking
@@ -180,30 +183,17 @@ module LazyCupid
 
     end
 
-    def ethnicity
-      @html.parser.xpath("//dd[@id='ajax_ethnicities']").text
-    end
-
-    def sign
-      @html.parser.xpath("//dd[@id='ajax_sign']").text
-    end
-
-    def pets
-      @html.parser.xpath("//dd[@id='ajax_pets']").text
-    end
-
     def drinking
       # /drinking.>(.+)<.dd>/.match(@body)[1].to_s
       @html.parser.xpath("//dd[@id='ajax_drinking']").text
     end
 
     def drugs
-      @html.parser.xpath("//dd[@id='ajax_drugs']").text
-      # /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
+      /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
     end
 
     def kids
-      @html.parser.xpath("//dd[@id='ajax_children']").text
+      /children.>(.+)<\/dd>/.match(@body)[1].to_s
     end
 
     def last_online

@@ -52,8 +52,6 @@ module LazyCupid
                     max_age: 50, #match_preferences[:max_age],
                     age_sort: "ASC", #prefer younger
                     gender: "F",
-                    visit_male: true,
-                    visit_female: true,
                     min_height: 0, #flatlanders!
                     max_height: 300, #giants!
                     height_sort: "ASC", #prefer shorter
@@ -78,7 +76,7 @@ module LazyCupid
                     new_im: false
                   },
                   development: {
-                    verbose: false,
+                    verbose: true,
                     debug: false
                   }
                   }
@@ -114,14 +112,6 @@ module LazyCupid
 
     def visit_gay
       @settings[:matching][:visit_gay]
-    end
-
-    def visit_male
-      @settings[:matching][:visit_male]
-    end
-
-    def visit_female
-      @settings[:matching][:visit_female]
     end
 
     def preferred_city

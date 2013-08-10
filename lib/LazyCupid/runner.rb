@@ -18,7 +18,7 @@ module LazyCupid
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
       @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
-      @user         = User.new(database: db, browser: @browser, log: @log, path: log_path)
+      @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
       @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
       @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)
@@ -261,7 +261,7 @@ module LazyCupid
 
       @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
         @app.check_events
-        # @has_unread_messages = true if @app.unread_messages > 0
+      #   # @has_unread_messages = true if @app.unread_messages > 0
       end
 
       @app.scheduler.every '5m', :mutex => 'tracker' do

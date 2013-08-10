@@ -1,6 +1,6 @@
 module LazyCupid
   class Browser
-    attr_reader :agent, :body, :current_user, :url, :hash, :page
+    attr_reader :agent, :body, :current_user, :url, :hash, :page, :debug
     attr_accessor :agent, :body, :current_user, :url, :hash, :page
 
 
@@ -10,6 +10,7 @@ module LazyCupid
       @agent = Mechanize.new
       @log      = args[ :log]
       @hash = Hash.new { |hash, key| hash[key] = 0 }
+      @debug = false
       # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
     end
 
@@ -17,7 +18,9 @@ module LazyCupid
       begin
         @agent.idle_timeout = 5
         @agent.read_timeout = 2
-        @agent.user_agent_alias = ['Mac Safari', 'Windows IE 7', 'Mac Firefox', 'Mac Mozilla'].sample
+        @agent.user_agent_alias = ['Mac Safari', 'Mac Firefox'].sample
+        @agent.agent.http.debug_output = $stderr if debug
+        @agent.keep_alive = false
         page = @agent.get("http://www.okcupid.com/")
         form = page.forms.first
         form['username']=@username
@@ -44,7 +47,7 @@ module LazyCupid
     end
 
     def is_logged_in
-      response = body_of("http://www.okcupid.com/", Time.now.to_i)
+      response = body_of("http://www.okcupid.com/home?cf=logo", Time.now.to_i)
       /logged_in/.match(response[:body])
     end
 
@@ -70,7 +73,7 @@ module LazyCupid
     def body_of(link, request_id)
       @hash[request_id] = {ready: false}
       url = URI.escape(link)
-      @agent.read_timeout=30
+      # @agent.read_timeout=30
       temp = @agent.get(url)
       # @log.debug "#{@url}"
       returned_body = temp.parser.xpath("//body").to_html
@@ -78,11 +81,27 @@ module LazyCupid
       {url: url.to_s, body: returned_body.to_s, html: temp, hash: request_id.to_i}
     end
 
+    def send_request(link, request_id)
+      # request_id = Time.now.to_i
+      @hash[request_id] = {ready: false}
+      url = URI.escape(link)
+      @agent.read_timeout=30
+      temp = @agent.get(link)
+      # @log.debug "#{@url}"
+      returned_body = temp.parser.xpath("//body").to_html
+      @hash[request_id] = {url: url.to_s, body: returned_body.to_s, html: temp, ready: true}
+
+    end
+
+    def get_request(request_id)
+      return @hash[request_id]
+    end
+
     def request(link, request_id)
       @hash[request_id] = {ready: false}
       url = URI.escape(link)
       @agent.read_timeout=30
-      temp = @agent.get(url)
+      temp = @agent.get(link)
       # @log.debug "#{@url}"
       returned_body = temp.parser.xpath("//body").to_html
       @hash[request_id] = {url: url.to_s, body: returned_body.to_s, html: temp, ready: true}

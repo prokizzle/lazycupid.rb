@@ -115,22 +115,30 @@ module LazyCupid
 
 
 
-    def visit_user(user, roll_type)
-      page = http_request
-      response = @user.profile(page)
-      if response[:inactive]
-        remove_match(user)
-      else
-
-        @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
-        # puts response
-        sexuality_filter(response[:handle], response[:sexuality])
-        @console.log(response, added_from(user), roll_type) if verbose
-        @tally += 1
-        @db.log2(response)
-        # @harvester.body = @user.body
-        autodiscover_new_users(response) if response[:gender] == @settings.gender
+    def visit_user(user, roll_type="NA")
+      result = Hash.new { |hash, key| hash[key] = 0 }
+      request_id = Time.now.to_i
+      @browser.send_request("http://www.okcupid.com/profile/#{user}", request_id)
+      until result[:ready] == true
+        result = @browser.get_request(request_id)
+        # p result
       end
+      @browser.delete_response(request_id)
+      response = @user.profile(result)
+      # if response[:inactive]
+      # remove_match(user)
+      # else
+
+      @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
+      # puts response
+      sexuality_filter(response[:handle], response[:sexuality])
+      @console.log(response, added_from(user), roll_type) if verbose
+      @tally += 1
+      # puts "Logging user #{response}"
+      @db.log2(response)
+      # @harvester.body = @user.body
+      autodiscover_new_users(response) if response[:gender] == @settings.gender
+      # end
     end
 
     def roll
@@ -139,8 +147,8 @@ module LazyCupid
       # wait = gets.chomp
       unless current_user == @db.login
         unless current_user == nil || current_user == ""
-          puts ".#{current_user}." if debug
-          visit_user(current_user, "disabled")
+          puts "Visting #{current_user}." if debug
+          visit_user(current_user)
           @already_idle == false
         else
           puts "Idle..." unless @already_idle

@@ -1,46 +1,69 @@
-class DatabaseMgr
-  attr_reader :login, :debug, :verbose
+module LazyCupid
+  class DatabaseMgr
+    attr_reader :login, :debug, :verbose
 
 
-  def initialize(args)
-    @did_migrate = false
-    @login    = args[:login_name]
-    @settings = args[:settings]
-    @db = PGconn.connect( :dbname => @settings.db_name,
-                          :password => @settings.db_pass,
-                          :user => @settings.db_user
-                          )
-    migrate unless @did_migrate
-    db_tasks if args[:tasks]
-    @verbose  = @settings.verbose
-    @debug    = @settings.debug
-  end
-
-  def db_tasks
-    puts "Executing db tasks..."
-    import
-    # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
-    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
-    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
-    @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
-    begin
-      # @db.exec("alter table matches add column prev_visit integer")
-    rescue
+    def initialize(args)
+      @did_migrate = false
+      @login    = args[:login_name]
+      @settings = args[:settings]
+      @db = PGconn.connect( :dbname => @settings.db_name,
+                            :password => @settings.db_pass,
+                            :user => @settings.db_user
+                            )
+      import
+      tasks     = args[:tasks]
+      open_db
+      db_tasks if tasks
+      @verbose  = @settings.verbose
+      @debug    = @settings.debug
     end
-    @db.exec("delete from matches where name = $1", [@login])
-    @db.exec("delete from matches where name = $1", [nil])
-    @db.exec("delete from matches where name = $1", [""])
-  end
 
-  def action(stmt)
-    db.transaction
-    stmt.execute
-    db.commit
-  end
+    def db
+      @db
+    end
 
-  def migrate
-    begin
-      @db.exec("CREATE TABLE matches(
+    def verbose
+      @verbose
+    end
+
+    def delete_self_refs
+      @db.exec("delete from matches where name = $1", [@login])
+      @db.exec("delete from matches where name = $1", [nil])
+      @db.exec("delete from matches where name = $1", [""])
+    end
+
+    def db_tasks
+      import
+      puts "Executing db tasks..."
+      delete_self_refs
+      # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
+      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
+      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
+      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
+      begin
+        @db.exec("alter table matches add column prev_visit integer")
+      rescue
+      end
+    end
+
+    def action(stmt)
+      db.transaction
+      stmt.execute
+      db.commit
+    end
+
+    def open_db
+      import unless @did_migrate
+    end
+
+    def open
+      open_db
+    end
+
+    def import
+      begin
+        @db.exec("CREATE TABLE matches(
         name text,
         account text,
         counts integer,
@@ -530,4 +553,5 @@ class DatabaseMgr
     @db.commit
   end
 
+  end
 end

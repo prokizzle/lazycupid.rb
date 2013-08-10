@@ -77,6 +77,7 @@ module LazyCupid
         relationship_status text,
         match_percentage integer,
         state text,
+        added_from text,
         city text,
         time_added text,
         smoking text,

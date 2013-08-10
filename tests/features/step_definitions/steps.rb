@@ -4,7 +4,7 @@ require_relative '../../../lib/LazyCupid/includes'
 Before do
   @account = "***REMOVED***"
   @password = "***REMOVED***"
-  url = "http://www.okcupid.com/profile/---nick"
+  url = "http://www.okcupid.com/profile/***REMOVED***"
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
   @db.delete_user("fake_user")

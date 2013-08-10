@@ -120,11 +120,7 @@ module LazyCupid
 
 
         @db.add_user(visitor, gender, "api_visitor")
-
-        unless (gender == "F" and @settings.visit_female == true) || (gender == "M" and @settings.visit_male == true)
-          @db.ignore_user(visitor)
-        end
-
+        @db.ignore_user(visitor) unless gender == @settings.gender
         # @db.set_gender(:username => visitor, :gender => gender)
         @db.set_state(:username => visitor, :state => state)
 

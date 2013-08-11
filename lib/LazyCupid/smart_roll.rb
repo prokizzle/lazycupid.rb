@@ -129,7 +129,10 @@ module LazyCupid
       # remove_match(user)
       # else
 
-      @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
+      begin
+        @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
+      rescue
+      end
       # puts response
       sexuality_filter(response[:handle], response[:sexuality])
       @console.log(response, added_from(user), roll_type) if verbose

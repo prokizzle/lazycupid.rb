@@ -58,7 +58,6 @@ module LazyCupid
          gender: gender,
          distance: relative_distance,
          relationship_status: relationship_status,
-         is_blocked: is_blocked,
          intended_handle: @intended_handle,
          inactive: inactive,
          body: @body,

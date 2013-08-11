@@ -147,7 +147,7 @@ module LazyCupid
     end
 
     def ethnicity
-      result = @html.parser.xpath("//span[@id='ajax_ethnicities']").text
+      result = @html.parser.xpath("//dd[@id='ajax_ethnicities']").text
     end
 
     def height

@@ -7,6 +7,7 @@ Before do
   url = "http://www.okcupid.com/profile/***REMOVED***"
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
+  @profile  = LazyCupid::Users.new(database: @db)
   @db.delete_user("fake_user")
   @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
   @browser.login
@@ -15,8 +16,9 @@ Before do
   until @browser.hash[request_id][:ready]
     sleep 0.1
   end
-  @html = @browser.hash[request_id][:html]
-  @body = @browser.hash[request_id][:body]
+  @page = @browser.hash[request_id]
+  @html = @page[:html]
+  @body = @page[:body]
 end
 
 Given(/^Username "(.*?)" is not in the database$/) do |user|
@@ -131,7 +133,7 @@ Given(/^I load a sample profile$/) do
 end
 
 When(/^I isolate the username field$/) do
-  @result = @html.parser.xpath("//p[@class='username']").text
+  @result = @profile.profile(@page)[:handle]
 end
 
 Then(/^The parser should return a username string$/) do
@@ -140,16 +142,15 @@ Then(/^The parser should return a username string$/) do
 end
 
 When(/^I isolate the match percent field$/) do
-  @result = @html.parser.xpath("//span[@class='match']").text
+  @result = @profile.profile(@page)[:match_percentage]
 end
 
 Then(/^The parser should return a match percent string$/) do
   puts @result
-  @result == "70% Match"
 end
 
 When(/^I isolate the age field$/) do
-  @result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
+  @result = @profile.profile(@page)[:age]
 end
 
 Then(/^The parser should return a age string$/) do
@@ -158,7 +159,7 @@ Then(/^The parser should return a age string$/) do
 end
 
 When(/^I isolate the height field$/) do
-  @result = @html.parser.xpath("//dd[@id='ajax_height']").text
+  @result = @profile.profile(@page)[:height]
 end
 
 Then(/^The parser should return a height string$/) do
@@ -166,7 +167,7 @@ Then(/^The parser should return a height string$/) do
 end
 
 When(/^I isolate the smoking field$/) do
-  @result = @html.parser.xpath("//dd[@id='ajax_smoking']").text
+  @result = @profile.profile(@page)[:smoking]
 end
 
 Then(/^The parser should return a smoking string$/) do
@@ -174,7 +175,7 @@ Then(/^The parser should return a smoking string$/) do
 end
 
 When(/^I isolate the drinking field$/) do
-  @result = @html.parser.xpath("//dd[@id='ajax_drinking']").text
+  @result = @profile.profile(@page)[:drinking]
 end
 
 Then(/^The parser should return a drinking string$/) do
@@ -182,7 +183,7 @@ Then(/^The parser should return a drinking string$/) do
 end
 
 When(/^I isolate the location field$/) do
-  @result = @html.parser.xpath("//span[@id='ajax_location']").text
+  @result = @profile.profile(@page)[:city]
 end
 
 Then(/^The parser should return a location string$/) do
@@ -190,7 +191,7 @@ Then(/^The parser should return a location string$/) do
 end
 
 When(/^I isolate the orientation field$/) do
-  @result = @html.parser.xpath("//span[@id='ajax_orientation']").text
+  @result = @profile.profile(@page)[:sexuality]
 end
 
 
@@ -199,7 +200,7 @@ Then(/^The parser should return a orientation string$/) do
 end
 
 When(/^I isolate the gender field$/) do
-  @result = @html.parser.xpath("//span[@id='ajax_gender']").text
+  @result = @profile.profile(@page)[:gender]
 end
 
 Then(/^The parser should return a gender string$/) do
@@ -207,7 +208,7 @@ Then(/^The parser should return a gender string$/) do
 end
 
 When(/^I isolate the status field$/) do
-  @result = @html.parser.xpath("//span[@id='ajax_status']").text
+  @result = @profile.profile(@page)[:relationship_status]
 end
 
 Then(/^The parser should return a status string$/) do
@@ -215,7 +216,7 @@ Then(/^The parser should return a status string$/) do
 end
 
 When(/^I isolate the friend_percent field$/) do
-  @result = />(\d+). Friend.*/.match(@body)[1].to_i
+  @result = @profile.profile(@page)[:friend_percentage]
 end
 
 Then(/^The parser should return a friend_percent string$/) do
@@ -223,7 +224,7 @@ Then(/^The parser should return a friend_percent string$/) do
 end
 
 When(/^I isolate the enemy_percent field$/) do
-  @result = />(\d+). Enemy.*/.match(@body)[1].to_i
+  @result = @profile.profile(@page)[:enemy_percentage]
 end
 
 Then(/^The parser should return a enemy_percent string$/) do
@@ -231,7 +232,7 @@ Then(/^The parser should return a enemy_percent string$/) do
 end
 
 When(/^I isolate the ethnicity field$/) do
-  @result = /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
+  @result = @profile.profile(@page)[:ethnicity]
 end
 
 Then(/^The parser should return a ethnicity string$/) do
@@ -239,7 +240,7 @@ Then(/^The parser should return a ethnicity string$/) do
 end
 
 When(/^I isolate the kids field$/) do
-  @result = /children.>(.+)<\/dd>/.match(@body)[1].to_s
+  @result = @profile.profile(@page)[:kids]
 end
 
 Then(/^The parser should return something$/) do
@@ -247,13 +248,13 @@ Then(/^The parser should return something$/) do
 end
 
 When(/^I isolate the drugs field$/) do
-  @result = /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
+  @result = @profile.profile(@page)[:drugs]
 end
 
 When(/^I isolate the last_online field$/) do
-  @result = /(\d{10}),..JOURNAL_FORMAT./.match(@body)[1].to_i
+  @result = @profile.profile(@page)[:last_online]
 end
 
 When(/^I isolate the relative_distance field$/) do
-  @result = /\((\d+) miles*\)/.match(@body)[1].to_i
+  @result = @profile.profile(@page)[:distance]
 end

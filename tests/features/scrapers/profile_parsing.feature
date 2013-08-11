@@ -9,7 +9,7 @@ Given I load a sample profile
 When I isolate the username field
 Then The parser should return a username string
 
-@scraper
+@scraper @percents
 Scenario: Match Percent
 Given I load a sample profile
 When I isolate the match percent field
@@ -63,13 +63,13 @@ Given I load a sample profile
 When I isolate the status field
 Then The parser should return a status string
 
-@scraper
+@scraper @percents
 Scenario: Friend percent
 Given I load a sample profile
 When I isolate the friend_percent field
 Then The parser should return a friend_percent string
 
-@scraper
+@scraper @percents
 Scenario: Enemy percent
 Given I load a sample profile
 When I isolate the enemy_percent field

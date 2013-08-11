@@ -125,13 +125,17 @@ module LazyCupid
       end
       @browser.delete_response(request_id)
       response = @user.profile(result)
-      # if response[:inactive]
-      # remove_match(user)
-      # else
+      if response[:inactive]
+        @db.ignore_user(user)
+      else
 
       begin
         @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
       rescue
+      end
+      unless response[:a_list_name_change].nil?
+        @db.rename_alist_user(user, response[:handle])
+        puts "(SR) A-list name change: #{user} is now #{response[:handle]}"
       end
       # puts response
       sexuality_filter(response[:handle], response[:sexuality])
@@ -141,7 +145,7 @@ module LazyCupid
       @db.log2(response)
       # @harvester.body = @user.body
       autodiscover_new_users(response) if response[:gender] == @settings.gender
-      # end
+      end
     end
 
     def roll

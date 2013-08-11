@@ -28,15 +28,16 @@ module LazyCupid
     end
 
     def profile(user_page)
+      @new_handle = nil
       @body = user_page[:body]
       @html = user_page[:html]
       # puts @html
       # wait = gets.chomp
       @url = user_page[:url]
-      inactive = @body.match(/Uh\-oh/)
+      inactive = @body.match(/we don’t have anyone by that name/)
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(@url)[1])
       if inactive
-        {inactive: inactive}
+        {inactive: true}
       else
         {handle: handle,
          match_percentage: match_percentage,
@@ -59,7 +60,8 @@ module LazyCupid
          distance: relative_distance,
          relationship_status: relationship_status,
          intended_handle: @intended_handle,
-         inactive: inactive,
+         inactive: false,
+         a_list_name_change: @new_handle,
          body: @body,
          html: @html }
       end
@@ -102,8 +104,9 @@ module LazyCupid
       # end
 
       unless result == @intended_handle.to_s
-        @db.rename_alist_user(@intended_handle, result)
-        puts "A-list name change: #{intended_handle} is now #{result}" if verbose
+        # @db.rename_alist_user(@intended_handle, result)
+        @new_handle = result
+        puts "(UC) A-list name change: #{intended_handle} is now #{result}" if verbose
       end
 
       # puts result
@@ -259,9 +262,9 @@ module LazyCupid
       @html.parser.xpath("//span[@id='ajax_status']").text
     end
 
-    def is_blocked
-      @db.is_ignored(handle)
-    end
+    # def is_blocked
+    #   @db.is_ignored(handle)
+    # end
 
   end
 end

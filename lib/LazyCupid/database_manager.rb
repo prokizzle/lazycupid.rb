@@ -641,9 +641,9 @@ module LazyCupid
 
     def set_user_details(user)
       @db.exec("update matches
-      set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online, last_visit) =
-      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-      where name=$11",
+      set (gender, sexuality, match_percentage, state, distance, age, city, height, last_online, last_visit, friend_percent, enemy_percent) =
+      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      where name=$13",
                [user[:gender],
                 user[:sexuality],
                 user[:match_percentage],
@@ -654,6 +654,8 @@ module LazyCupid
                 user[:height],
                 user[:last_online],
                 Time.now.to_i,
+                user[:friend_percentage],
+                user[:enemy_percentage],
                 user[:handle]])
     end
 

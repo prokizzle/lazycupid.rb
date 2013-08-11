@@ -5,7 +5,6 @@ module LazyCupid
 
     def initialize(args)
       @db = args[ :database]
-      @browser  = args[ :browser]
       @log      = args[ :log]
       @path     = args[ :path]
       @verbose  = true

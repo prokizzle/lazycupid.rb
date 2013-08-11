@@ -112,35 +112,30 @@ module LazyCupid
     end
 
     def match_percentage
-      begin
-        result = @html.parser.xpath("//span[@class='match']").text
-        new_result = /(\d*\d*). Match/.match(result)[1]
-        new_result.to_i
-      rescue
-        log.debug "match_percentage: #{body}"
-        begin
-          @body.match(/(\d+). Match/)[1].to_i
-        rescue
-          0
-        end
-      end
+      result = @html.parser.xpath("//span[@class='match']").text
+      result.match(/(\d+)/)[1].to_i
+      # begin
+      #   result = @html.parser.xpath("//span[@class='match']").text
+      #   new_result = /(\d*\d*). Match/.match(result)[1]
+      #   new_result.to_i
+      # rescue
+      #   log.debug "match_percentage: #{body}"
+      #   begin
+      #     @body.match(/(\d+). Match/)[1].to_i
+      #   rescue
+      #     0
+      #   end
+      # end
     end
 
     def friend_percentage
-      if />(\d+). Friend.*/.match(@body)
-        />(\d+). Friend.*/.match(@body)[1].to_i
-      else
-        0
-      end
-
+      result = @html.parser.xpath("//span[@class='friend']").text
+      result.match(/(\d+)/)[1].to_i
     end
 
     def enemy_percentage
-      begin
-        />(\d+). Enemy.*/.match(@body)[1].to_i
-      rescue
-        0
-      end
+      result = @html.parser.xpath("//span[@class='enemy']").text
+      result.match(/(\d+)/)[1].to_i
     end
 
     def slut_test_results
@@ -152,7 +147,7 @@ module LazyCupid
     end
 
     def ethnicity
-      /ethnicities.>\s([\w\s]+).*/.match(@body)[1].to_s
+      result = @html.parser.xpath("//span[@id='ajax_ethnicities']").text.to_i
     end
 
     def height

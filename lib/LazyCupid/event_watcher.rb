@@ -5,37 +5,38 @@ module LazyCupid
     def initialize(args)
       # puts "Initializing browser..."
       # @browser = Browser.new(:username => @username, :password => password)
-      @browser    = args[:browser]
-      @tracker    = args[:tracker]
-      @log        = args[:logger]
-      @settings   = args[:settings]
+      @browser      = args[:browser]
+      @tracker      = args[:tracker]
+      @log          = args[:logger]
+      @settings     = args[:settings]
+  
+      @api          = APIEvents.new(tracker: @tracker, logger: @log, settings: @settings)
 
-      @api        = APIEvents.new(tracker: @tracker, logger: @log, settings: @settings)
-
-      @spotlight  = Hash.new
-      @messages   = Hash.new
-      @stalks     = Hash.new
-      @looks_vote = Hash.new
-      @new_events = Array.new
-      @new_people = Array.new
-      @people_hash = Hash.new
-      @hash = Hash.new { |hash, key| hash[key] = 0 }
-      @events_hash = Hash.new { |hash, key| hash[key] = 0 }
-      @instant = [1,2,3,4]
+      @spotlight    = Hash.new
+      @messages     = Hash.new
+      @stalks       = Hash.new
+      @looks_vote   = Hash.new
+      @new_events   = Array.new
+      @new_people   = Array.new
+      @people_hash  = Hash.new
+      @hash         = Hash.new { |hash, key| hash[key] = 0 }
+      @events_hash  = Hash.new { |hash, key| hash[key] = 0 }
+      @instant      = (1..4).to_a
     end
 
     def long_poll_result
       response = async_response(api_url)
-      response[:body]
+      return response[:body]
     end
 
     def async_response(url)
+      result = Hash.new { |hash, key| hash[key] = 0 }
       request_id = Time.now.to_i
-      @browser.request(url, request_id)
-      until @browser.hash[request_id][:ready]
-        sleep 0.1
+      @browser.send_request(url, request_id)
+      until result[:ready] == true
+        result = @browser.get_request(request_id)
       end
-      @browser.hash[request_id]
+      return result
     end
 
     def login

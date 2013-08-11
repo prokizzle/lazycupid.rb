@@ -48,11 +48,9 @@ module LazyCupid
     end
 
     def api_url
-      if @instant.empty?
-        @instant = [1,2,3,4]
-      end
+      @instant = (1..4).to_a if @instant.empty?
       i = @instant.shift
-      "http://#{i}-instant.okcupid.com/instantevents?random=#{rand}&server_gmt=#{Time.now.to_i}"
+      return "http://#{i}-instant.okcupid.com/instantevents?random=#{rand}&server_gmt=#{Time.now.to_i}"
     end
 
     def this_event_time

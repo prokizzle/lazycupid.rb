@@ -126,7 +126,10 @@ module LazyCupid
       @browser.delete_response(request_id)
       response = @user.profile(result)
       if response[:inactive]
-        @db.ignore_user(user)
+        puts "Inactive profile found: #{user}"
+        # @db.ignore_user(user)
+        @db.set_inactive(user)
+
       else
 
       begin

@@ -166,6 +166,7 @@ module LazyCupid
     end
 
     def delete_user(username)
+      puts "Deleting #{username}"
       # @db.exec("delete from matches where name=$1 and account=$2", [username, @login])
     end
 

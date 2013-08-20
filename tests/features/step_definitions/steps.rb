@@ -7,7 +7,7 @@ Before do
   url = "http://www.okcupid.com/profile/***REMOVED***"
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
-  @profile  = LazyCupid::Users.new(database: @db)
+  # @profile  = LazyCupid::Users.new(database: @db)
   @db.delete_user("fake_user")
   @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
   @browser.login
@@ -133,7 +133,7 @@ Given(/^I load a sample profile$/) do
 end
 
 When(/^I isolate the username field$/) do
-  @result = @profile.profile(@page)[:handle]
+  @result = LazyCupid::Profile.parse(@page)[:handle]
 end
 
 Then(/^The parser should return a username string$/) do
@@ -142,7 +142,7 @@ Then(/^The parser should return a username string$/) do
 end
 
 When(/^I isolate the match percent field$/) do
-  @result = @profile.profile(@page)[:match_percentage]
+  @result = LazyCupid::Profile.parse(@page)[:match_percentage]
 end
 
 Then(/^The parser should return a match percent string$/) do
@@ -150,7 +150,7 @@ Then(/^The parser should return a match percent string$/) do
 end
 
 When(/^I isolate the age field$/) do
-  @result = @profile.profile(@page)[:age]
+  @result = LazyCupid::Profile.parse(@page)[:age]
 end
 
 Then(/^The parser should return a age string$/) do
@@ -159,7 +159,7 @@ Then(/^The parser should return a age string$/) do
 end
 
 When(/^I isolate the height field$/) do
-  @result = @profile.profile(@page)[:height]
+  @result = LazyCupid::Profile.parse(@page)[:height]
 end
 
 Then(/^The parser should return a height string$/) do
@@ -167,7 +167,7 @@ Then(/^The parser should return a height string$/) do
 end
 
 When(/^I isolate the smoking field$/) do
-  @result = @profile.profile(@page)[:smoking]
+  @result = LazyCupid::Profile.parse(@page)[:smoking]
 end
 
 Then(/^The parser should return a smoking string$/) do
@@ -175,7 +175,7 @@ Then(/^The parser should return a smoking string$/) do
 end
 
 When(/^I isolate the drinking field$/) do
-  @result = @profile.profile(@page)[:drinking]
+  @result = LazyCupid::Profile.parse(@page)[:drinking]
 end
 
 Then(/^The parser should return a drinking string$/) do
@@ -183,7 +183,7 @@ Then(/^The parser should return a drinking string$/) do
 end
 
 When(/^I isolate the location field$/) do
-  @result = @profile.profile(@page)[:city]
+  @result = LazyCupid::Profile.parse(@page)[:city]
 end
 
 Then(/^The parser should return a location string$/) do
@@ -191,7 +191,7 @@ Then(/^The parser should return a location string$/) do
 end
 
 When(/^I isolate the orientation field$/) do
-  @result = @profile.profile(@page)[:sexuality]
+  @result = LazyCupid::Profile.parse(@page)[:sexuality]
 end
 
 
@@ -200,7 +200,7 @@ Then(/^The parser should return a orientation string$/) do
 end
 
 When(/^I isolate the gender field$/) do
-  @result = @profile.profile(@page)[:gender]
+  @result = LazyCupid::Profile.parse(@page)[:gender]
 end
 
 Then(/^The parser should return a gender string$/) do
@@ -208,7 +208,7 @@ Then(/^The parser should return a gender string$/) do
 end
 
 When(/^I isolate the status field$/) do
-  @result = @profile.profile(@page)[:relationship_status]
+  @result = LazyCupid::Profile.parse(@page)[:relationship_status]
 end
 
 Then(/^The parser should return a status string$/) do
@@ -216,7 +216,7 @@ Then(/^The parser should return a status string$/) do
 end
 
 When(/^I isolate the friend_percent field$/) do
-  @result = @profile.profile(@page)[:friend_percentage]
+  @result = LazyCupid::Profile.parse(@page)[:friend_percentage]
 end
 
 Then(/^The parser should return a friend_percent string$/) do
@@ -224,7 +224,7 @@ Then(/^The parser should return a friend_percent string$/) do
 end
 
 When(/^I isolate the enemy_percent field$/) do
-  @result = @profile.profile(@page)[:enemy_percentage]
+  @result = LazyCupid::Profile.parse(@page)[:enemy_percentage]
 end
 
 Then(/^The parser should return a enemy_percent string$/) do
@@ -232,7 +232,7 @@ Then(/^The parser should return a enemy_percent string$/) do
 end
 
 When(/^I isolate the ethnicity field$/) do
-  @result = @profile.profile(@page)[:ethnicity]
+  @result = LazyCupid::Profile.parse(@page)[:ethnicity]
 end
 
 Then(/^The parser should return a ethnicity string$/) do
@@ -240,7 +240,7 @@ Then(/^The parser should return a ethnicity string$/) do
 end
 
 When(/^I isolate the kids field$/) do
-  @result = @profile.profile(@page)[:kids]
+  @result = LazyCupid::Profile.parse(@page)[:kids]
 end
 
 Then(/^The parser should return something$/) do
@@ -248,13 +248,13 @@ Then(/^The parser should return something$/) do
 end
 
 When(/^I isolate the drugs field$/) do
-  @result = @profile.profile(@page)[:drugs]
+  @result = LazyCupid::Profile.parse(@page)[:drugs]
 end
 
 When(/^I isolate the last_online field$/) do
-  @result = @profile.profile(@page)[:last_online]
+  @result = LazyCupid::Profile.parse(@page)[:last_online]
 end
 
 When(/^I isolate the relative_distance field$/) do
-  @result = @profile.profile(@page)[:distance]
+  @result = LazyCupid::Profile.parse(@page)[:distance]
 end

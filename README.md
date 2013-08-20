@@ -10,28 +10,37 @@ _An intelligent auto-visitor bot for OKCupid._
 + Uses private OKCupid API
 + Multi-threaded (via rufus-scheduler)
 
-###Requirements
+##Requirements
 
 + Postgres: db name lazy_cupid
 + Ruby
 
-####Installation:
+##Installation:
 
+	createdb lazy_cupid
     bundle install
 
-On first run, after successful login, LzC automatically creates config files in config/ with default values. Make changes to database.yml to reflect your postgres configuration, and also _your_user_name_.yml for your match preferences. You will need to restart LazyCupid for changes in config to take effect.
+On first run, after successful login, LzC automatically creates config files in `config/` with default values. Make changes to database.yml to reflect your postgres configuration, and also `_your_user_name_.yml `for your match preferences. You will need to restart LazyCupid for changes in config to take effect.
 
+##Migrations
+
+Apply database changes before running on every git pull with *Sequel Migrations* tool:
+`sequel -m db/migrations/ -E postgres://localhost/lazy_cupid`
+
+or 
+
+`rake db:migrate`
 
 ##Usage:
 
-    ruby bin/lazycupid
+`ruby bin/lazycupid`
 
 or
 
-    ruby bin/lazycupid _username_ _password_
+`ruby bin/lazycupid [username] [password]`
 
 
-####Todo:
+##Todo:
 
 + Alter database schema to mutli tables
 + Switch to ActiveRecord database format (Sequel gem)
@@ -40,6 +49,7 @@ or
 + Minimize API usage
 + Improve visitors page parser
 + Store links or file records for user profile thumbnails
++ Detect account status on login (disabled, deleted, logged in, wrong password, etc)
 + Create Rails app
   + visualizing patterns, data
   + success rates

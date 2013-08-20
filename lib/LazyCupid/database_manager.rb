@@ -207,25 +207,7 @@ module LazyCupid
     end
 
     def rename_alist_user(old_name, new_name)
-      # if existsCheck(new_name)
-      # update_visit_count(new_name, get_visit_count(old_name) + get_visit_count(new_name) + 1)
-      # else
-      add_user(new_name, get_gender(old_name), "a_list_rename")
-      # update_visit_count(new_name, get_visit_count(old_name))
-      # set_gender(:username => new_name, :gender => get_gender(old_name))
-      # set_age(new_name, get_age(old_name))
-      # set_city(new_name, get_city(old_name))
-      # set_state(new_name, get_state(old_name))
-      # set_visitor_counter(new_name, get_visitor_count(old_name))
-      # set_visitor_timestamp(new_name, get_visitor_timestamp(old_name))
-      # set_distance(new_name, get_distance(old_name))
-      # set_match_percentage(new_name, get_match_percentage(old_name))
-      # set_my_last_visit_date(new_name, get_my_last_visit_date(old_name))
-      # set_received_messages_count(new_name, get_received_messages_count(old_name))
-      # set_last_received_message_date(new_name, get_last_received_message_date(old_name))
-      # end
-      ignore_user(old_name)
-      delete_user(old_name)
+      @db.exec("update matches set name=$1 where name=$2", [new_name, old_name])
     end
 
     def toggle_flag(name)

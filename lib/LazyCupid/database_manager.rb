@@ -40,6 +40,7 @@ module LazyCupid
       # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
+      @db.exec("update matches set ignored=true where ignore_list=1")
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
       begin
         @db.exec("alter table matches add column prev_visit integer")

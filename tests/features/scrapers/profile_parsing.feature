@@ -3,7 +3,7 @@ In order to store accurate user data in the database
 As a lazy online dater
 I want to be able to pull specific details from each profile I visit
 
-@scraper
+@scraper @alist
 Scenario: Username
 Given I load a sample profile
 When I isolate the username field
@@ -98,5 +98,20 @@ Then The parser should return something
 @scraper
 Scenario: Relative distance
 When I isolate the relative_distance field
+Then The parser should return something
+
+@scraper @alist
+Scenario: Intended handle
+When I isolate the intended_handle field
+Then The parser should return something
+
+@scraper
+Scenario: Inactive
+When I isolate the inactive field
+Then The parser should return something
+
+@scraper @alist
+Scenario: A list name change
+When I isolate the a_list_name_change field
 Then The parser should return something
 

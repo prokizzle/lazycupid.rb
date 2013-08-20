@@ -18,6 +18,7 @@ module LazyCupid
       @debug      = @settings.debug
       @alt_reload = false
       @already_idle = true
+      @already_rolling = false
     end
 
     def reload
@@ -160,11 +161,14 @@ module LazyCupid
       unless current_user == @db.login
         unless current_user == nil || current_user == ""
           puts "Visting #{current_user}." if debug
+          puts "Rolling..." unless @already_rolling
           visit_user(current_user)
-          @already_idle == false
+          @already_idle = false
+          @already_rolling = true
         else
           puts "Idle..." unless @already_idle
           @already_idle = true
+          @already_rolling = false
         end
       end
     end

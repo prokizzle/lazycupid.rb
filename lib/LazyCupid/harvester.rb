@@ -70,18 +70,7 @@ module LazyCupid
     end
 
     def distance_criteria_met?
-      # puts "by state:     #{filter_by_state?}" if verbose
-      # puts "Max dist:     #{max_distance}" if verbose
-      # puts "Rel dist:     #{@user.relative_distance}" if verbose
-
-      case @settings.distance_filter_type
-      when "state"
-        @user.state == preferred_state
-      when "city"
-        @user.city == preferred_city
-      when "distance"
-        @user.relative_distance <= max_distance
-      end
+      @user[:distance] <= max_distance
     end
 
     def match_percent_criteria_met?

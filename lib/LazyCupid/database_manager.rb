@@ -218,6 +218,7 @@ module LazyCupid
       @db.exec("select * from matches
     where account=$2
     and counts = 0
+    and inactive = false
     and (ignore_list=0 or ignore_list is null)
     and (gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
@@ -290,6 +291,8 @@ module LazyCupid
          and counts between $2 and $3
          and (distance <= $4 or distance is null)
          and ignore_list = 0
+         and ignored = false
+         and inactive <> true
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
          and (gender=$8)
@@ -667,6 +670,19 @@ module LazyCupid
 
     def unignore_user(username)
       @db.exec( "update matches set ignore_list=0 where name=$1 and account=$2", [username, @login])
+    end
+
+    def unignore_user2(username)
+      @db.exec( "update matches set ignore_list=0 where name=$1", [username])
+    end
+
+    def set_inactive(username)
+      begin
+        @db.exec( "update matches set inactive=$2 where name=$1", [username, true])
+      rescue
+        add_user(username, "Q", "set_inactive")
+        @db.exec( "update matches set inactive=$2 where name=$1", [username, true])
+      end
     end
 
     def added_from(username, method)

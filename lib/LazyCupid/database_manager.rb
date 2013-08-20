@@ -178,6 +178,10 @@ module LazyCupid
       @db.exec( "select name from matches where account=$1", [@login] )
     end
 
+    def all_ignore_list
+      @db.exec("select name from matches where ignore_list=1")
+    end
+
     def get_visit_count(user)
       row = @db.exec( "select counts from matches where name=$1 and account=$2", [user, @login])
       begin
@@ -658,11 +662,13 @@ module LazyCupid
 
     def ignore_user(username)
       unless existsCheck(username)
+        puts "Adding user first: #{username}"
         add_user(username, "Q", "hidden_users")
       end
       unless is_ignored(username)
         puts "Added to ignore list: #{username}" if verbose
         @db.exec( "update matches set ignore_list=$3 where name=$1 and account=$2", [username, @login, 1])
+        @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
       else
         puts "User already ignored: #{username}" if verbose
       end

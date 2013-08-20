@@ -9,7 +9,7 @@ module LazyCupid
     def initialize(args)
       @browser      = args[ :browser]
       @database     = args[ :database]
-      @user         = args[ :profile_scraper]
+      # @user         = args[ :profile_scraper]
       @settings     = args[ :settings]
       @events       = args[ :events]
       @verbose      = @settings.verbose
@@ -25,7 +25,7 @@ module LazyCupid
     end
 
     def body
-      @user.body
+      @user[:body]
     end
 
     def current_user
@@ -74,21 +74,21 @@ module LazyCupid
     end
 
     def match_percent_criteria_met?
-      (@user.match_percentage >= min_match_percentage || (@user.match_percentage == 0 && @user.friend_percentage == 0))
+      (@user[:match_percentage] >= min_match_percentage || (@user[:match_percentage] == 0 && @user[:friend_percentage] == 0))
     end
 
     def age_criteria_met?
-      @user.age.between?(min_age, max_age)
+      @user[:age].between?(min_age, max_age)
     end
 
     def height_criteria_met?
-      (@user.height.to_f >= min_height && @user.height.to_f <= max_height) || @user.height == 0
+      (@user[:height].to_f >= min_height && @user[:height].to_f <= max_height) || @user[:height] == 0
     end
 
     def sexuality_criteria_met?
-      (@user.sexuality == "Gay" if @settings.visit_gay) ||
-        (@user.sexuality == "Straight" if @settings.visit_straight) ||
-        (@user.sexuality == "Bisexual" if @settings.visit_bisexual)
+      (@user[:sexuality] == "Gay" if @settings.visit_gay) ||
+        (@user[:sexuality] == "Straight" if @settings.visit_straight) ||
+        (@user[:sexuality] == "Bisexual" if @settings.visit_bisexual)
     end
 
     def meets_preferences?
@@ -99,8 +99,8 @@ module LazyCupid
       puts "Sexuality met:    #{sexuality_criteria_met?}" if verbose
 
       unless height_criteria_met?
-        puts "Ignoring #{@user.handle} based on their height." if verbose
-        @database.ignore_user(@user.handle)
+        puts "Ignoring #{@user[:handle]} based on their height." if verbose
+        @database.ignore_user(@user[:handle])
       end
 
       match_percent_criteria_met? &&
@@ -110,6 +110,7 @@ module LazyCupid
     end
 
     def scrape_from_user(user_body)
+      @user = user_body
       # @found = Array.new
       # @database.log(match)
       if meets_preferences?
@@ -125,13 +126,13 @@ module LazyCupid
           similar_user = similar_user.shift
           if user_[:gender] == @settings.gender
             @database.add_user(similar_user, user_[:gender], "similar_users")
-            @database.set_state(:username => similar_user, :state => @user.state)
-            # @database.set_gender(:username => similar_user, :gender => @user.gender)
-            @database.set_distance(:username => similar_user, :distance => @user.relative_distance)
+            @database.set_state(:username => similar_user, :state => @user[:state])
+            # @database.set_gender(:username => similar_user, :gender => @user[:gender])
+            @database.set_distance(:username => similar_user, :distance => @user[:distance])
           end
         end
       else
-        puts "Not scraped: #{@user.handle}" if verbose
+        puts "Not scraped: #{@user[:handle]}" if verbose
       end
 
 

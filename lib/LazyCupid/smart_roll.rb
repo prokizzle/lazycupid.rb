@@ -7,7 +7,7 @@ module LazyCupid
       @db         = args[:database]
       @blocklist  = args[:blocklist]
       @harvester  = args[:harvester]
-      @user       = args[:profile_scraper]
+      # @user       = args[:profile_scraper]
       @browser    = args[:browser]
       @settings   = args[:settings]
       @console    = args[:gui]
@@ -124,7 +124,8 @@ module LazyCupid
         # p result
       end
       @browser.delete_response(request_id)
-      response = @user.profile(result)
+      response = Profile.parse(result)
+      # puts response[:handle], response[:a_list_name_change], response[:inactive]
       if response[:inactive]
         puts "Inactive profile found: #{user}"
         # @db.ignore_user(user)
@@ -132,22 +133,23 @@ module LazyCupid
 
       else
 
-      begin
-        @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
-      rescue
-      end
-      unless response[:a_list_name_change].nil?
-        @db.rename_alist_user(user, response[:handle])
-        puts "(SR) A-list name change: #{user} is now #{response[:handle]}"
-      end
-      # puts response
-      sexuality_filter(response[:handle], response[:sexuality])
-      @console.log(response, added_from(user), roll_type) if verbose
-      @tally += 1
-      # puts "Logging user #{response}"
-      @db.log2(response)
-      # @harvester.body = @user.body
-      autodiscover_new_users(response) if response[:gender] == @settings.gender
+        begin
+          @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
+        rescue
+        end
+        puts "Name change: #{response[:a_list_name_change]}" if debug
+        if response[:a_list_name_change]
+          @db.rename_alist_user(user, response[:handle])
+          puts "(SR) A-list name change: #{user} is now #{response[:handle]}"
+        end
+        # puts response
+        sexuality_filter(response[:handle], response[:sexuality])
+        @console.log(response, added_from(user), roll_type) if verbose
+        @tally += 1
+        # puts "Logging user #{response}"
+        @db.log2(response)
+        # @harvester.body = @user.body
+        autodiscover_new_users(response) if response[:gender] == @settings.gender
       end
     end
 

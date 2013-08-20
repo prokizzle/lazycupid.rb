@@ -1,33 +1,33 @@
 module LazyCupid
-  class Users
+  class Profile
 
-    attr_reader :verbose, :debug, :body, :url, :html
+    attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
 
-    def initialize(args)
-      @db = args[ :database]
-      @log      = args[ :log]
-      @path     = args[ :path]
+    def self.initialize(args)
+      # @db = args[ :database]
+      # @log      = args[ :log]
+      # @path     = args[ :path]
       @verbose  = true
       @debug    = true
     end
 
-    # def verbose
+    # def self.verbose
     #   @verbose
     # end
 
-    # def debug
+    # def self.debug
     #   @debug
     # end
 
-    def log
-      Logger.new("#{@path}#{@username}_#{Time.now}.log")
+    def self.log
+      # Logger.new("#{@path}#{@username}_#{Time.now}.log")
     end
 
-    def for_page(page_object)
+    def self.for_page(page_object)
       @page = page_object
     end
 
-    def profile(user_page)
+    def self.parse(user_page)
       @new_handle = nil
       @body = user_page[:body]
       @html = user_page[:html]
@@ -61,36 +61,33 @@ module LazyCupid
          relationship_status: relationship_status,
          intended_handle: @intended_handle,
          inactive: false,
-         a_list_name_change: @new_handle,
+         a_list_name_change: intended_handle.downcase != handle.downcase,
+         new_handle: @new_handle,
          body: @body,
          html: @html }
       end
       
     end
 
-    def display_code
+    def self.intended_handle
+      @intended_handle
+    end
+
+    def self.new_handle
+      @new_handle
+    end
+
+    def self.display_code
       puts body
       puts "","Press any key..."
       wait = gets.chomp
     end
 
-    def intended_handle
-      temp_url = @url
-      begin
-        /\/profile\/(.+)/.match(temp_url)[1]
-      rescue Exception => e
-        @log.debug "#{temp_url}"
-        @log.debug body
-        @log.debug "#{e.message}"
-        @log.debug "#{e.backtrace}"
-      end
-    end
-
-    def asl
+    def self.asl
       /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married|Unknown) \/ (.+)\s<\/p>/.match(@body)
     end
 
-    def handle
+    def self.handle
 
       # log = Logger.new("logs/user_test_#{Time.now}.log")
       # log.debug @body
@@ -106,7 +103,7 @@ module LazyCupid
       unless result == @intended_handle.to_s
         # @db.rename_alist_user(@intended_handle, result)
         @new_handle = result
-        puts "(UC) A-list name change: #{intended_handle} is now #{result}" if verbose
+        puts "(UC) A-list name change: #{intended_handle} is now #{result}" if @verbose
       end
 
       # puts result
@@ -114,7 +111,7 @@ module LazyCupid
 
     end
 
-    def match_percentage
+    def self.match_percentage
       result = @html.parser.xpath("//span[@class='match']").text
       result.match(/(\d+)/)[1].to_i
       # begin
@@ -131,29 +128,29 @@ module LazyCupid
       # end
     end
 
-    def friend_percentage
+    def self.friend_percentage
       result = @html.parser.xpath("//span[@class='friend']").text
       result.match(/(\d+)/)[1].to_i
     end
 
-    def enemy_percentage
+    def self.enemy_percentage
       result = @html.parser.xpath("//span[@class='enemy']").text
       result.match(/(\d+)/)[1].to_i
     end
 
-    def slut_test_results
+    def self.slut_test_results
       /(\d+). slut/.match(@body)[1].to_i
     end
 
-    def age
+    def self.age
       result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i
     end
 
-    def ethnicity
+    def self.ethnicity
       result = @html.parser.xpath("//dd[@id='ajax_ethnicities']").text
     end
 
-    def height
+    def self.height
       # hash = Hash.new
       result = @html.parser.xpath("//dd[@id='ajax_height']").text
       begin
@@ -168,31 +165,31 @@ module LazyCupid
       end
     end
 
-    def body_type
-      /bodytype.>(.+)<.dd>/.match(@body)[1].to_s
+    def self.body_type
+      @html.parser.xpath("//dd[@id='ajax_bodytype']").text
     end
 
-    def smoking
-      # display_code if debug
+    def self.smoking
+      # display_code if @debug
       # /smoking.>(.*)<.dd>/.match(@body)[1].to_s
       @html.parser.xpath("//dd[@id='ajax_smoking']").text
 
     end
 
-    def drinking
+    def self.drinking
       # /drinking.>(.+)<.dd>/.match(@body)[1].to_s
       @html.parser.xpath("//dd[@id='ajax_drinking']").text
     end
 
-    def drugs
-      /drugs.>(.+)<\/dd>/.match(@body)[1].to_s
+    def self.drugs
+      @html.parser.xpath("//dd[@id='ajax_drugs']").text
     end
 
-    def kids
-      /children.>(.+)<\/dd>/.match(@body)[1].to_s
+    def self.kids
+      @html.parser.xpath("//dd[@id='ajax_children']").text
     end
 
-    def last_online
+    def self.last_online
       begin
         result = /(\d{10}),..JOURNAL_FORMAT./.match(@body)[1].to_i
         result
@@ -204,15 +201,15 @@ module LazyCupid
       end
     end
 
-    def count
+    def self.count
       @names[@handle].to_i
     end
 
-    def location
+    def self.location
       @html.parser.xpath("//span[@id='ajax_location']").text
     end
 
-    def city
+    def self.city
       begin
         location.match(/(\w[\w\s]+),/)[1].to_s
       rescue
@@ -220,7 +217,7 @@ module LazyCupid
       end
     end
 
-    def state
+    def self.state
       begin
         location.match(/, (.*)/)[1].to_s
       rescue
@@ -228,7 +225,7 @@ module LazyCupid
       end
     end
 
-    def foreign_locations
+    def self.foreign_locations
       delims = location.scan(/(.*),/)
       counter
       delims.each do |item|
@@ -242,15 +239,15 @@ module LazyCupid
     end
 
 
-    def sexuality
+    def self.sexuality
       @html.parser.xpath("//span[@id='ajax_orientation']").text
     end
 
-    def gender
+    def self.gender
       @html.parser.xpath("//span[@id='ajax_gender']").text
     end
 
-    def relative_distance
+    def self.relative_distance
       begin
         /\((\d+) miles*\)/.match(@body)[1].to_i
       rescue
@@ -258,11 +255,11 @@ module LazyCupid
       end
     end
 
-    def relationship_status
+    def self.relationship_status
       @html.parser.xpath("//span[@id='ajax_status']").text
     end
 
-    # def is_blocked
+    # def self.is_blocked
     #   @db.is_ignored(handle)
     # end
 

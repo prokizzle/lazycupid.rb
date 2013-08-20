@@ -259,3 +259,17 @@ end
 When(/^I isolate the relative_distance field$/) do
   @result = LazyCupid::Profile.parse(@page)[:distance]
 end
+
+When(/^I isolate the inactive field$/) do
+  @result = LazyCupid::Profile.parse(@page)[:inactive]
+end
+
+
+When(/^I isolate the intended_handle field$/) do
+  @result = LazyCupid::Profile.parse(@page)[:intended_handle]
+end
+
+When(/^I isolate the a_list_name_change field$/) do
+  @result = LazyCupid::Profile.parse(@page)[:a_list_name_change]
+end
+

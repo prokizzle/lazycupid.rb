@@ -138,13 +138,6 @@ module LazyCupid
 
     end
 
-    def log_this(item)
-      File.open("scraped.log", "w") do |f|
-        f.write(item)
-      end
-      wait = gets.chomp
-    end
-
     def scrape_matches_page(url="http://www.okcupid.com/match")
       @browser.go_to(url)
       @current_user       = @browser.current_user
@@ -217,50 +210,7 @@ module LazyCupid
       results.each do |user|
         @payload
       end
-
     end
 
-    def page_turner(args)
-      page_links      = Regexp.quote(args[ :page_links].to_s)
-      pre_var_url     = args[ :pre_var_url].to_s
-      post_var_url    = args[ :post_var_url].to_s
-      @ITEMS_PER_PAGE  = args[ :items_per_page].to_i
-      initial_page    = args[ :initial_page].to_s
-      @scraper        = args[ :scraper_object]
-      @last_page       = 0
-
-
-      @scraper.go_to(initial_page)
-
-      page_numbers = body.scan(/#{Regexp.quote(page_links)}/)
-
-      puts page_numbers
-
-      page_numbers.each do |page|
-        page_number = page[0].to_i
-        @last_page = page_number if page_number > @last_page.to_i
-      end
-
-      puts @last_page
-
-      @page = @ITEMS_PER_PAGE + 1
-
-      do_page_action(initial_page)
-
-
-      until @page >= @last_page
-        do_page_action("#{pre_var_url}#{@page}#{post_var_url}")
-        @page += @ITEMS_PER_PAGE
-      end
-
-    end
-
-
-    def do_page_action(url)
-      puts "","Scraping: #{url}" if verbose
-      @browser.go_to(url)
-      track_msg_dates
-      sleep 2
-    end
   end
 end

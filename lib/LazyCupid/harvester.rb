@@ -32,6 +32,11 @@ module LazyCupid
       @browser.current_user
     end
 
+    # Wrapper method to add a user to the database
+    # 
+    # @param user [String] username of user to be added
+    # @param gender [String] gender of user to be added
+    #
     def add_user(user, gender)
       method_name = caller[0][/`.*'/].to_s.match(/`(.+)'/)[1]
       @database.add_user(user, gender, method_name)
@@ -69,28 +74,52 @@ module LazyCupid
       @settings.preferred_city
     end
 
+    # Determines if user is within preferred distance
+    # 
+    # @return [Boolean]
+    # 
     def distance_criteria_met?
       @user[:distance] <= max_distance
     end
 
+    # Determines if user is within preferred match percentage range
+    # 
+    # @return [Boolean]
+    # 
     def match_percent_criteria_met?
       (@user[:match_percentage] >= min_match_percentage || (@user[:match_percentage] == 0 && @user[:friend_percentage] == 0))
     end
 
+    # Determines if user meets preferred age requirements
+    # 
+    # @return [Boolean]
+    # 
     def age_criteria_met?
       @user[:age].between?(min_age, max_age)
     end
 
+    # Determines if user meets preferred height requirements
+    # 
+    # @return [Boolean]
+    # 
     def height_criteria_met?
       (@user[:height].to_f >= min_height && @user[:height].to_f <= max_height) || @user[:height] == 0
     end
 
+    # Determines if user meets preferred sexuality requirements
+    # 
+    # @return [Boolean]
+    # 
     def sexuality_criteria_met?
       (@user[:sexuality] == "Gay" if @settings.visit_gay) ||
         (@user[:sexuality] == "Straight" if @settings.visit_straight) ||
         (@user[:sexuality] == "Bisexual" if @settings.visit_bisexual)
     end
 
+    # Determines if user meets preferred match requirements
+    # 
+    # @return [Boolean]
+    # 
     def meets_preferences?
       puts "Match met:        #{match_percent_criteria_met?}" if verbose
       puts "Distance met:     #{distance_criteria_met?}" if verbose
@@ -109,6 +138,10 @@ module LazyCupid
         sexuality_criteria_met?
     end
 
+    # Scrapes new matches from a user profile page and adds them to the database
+    # 
+    # @param user_body [Page object] A Mechanize Page object for a user's profile page
+    #
     def scrape_from_user(user_body)
       @user = user_body
       # @found = Array.new
@@ -138,6 +171,10 @@ module LazyCupid
 
     end
 
+    # Scrapes the matches page and adds new matches to the database
+    # 
+    # @param url [String] url of matches page to scrape
+    # 
     def scrape_matches_page(url="http://www.okcupid.com/match")
       @browser.go_to(url)
       @current_user       = @browser.current_user
@@ -181,6 +218,8 @@ module LazyCupid
 
     end
 
+    # Scrapes the OKCupid home page for users to add to database
+    # 
     def scrape_home_page
       puts "Scraping home page." if verbose
       @browser.go_to("http://www.okcupid.com/home?cf=logo")

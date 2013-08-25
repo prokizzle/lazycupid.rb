@@ -1,3 +1,17 @@
+# Override method for opposite of Nil
+class Fixnum
+  def swag?
+    !self.nil? rescue false
+  end
+end
+
+# Override method for opposite of Nil
+class NilClass
+  def swag?
+    false
+  end
+end
+
 module LazyCupid
   
   # Processes HTML requests and manages the current user session for OKCupid

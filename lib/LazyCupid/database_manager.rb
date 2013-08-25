@@ -1,3 +1,4 @@
+require 'uuidtools'
 module LazyCupid
   class DatabaseMgr
     attr_reader :login, :debug, :verbose

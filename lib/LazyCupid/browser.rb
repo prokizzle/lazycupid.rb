@@ -13,9 +13,10 @@ class NilClass
 end
 
 module LazyCupid
-  
+
+
   # Processes HTML requests and manages the current user session for OKCupid
-  # 
+  #
   # @param username [Symbol] [username to login with]
   # @param password [Symbol] [password to login with]
   # @param log      [Symbol] [the path to folder containing log files]
@@ -35,9 +36,9 @@ module LazyCupid
     end
 
     # Logs in to OKCupid and initializes a Mechanize agent
-    # 
+    #
     # @return [Boolean] True if account has been logged in successfully
-    # 
+    #
     def login
       begin
         @agent.keep_alive               = false

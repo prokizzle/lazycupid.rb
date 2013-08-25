@@ -145,7 +145,7 @@ module LazyCupid
         end
         # puts response
         sexuality_filter(response[:handle], response[:sexuality])
-        @console.log(response, added_from(user), roll_type) if verbose
+        @console.log(response, roll_type) if verbose
         @tally += 1
         # puts "Logging user #{response}"
         @db.log2(response)

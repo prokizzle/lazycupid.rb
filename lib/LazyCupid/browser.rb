@@ -42,6 +42,9 @@ module LazyCupid
         puts e.backtrace
         puts "Invalid password. Please try again"
       end
+      # Mechanize settings
+      # OKCupid login sequence
+      # Check if logged in
       is_logged_in?
     end
 
@@ -77,24 +80,33 @@ module LazyCupid
     # 
     def delete_response(key)
       @hash.tap {|k| k.delete(key)}
+    # Determines status of OKCupid session
+    # Useful for login interaction screen
+    #
+    # @return String status of login attempt
     end
 
     # Determines if OKCupid login session has been ended
-    # 
+    #
     # @return [Boolean] True is account has been logged out
-    # 
+    #
     def is_logged_out?
       response = body_of("http://www.okcupid.com/", Time.now.to_i)
       /logged_out/.match(response[:body])
     end
 
-    # Determines if logged in account has been deleted by moderators    # 
+    # Determines if logged in account has been deleted by moderators    #
     #
     # @return [Boolean] [True if account has been deleted]
-    # 
+    #
     def is_deleted?
       response = body_of("http://www.okcupid.com/home?cf=logo", Time.now.to_i)
       /has been deleted/.match(response[:body])
+    # Removes a html response hash from the hash of responses
+    #
+    # @param key [Integer] original timestamp used to request a page
+    # @return [Boolean] True if response has been deleted
+    #
     end
 
     # Visits URL and returns HTML body

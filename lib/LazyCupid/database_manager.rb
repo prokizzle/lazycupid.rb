@@ -2,6 +2,15 @@ require 'uuidtools'
 require 'pg'
 
 module LazyCupid
+
+  # A Postgres database SQL wrapper for reading and writing data to and from
+  # the database.
+  #
+  # @param login_name [Symbol] [account name for your okcupid account]
+  # @param settings [Symbol] settings object
+  # @param tasks [Symbol] Boolean value for whether or not to run db tasks
+  # on initialization
+  #
   class DatabaseMgr
     attr_reader :login, :debug, :verbose
 

@@ -1,4 +1,9 @@
 module LazyCupid
+
+  # OKCupid profile page parser
+  # Class methods for turning a scraped Mechanize page for an OKCupid user profile
+  # into a hash of attributes for easy data manipulation and storage.
+  # 
   class Profile
 
     attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
@@ -27,6 +32,11 @@ module LazyCupid
       @page = page_object
     end
 
+    # Parses a profile page for user attributes
+    # 
+    # @param user_page [Hash] [A browser request hash containing body, url, and Mechanize page object]
+    # @return [Hash] a hash of attributes scraped from the profile page
+    # 
     def self.parse(user_page)
       @new_handle = nil
       @body = user_page[:body]

@@ -54,10 +54,6 @@ module LazyCupid
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
       @db.exec("update matches set ignored=true where ignore_list=1")
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
-      begin
-        @db.exec("alter table matches add column prev_visit integer")
-      rescue
-      end
     end
 
     def action(stmt)

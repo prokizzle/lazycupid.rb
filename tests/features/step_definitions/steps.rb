@@ -1,7 +1,17 @@
 # require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "includes.rb"))
 require_relative '../../../lib/LazyCupid/includes'
 
-Before do
+Before('login') do
+ user = "dixiesugar86"
+  @account = "***REMOVED***"
+  @password = "***REMOVED***"
+  url = "http://www.okcupid.com/profile/#{user}"
+  @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
+  @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
+  # @profile  = LazyCupid::Users.new(database: @db)
+end
+
+Before('scraper') do
   user = "dixiesugar86"
   @account = "***REMOVED***"
   @password = "***REMOVED***"
@@ -9,17 +19,19 @@ Before do
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
   # @profile  = LazyCupid::Users.new(database: @db)
-  @db.delete_user("fake_user")
-  @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
-  @browser.login
-  request_id = Time.now.to_i
-  @browser.request(url, request_id)
-  until @browser.hash[request_id][:ready]
+  # @db.delete_user("fake_user")
+  # @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
+  # puts "New login session"
+  # @browser.login
+  # request_id = Time.now.to_i
+  # @browser.request(url, request_id)
+  # until @browser.hash[request_id][:ready]
     sleep 0.1
-  end
-  @page = @browser.hash[request_id]
-  @html = @page[:html]
-  @body = @page[:body]
+  # end
+  # @page = @browser.hash[request_id]
+  # @html = @page[:html]
+  # @body = @page[:body]
+  # @browser.go_to("http://www.okcupid.com/logout")
 end
 
 Given(/^Username "(.*?)" is not in the database$/) do |user|
@@ -273,3 +285,32 @@ When(/^I isolate the a_list_name_change field$/) do
   @result = LazyCupid::Profile.parse(@page)[:a_list_name_change]
 end
 
+When(/^I login with a valid credentials$/) do
+  @browser = LazyCupid::Browser.new(username: "***REMOVED***", password: "***REMOVED***", log: @log)
+  @browser.login
+end
+
+Then(/^I should get login status "(.*?)"$/) do |arg1|
+  puts @browser.login_status
+  @browser.login_status.to_s == arg1.to_s
+  @browser.logout
+end
+
+When(/^I login with invalid credentials$/) do
+  @browser = LazyCupid::Browser.new(username: "doctorpkh", password: "1234", log: @log)
+  @browser.login
+end
+
+When(/^I login with an account that has been deleted$/) do
+  @browser = LazyCupid::Browser.new(username: "***REMOVED***", password: "***REMOVED***", log: @log)
+  @browser.login
+end
+
+When(/^I login with an account that has been deactivated$/) do
+  @browser = LazyCupid::Browser.new(username: "1twistedtea", password: "asdf21", log: @log)
+  @browser.login
+end
+
+When(/^a CAPTCHA is present$/) do
+  @browser.recaptcha?
+end

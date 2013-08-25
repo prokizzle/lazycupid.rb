@@ -8,28 +8,11 @@ module LazyCupid
 
     attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
 
-    def self.initialize(args)
-      # @db = args[ :database]
-      # @log      = args[ :log]
-      # @path     = args[ :path]
+    public 
+
+    def self.initialize
       @verbose  = true
       @debug    = true
-    end
-
-    # def self.verbose
-    #   @verbose
-    # end
-
-    # def self.debug
-    #   @debug
-    # end
-
-    def self.log
-      # Logger.new("#{@path}#{@username}_#{Time.now}.log")
-    end
-
-    def self.for_page(page_object)
-      @page = page_object
     end
 
     # Parses a profile page for user attributes
@@ -41,6 +24,7 @@ module LazyCupid
       @new_handle = nil
       @body = user_page[:body]
       @html = user_page[:html]
+      @source = user_page[:source]
       # puts @html
       # wait = gets.chomp
       @url = user_page[:url]
@@ -78,6 +62,8 @@ module LazyCupid
       end
       
     end
+
+    private
 
     def self.intended_handle
       @intended_handle

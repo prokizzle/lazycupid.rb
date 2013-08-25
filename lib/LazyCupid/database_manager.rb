@@ -1,4 +1,6 @@
 require 'uuidtools'
+require 'pg'
+
 module LazyCupid
   class DatabaseMgr
     attr_reader :login, :debug, :verbose

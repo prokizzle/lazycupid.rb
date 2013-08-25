@@ -67,6 +67,10 @@ module LazyCupid
       # db.open
     end
 
+    def login_message
+      @browser.login_status
+    end
+
     def scrape_ajax_matches
       @tracker.default_match_search
     end
@@ -225,19 +229,12 @@ module LazyCupid
         @app = Application.new(username: username, password: password)
         if @app.login
           logged_in = true
-          login_message = "Success. Initializing."
+          login_message = @app.login_message
           print "\e[2J\e[f"
         else
-
-          if @app.recaptcha?
-            login_message = "CAPTCHA error"
-            puts login_message if cli_login
-            exit if cli_login
-          else
-            login_message = "Incorrect password. Try again."
-            puts login_message if cli_login
-            exit if cli_login
-          end
+          login_message = @app.login_message
+          puts login_message if cli_login
+          exit if cli_login
         end
       end
     end

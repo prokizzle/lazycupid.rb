@@ -22,10 +22,12 @@ module LazyCupid
     end
 
     def reload
-      queue = build_user_list(@db.new_user_smart_query)
-      queue = queue.concat(build_user_list(@db.followup_query))
+      queue = build_user_list(@db.followup_query)
+      # queue = build_user_list(@db.new_user_smart_query)
+      # queue = queue.concat(build_user_list(@db.followup_query))
       roll_type  = "mixed"
-      remove_duplicates(queue)
+      puts "#{queue.size} users queued."
+      return queue
     end
 
     def build_user_list(results)
@@ -36,18 +38,14 @@ module LazyCupid
           # puts user["name"] if debug
         end
       end
-      array
-    end
-
-
-    def remove_duplicates(array)
+      # array
       result = array.to_set
-      result.to_a
+      return result.to_a
     end
-
+    
     def cache
       if @roll_list.empty?
-        @roll_list = reload
+        @roll_list = build_user_list(@db.followup_query)
       else
         @roll_list
       end

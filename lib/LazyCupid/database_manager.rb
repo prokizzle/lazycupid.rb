@@ -292,7 +292,7 @@ module LazyCupid
       age_sort            = @settings.age_sort
       height_sort         = @settings.height_sort
       last_online_cutoff  = @settings.last_online_cutoff
-      min_counts          = 1
+      min_counts          = 0
       max_counts          = @settings.max_followup
       min_percent         = @settings.min_percent
       visit_gay           = @settings.visit_gay
@@ -302,7 +302,7 @@ module LazyCupid
 
       result          = @db.exec("
         select * from matches
-         where account=$9
+        where account=$9
         and (last_visit <= $1 or last_visit is null)
          and counts between $2 and $3
          and (distance <= $4 or distance is null)
@@ -312,8 +312,9 @@ module LazyCupid
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
          and (gender=$8)
-         and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
-         order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}",
+         and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
+        order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}
+        limit 500",
                                  [min_time.to_i,
                                   min_counts,
                                   max_counts,
@@ -323,7 +324,7 @@ module LazyCupid
                                   min_percent,
                                   desired_gender,
                                   @login])
-      result
+      return result
     end
 
     def get_counts_of_follow_up

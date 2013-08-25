@@ -124,8 +124,9 @@ module LazyCupid
       @did_migrate = true
     end
 
-    def stats_add_visit
+    def stats_add_visit(name)
       @db.exec("update stats set total_visits=total_visits + 1 where account=$1", [@login])
+      @db.exec("insert into outgoing_visits(name, account, timestamp) values($1,$2,$3)", [name, @login, Time.now.to_i])
     end
 
     def stats_add_visitor
@@ -636,7 +637,7 @@ module LazyCupid
         set_user_details(user)
         p "Height: #{user[:height]}" if debug
       end
-      stats_add_visit
+      stats_add_visit(user[:handle])
     end
 
     def set_user_details(user)

@@ -3,7 +3,7 @@ module LazyCupid
   # A class for gathering usernames to visit via various scraped portions of the site
   #
   class Harvester
-    attr_reader :type, :user, :verbose, :debug
+    attr_reader :verbose, :debug, :min_match_percentage, :min_age, :max_age, :max_distance, :max_height, :min_height, :preferred_state, :preferred_city
     attr_accessor :type, :user, :body
 
     def initialize(args)

@@ -14,6 +14,15 @@ module LazyCupid
       @events       = args[ :events]
       @verbose      = @settings.verbose
       @debug        = @settings.debug
+
+      @min_match_percentage = @settings.min_percent
+      @min_age              = @settings.min_age
+      @max_age              = @settings.max_age
+      @max_distance         = @settings.max_distance.to_i
+      @max_height           = @settings.max_height.to_f
+      @min_height           = @settings.min_height.to_f
+      @preferred_state      = @settings.preferred_state
+      @preferred_city       = @settings.preferred_city
     end
 
     # def user
@@ -42,74 +51,44 @@ module LazyCupid
       @database.add_user(user, gender, method_name)
     end
 
-    def min_match_percentage
-      @settings.min_percent
-    end
 
-    def min_age
-      @settings.min_age
-    end
-
-    def max_age
-      @settings.max_age
-    end
-
-    def max_distance
-      @settings.max_distance.to_i
-    end
-
-    def max_height
-      @settings.max_height.to_f
-    end
-
-    def min_height
-      @settings.min_height.to_f
-    end
-
-    def preferred_state
-      @settings.preferred_state
-    end
-
-    def preferred_city
-      @settings.preferred_city
-    end
 
     # Determines if user is within preferred distance
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def distance_criteria_met?
       @user[:distance] <= max_distance
     end
 
     # Determines if user is within preferred match percentage range
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def match_percent_criteria_met?
       (@user[:match_percentage] >= min_match_percentage || (@user[:match_percentage] == 0 && @user[:friend_percentage] == 0))
     end
 
     # Determines if user meets preferred age requirements
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def age_criteria_met?
       @user[:age].between?(min_age, max_age)
     end
 
     # Determines if user meets preferred height requirements
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def height_criteria_met?
       (@user[:height].to_f >= min_height && @user[:height].to_f <= max_height) || @user[:height] == 0
     end
 
     # Determines if user meets preferred sexuality requirements
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def sexuality_criteria_met?
       (@user[:sexuality] == "Gay" if @settings.visit_gay) ||
         (@user[:sexuality] == "Straight" if @settings.visit_straight) ||

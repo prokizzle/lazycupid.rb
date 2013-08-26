@@ -205,21 +205,21 @@ module LazyCupid
 
       matches_list   = @matches_page.scan(/"usr-([\w\d]+)"/)
       @count  = 0
-      matches_list.each do |username, zindex|
+      matches_list.each do |username|
 
         add_user(username, gender)
-        @database.set_gender(:username => username, :gender => gender)
+        @database.set_gender(:username => username, :gender => @gender[username])
         @database.set_age(username, @age[username])
         @database.set_city(username, @city[username])
         @database.set_sexuality(username, @sexuality[username])
         @database.set_state(:username => username, :state => @state[username])
-
+        #User.where(:name => username).update(gender: @gender[username], age: @age[username], city: @city[username], state: @state[username], sexuality: @sexuality[username])
       end
 
     end
 
     # Scrapes the OKCupid home page for users to add to database
-    # 
+    #
     def scrape_home_page
       puts "Scraping home page." if verbose
       @browser.go_to("http://www.okcupid.com/home?cf=logo")

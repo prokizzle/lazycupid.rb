@@ -5,15 +5,14 @@ module LazyCupid
   class InboxScraper
 
     def async_response(url)
-      result = Hash.new
-      result[:hash] = 0
-      request_id = Time.now.to_i
-      until result[:hash] == request_id
-        result = @browser.body_of(url, request_id)
+      result = {ready: false}
+      request_id = UUID.create_timestamp
+      @browser.send_request(url, request_id)
+      until result[:ready] == true
+        result = @browser.get_request(request_id)
       end
-      # p result
       @browser.delete_response(request_id)
-      result
+      return result
     end
 
     def analyze_message_thread(thread)

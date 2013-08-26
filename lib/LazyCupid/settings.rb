@@ -2,27 +2,16 @@ require 'yaml'
 
 module LazyCupid
   class Settings
-    attr_reader :max_distance,
-      :min_percent,
-      :min_age,
-      :max_age,
-      :max_height,
-      :days_ago,
-      :preferred_state,
-      :max_followup,
-      :debug,
-      :verbose,
-      :gender,
-      :autodiscover_on,
-      :distance_filter_type
+    attr_reader :distance_filter_type, :preferred_state, :visit_bisexual, :visit_gay, :visit_straight, :preferred_city, :max_distance,
+      :import_hidden_users, :min_percent, :gender, :min_age, :max_age, :age_sort, :max_height, :min_height, :height_sort,
+      :last_online_cutoff, :autodiscover_on, :days_ago, :max_followup, :debug, :verbose, :db_name, :db_host, :db_user, :db_pass, :db_adapter
+
 
     def initialize(args)
       @account  = args[ :username]
       path      = args[ :path]
       @filename = "#{path}/#{@account}.yml"
-
       @db_file  = "#{path}/database.yml"
-      # @browser     = args[ :browser]
       unless File.exists?(@db_file)
         db_ = {
           development: {
@@ -38,6 +27,7 @@ module LazyCupid
         end
       end
       unless File.exists?(@filename)
+        # Create generic preference file
         config = {geo: {
                     distance_filter_type: "distance",
                     preferred_state: " ",
@@ -86,145 +76,41 @@ module LazyCupid
         puts "Exiting... restart app after setting your config preferences"
         exit
       end
+      # Load preference file
       @settings = YAML.load_file(@filename)
+
+      # Load database config
       @db_settings = YAML.load_file(@db_file)
-    end
 
-    def reload_settings
-      @settings = YAML.load_file(@filename)
-    end
 
-    def distance_filter_type
-      @settings[:geo][:distance_filter_type].to_s
-    end
-
-    def preferred_state
-      @settings[:geo][:preferred_state].to_s
-    end
-
-    def visit_bisexual
-      @settings[:matching][:visit_bisexual]
-    end
-
-    def visit_straight
-      @settings[:matching][:visit_straight]
-    end
-
-    def visit_gay
-      @settings[:matching][:visit_gay]
-    end
-
-    def preferred_city
-      @settings[:geo][:preferred_city].to_s
-    end
-
-    def max_distance
-      @settings[:geo][:distance].to_i
-    end
-
-    def import_hidden_users
-      @settings[:scraping][:import_hidden_users]
-    end
-
-    def min_percent
-      @settings[:matching][:min_percent].to_i
-    end
-
-    def gender
-      @settings[:matching][:gender].to_s
-    end
-
-    def min_age
-      @settings[:matching][:min_age].to_i
-    end
-
-    def max_age
-      @settings[:matching][:max_age].to_i
-    end
-
-    def age_sort
-      @settings[:matching][:age_sort].to_s
-    end
-
-    def max_height
-      @settings[:matching][:max_height].to_f
-    end
-
-    def min_height
-      @settings[:matching][:min_height].to_f
-    end
-
-    def height_sort
-      @settings[:matching][:height_sort].to_s
-    end
-
-    def last_online_cutoff
-      @settings[:matching][:last_online_cutoff].to_i
-    end
-
-    def autodiscover_on
-      @settings[:scraping][:autodiscover_on] == true
-    end
-
-    def days_ago
-      @settings[:visit_freq][:days_ago].to_i
-    end
-
-    def max_followup
-      @settings[:visit_freq][:max_followup].to_i
-    end
-
-    def growl_new_visits
-      @settings[:growl][:new_visits] == true
-    end
-
-    def growl_new_im
-      @settings[:growl][:new_im] == true
-    end
-
-    def growl_new_mail
-      @settings[:growl][:new_mail] == true
-    end
-
-    def growl_fave_signoff
-      @settings[:growl][:favorite_sign_off] == true
-    end
-
-    def growl_fave_signon
-      @settings[:growl][:favorite_sign_on] == true
-    end
-
-    def debug
-      @settings[:development][:debug] == true
-    end
-
-    def verbose
-      @settings[:development][:verbose] == true
-    end
-
-    def db_name
-      begin
-        @db_settings["development"]["database"].to_s
-      rescue
-        puts @db_settings
-        wait = gets.chomp
-      end
-    end
-
-    def db_host
-      @db_settings["development"]["host"].to_s
-    end
-
-    def db_user
-      @db_settings["development"]["username"].to_s
-    end
-
-    def db_pass
-      @db_settings["development"]["password"].to_s
-    end
-
-    def db_adapter
-      @db_settings["development"]["adapter"].to_s
+      # Load settings attributes into variables for external reference
+      @distance_filter_type   = @settings[:geo][:distance_filter_type].to_s
+      @preferred_state        = @settings[:geo][:preferred_state].to_s
+      @max_distance           = @settings[:geo][:distance].to_i
+      @preferred_city         = @settings[:geo][:preferred_city].to_s
+      @visit_bisexual         = @settings[:matching][:visit_bisexual]
+      @visit_straight         = @settings[:matching][:visit_straight]
+      @visit_gay              = @settings[:matching][:visit_gay]
+      @min_percent            = @settings[:matching][:min_percent].to_i
+      @gender                 = @settings[:matching][:gender].to_s
+      @min_age                = @settings[:matching][:min_age].to_i
+      @max_age                = @settings[:matching][:max_age].to_i
+      @age_sort               = @settings[:matching][:age_sort].to_s
+      @max_height             = @settings[:matching][:max_height].to_f
+      @min_height             = @settings[:matching][:min_height].to_f
+      @height_sort            = @settings[:matching][:height_sort].to_s
+      @last_online_cutoff     = @settings[:matching][:last_online_cutoff].to_i
+      @days_ago               = @settings[:visit_freq][:days_ago].to_i
+      @max_followup           = @settings[:visit_freq][:max_followup].to_i
+      @import_hidden_users    = @settings[:scraping][:import_hidden_users]
+      @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
+      @debug                  = @settings[:development][:debug]         == true
+      @verbose                = @settings[:development][:verbose]       == true
+      @db_name                = @db_settings["development"]["database"].to_s
+      @db_host                = @db_settings["development"]["host"].to_s
+      @db_user                = @db_settings["development"]["username"].to_s
+      @db_pass                = @db_settings["development"]["password"].to_s
+      @db_adapter             = @db_settings["development"]["adapter"].to_s
     end
 
   end

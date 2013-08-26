@@ -223,10 +223,6 @@ module LazyCupid
       @db.exec("update matches set name=$1 where name=$2", [new_name, old_name])
     end
 
-    def toggle_flag(name)
-      @db.exec("update matches set flag=flag * -1 where name=$1 and account=$2", [name, @login])
-    end
-
     def new_user_smart_query
       @db.exec("select * from matches
     where account=$2
@@ -235,49 +231,6 @@ module LazyCupid
     and (ignore_list=0 or ignore_list is null)
     and (gender=$1)
     order by last_online desc, time_added asc", [@settings.gender, @login])
-    end
-
-    def focus_query_new_users
-      desired_gender      = @settings.gender
-      min_age             = @settings.min_age
-      max_age             = @settings.max_age
-      max_distance        = @settings.max_distance
-      age_sort            = @settings.age_sort
-      height_sort         = @settings.height_sort
-      last_online_cutoff  = @settings.last_online_cutoff
-      min_counts          = 1
-      max_counts          = @settings.max_followup
-      min_percent         = @settings.min_percent
-      time = Time.now.to_i
-      date_range_min = time - 1209600
-      date_range_max = time - 604800
-      @db.exec("select name from matches
-      where account=$1
-      and (last_visit >= $2 or last_visit is null)
-      and time_added between $3 and $4
-      and ignore_list=0
-      and age between $6 and $7
-      and distance <= $8
-      and gender=$5",
-               [@login, #1
-                time - 86400, #2
-                date_range_min, #3
-                date_range_max, #4
-                @settings.gender, #5
-                min_age, #6
-                max_age, #7
-                max_distance #8
-                ])
-    end
-
-    def count_new_user_smart_query
-      result = @db.exec("select count(name) from matches
-    where account=$2
-    (counts = 0 or counts is null)
-    and (ignore_list=0 or ignore_list is null)
-    and (gender=$1)
-    order by time_added asc", [@settings.gender, @login])
-      result[0][0].to_i
     end
 
     def followup_query

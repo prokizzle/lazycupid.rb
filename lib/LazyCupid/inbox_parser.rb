@@ -1,3 +1,5 @@
+require 'uuidtools'
+
 module LazyCupid
 
   class InboxScraper

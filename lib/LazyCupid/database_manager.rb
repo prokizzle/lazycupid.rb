@@ -245,10 +245,25 @@ module LazyCupid
       min_counts          = 0
       max_counts          = @settings.max_followup
       min_percent         = @settings.min_percent
-      visit_gay           = @settings.visit_gay
-      visit_bisexual      = @settings.visit_bisexual
-      visit_straight      = @settings.visit_straight
       distance            = @settings.max_distance
+
+      if @settings.visit_gay
+        visit_gay = "Gay"
+      else
+        visit_gay = "Null"
+      end
+
+      if @settings.visit_bisexual
+        visit_bisexual = "Bisexual"
+      else
+        visit_bisexual = "Null"
+      end
+
+      if @settings.visit_straight
+        visit_straight = "Straight"
+      else
+        visit_straight = "Null"
+      end
 
       result          = @db.exec("
         select * from matches
@@ -262,55 +277,13 @@ module LazyCupid
          and (age between $5 and $6 or age is null)
          and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
          and (gender=$8)
+         and (sexuality=$10 or sexuality=$11 or sexuality=$12)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
         order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}
-        limit 500",
-                                 [min_time.to_i,
-                                  min_counts,
-                                  max_counts,
-                                  distance,
-                                  min_age,
-                                  max_age,
-                                  min_percent,
-                                  desired_gender,
-                                  @login])
+        limit 500", [min_time.to_i, min_counts, max_counts, distance, min_age, max_age, min_percent, desired_gender, 
+                                              @login, visit_gay, visit_straight, visit_bisexual])
+
       return result
-    end
-
-    def get_counts_of_follow_up
-
-      min_time        = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-      desired_gender  = @settings.gender
-      min_age         = @settings.min_age
-      max_age         = @settings.max_age
-      min_counts      = 1
-      max_counts      = @settings.max_followup
-      min_percent     = @settings.min_percent
-      distance        = @settings.max_distance
-
-      result          = @db.exec("
-        select count(name)
-        from matches
-        where account=$1
-        and (last_visit <= $2 or last_visit is null)
-        and counts between $3 and $4
-        and (distance <= $5 or distance is null)
-        and ignore_list = 0
-        and (age between $6 and $7 or age is null)
-        and (match_percent between $8 and 100 or match_percent is null or match_percent=0)
-        and (gender=$9)",
-                                 [@login,
-                                  min_time.to_i,
-                                  min_counts,
-                                  max_counts,
-                                  distance,
-                                  min_age,
-                                  max_age,
-                                  min_percent,
-                                  desired_gender])
-
-      # result.close
-      result[0][0].to_i
     end
 
     def user_record_exists(user)

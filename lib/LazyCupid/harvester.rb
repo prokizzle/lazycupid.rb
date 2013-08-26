@@ -42,7 +42,7 @@ module LazyCupid
     end
 
     # Wrapper method to add a user to the database
-    # 
+    #
     # @param user [String] username of user to be added
     # @param gender [String] gender of user to be added
     #
@@ -96,9 +96,9 @@ module LazyCupid
     end
 
     # Determines if user meets preferred match requirements
-    # 
+    #
     # @return [Boolean]
-    # 
+    #
     def meets_preferences?
       puts "Match met:        #{match_percent_criteria_met?}" if verbose
       puts "Distance met:     #{distance_criteria_met?}" if verbose
@@ -118,7 +118,7 @@ module LazyCupid
     end
 
     # Scrapes new matches from a user profile page and adds them to the database
-    # 
+    #
     # @param user_body [Page object] A Mechanize Page object for a user's profile page
     #
     def scrape_from_user(user_body)
@@ -151,9 +151,9 @@ module LazyCupid
     end
 
     # Scrapes the matches page and adds new matches to the database
-    # 
+    #
     # @param url [String] url of matches page to scrape
-    # 
+    #
     def scrape_matches_page(url="http://www.okcupid.com/match")
       @browser.go_to(url)
       @current_user       = @browser.current_user

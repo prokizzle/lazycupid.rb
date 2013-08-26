@@ -157,7 +157,7 @@ module LazyCupid
       # puts "Waiting..."
       # wait = gets.chomp
       unless current_user == @db.login
-        unless current_user == nil || current_user == ""
+        unless current_user.nil? || current_user == ""
           puts "Visting #{current_user}." if debug
           puts "Rolling..." unless @already_rolling
           visit_user(current_user)

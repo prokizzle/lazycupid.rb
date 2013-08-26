@@ -239,17 +239,5 @@ module LazyCupid
         # @database.set_city(:username => handle, :city => city)
       end
     end
-
-    def scrape_matches
-      puts "Scraping matches" if verbose
-
-      @browser.go_to("http://www.okcupid.com/match")
-      results = body.scan(/\/([\w\d _-]+)....regular/)
-
-      results.each do |user|
-        @payload
-      end
-    end
-
   end
 end

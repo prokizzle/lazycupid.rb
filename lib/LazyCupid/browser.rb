@@ -32,6 +32,8 @@ module LazyCupid
       @log      = args[ :log]
       @hash = Hash.new { |hash, key| hash[key] = 0 }
       @debug = false
+      delete_keys = lambda {|k| k.delete(key)}
+      retrieved_responses = lambda {|h,k| k[:retrieved] == true}
       # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
     end
 
@@ -142,6 +144,11 @@ module LazyCupid
       @hash.tap {|k| k.delete(key)}
     end
 
+    def remove_retrieved_responses
+      responses = @hash.select &retrieved_responses
+      responses.map {@hash.tap &delete_keys}
+    end
+
 
     # Visits URL and returns HTML body
     #
@@ -183,7 +190,7 @@ module LazyCupid
       page_object           = agent.get(link)
       page_body             = page_object.parser.xpath("//body").to_html
       page_source           = page_object.parser.xpath("//html").to_html
-      @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source}
+      @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false}
       true
     end
 

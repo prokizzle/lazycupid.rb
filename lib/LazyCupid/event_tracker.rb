@@ -9,11 +9,11 @@ module LazyCupid
       @browser = args[ :browser]
       @db = args[:database]
       @settings = args[ :settings]
-      # @regex = RegEx.new
+      # RegEx = RegEx.new
       @account = @db.login
       @prev_total_messages = 0
       @queries = MatchQueries.new
-      @regex = RegEx.new
+      # RegEx = RegEx.new
     end
 
     def current_user
@@ -54,8 +54,8 @@ module LazyCupid
         sexuality = aso.match(/#{age} \/ #{gender} \/ (\w+) \//)[1]
         status = aso.match(/#{age} \/ #{gender} \/ #{sexuality} \/ ([\w\s]+)/)[1]
         location = block.match(/location.+>(.+)/)[1]
-        city = @regex.parsed_location(location)[:city]
-        state = @regex.parsed_location(location)[:state]
+        city = RegEx.parsed_location(location)[:city]
+        state = RegEx.parsed_location(location)[:state]
         @visitors.push({handle: handle, age: age, gender: gender, sexuality: sexuality, status: status, city: city, state: state})
       end
 
@@ -111,8 +111,8 @@ module LazyCupid
       age       = person['age']
       sexuality = translate_sexuality(person['orientation'])
       location  = person['location']
-      city      = @regex.parsed_location(location)[:city]
-      state     = @regex.parsed_location(location)[:state]
+      city      = RegEx.parsed_location(location)[:city]
+      state     = RegEx.parsed_location(location)[:state]
       @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
       unless @stored_timestamp == timestamp
@@ -141,8 +141,8 @@ module LazyCupid
           :match       => response[:match],
           :sexuality   => response[:sexuality],
           :location    => response[:location],
-          :city        => @regex.parsed_location(location)[:city],
-          :state       => @regex.parsed_location(location)[:state]
+          :city        => RegEx.parsed_location(location)[:city],
+          :state       => RegEx.parsed_location(location)[:state]
         }
 
         track_visitor(person)
@@ -231,8 +231,8 @@ module LazyCupid
             city = ""
             state = ""
             location = /location.>(.+)</.match(result)[1]
-            city = @regex.parsed_location(location)[:city]
-            state = @regex.parsed_location(location)[:state]
+            city = RegEx.parsed_location(location)[:city]
+            state = RegEx.parsed_location(location)[:state]
             @db.set_city(username, city)
             @db.set_state(:username => username, :state => state)
           rescue Exception => e

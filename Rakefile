@@ -18,4 +18,8 @@ namespace :db do
     @db           = LazyCupid::DatabaseMgr.new(login_name: username, settings: @config)
     @db.db_tasks
   end
+
+  task :backup do
+    backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
+  end
 end

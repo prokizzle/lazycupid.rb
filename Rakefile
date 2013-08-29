@@ -13,7 +13,7 @@ namespace :db do
   require_relative 'lib/LazyCupid/settings'
   task :tasks do
     username = ask("Username:  ")
-      config_path = File.expand_path("../config/", __FILE__)
+    config_path = File.expand_path("../config/", __FILE__)
     @config       = LazyCupid::Settings.new(username: username, path: config_path)
     @db           = LazyCupid::DatabaseMgr.new(login_name: username, settings: @config)
     @db.db_tasks

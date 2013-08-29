@@ -1,7 +1,7 @@
 module LazyCupid
   class RegEx
 
-    def parsed_location(string)
+    def self.parsed_location(string)
       result    = string.scan(/,/)
       if result.size == 2
         city    = string.match(/(.+), (.+), (.+)/)[1]

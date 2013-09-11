@@ -251,10 +251,10 @@ module LazyCupid
 
     def async_response(url)
       result = Hash.new
-      result[:hash] = 0
       request_id = Time.now.to_i
-      until result[:hash] == request_id
-        result = @browser.body_of(url, request_id)
+      @browser.send_request(url, request_id)
+      until result[:ready] == true
+        result = @browser.get_request(request_id)
       end
       # p result
       @browser.delete_response(request_id)

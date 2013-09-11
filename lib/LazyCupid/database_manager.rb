@@ -243,7 +243,6 @@ module LazyCupid
       age_sort            = @settings.age_sort
       height_sort         = @settings.height_sort
       last_online_cutoff  = @settings.last_online_cutoff
-      min_counts          = 0
       max_counts          = @settings.max_followup
       min_percent         = @settings.min_percent
       distance            = @settings.max_distance
@@ -266,23 +265,32 @@ module LazyCupid
         visit_straight = "Null"
       end
 
-      result          = @db.exec("
+  result          = @db.exec("
         select * from matches
-        where account=$9
+        where account=$8
         and (last_visit <= $1 or last_visit is null)
-         and counts between $2 and $3
-         and (distance <= $4 or distance is null)
-         and ignore_list = 0
-         and ignored = false
-         and inactive <> true
-         and (age between $5 and $6 or age is null)
-         and (match_percent between $7 and 100 or match_percent is null or match_percent=0)
-         and (gender=$8)
-         and (sexuality=$10 or sexuality=$11 or sexuality=$12)
+         and (counts <=$2 or counts is null)
+         and (distance <= $3 or distance is null)
+         and (ignored = false or ignored is null)
+         and (inactive = false or inactive is null)
+         and (age between $4 and $5 or age is null)
+         and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
+         and (gender=$7)
+         and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        order by counts ASC, last_online DESC, match_percent DESC, distance ASC, height #{height_sort}, age #{age_sort}
-        limit 500", [min_time.to_i, min_counts, max_counts, distance, min_age, max_age, min_percent, desired_gender, 
-                                              @login, visit_gay, visit_straight, visit_bisexual])
+        order by counts ASC, distance ASC, last_online DESC, match_percent DESC, height #{height_sort}, age #{age_sort}
+        limit 50", [
+        min_time.to_i, #1
+        max_counts, #2
+        distance, #3
+        min_age, #4
+        max_age, #5
+        min_percent, #6
+        desired_gender, #7
+        @login, #8
+        visit_gay, #9
+        visit_straight, #10
+        visit_bisexual]) #11
 
       return result
     end

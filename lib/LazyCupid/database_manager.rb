@@ -170,6 +170,7 @@ module LazyCupid
         # @db.commit
         stats_add_new_user
       else
+        @db.exec("update matches set inactive=false where name=$1", [username])
         puts "User already in db: #{username}" if verbose
       end
     end

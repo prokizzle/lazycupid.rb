@@ -314,3 +314,25 @@ end
 When(/^a CAPTCHA is present$/) do
   @browser.recaptcha?
 end
+
+When(/^I am on the messages page$/) do
+  @browser = LazyCupid::Browser.new(username: "***REMOVED***", password: "***REMOVED***", log: @log)
+  if @browser.login
+    request_id = Time.now.to_i
+    @browser.send_request("http://www.okcupid.com/messages", request_id)
+    until @browser.get_request(request_id)[:ready]
+      sleep 0.1
+    end
+    @page = @browser.get_request(request_id)[:body]
+  else
+    false
+  end
+end
+
+Then(/"(.*?)" regular expression should return/) do |arg1|
+  case arg1
+  when "total messages"
+   @page.match(/Message storage.*(\d+) of/)[1].is_a Integer rescue !(@page =~ /No messages\!/).nil?
+  else false
+  end
+end

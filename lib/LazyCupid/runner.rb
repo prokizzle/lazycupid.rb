@@ -245,7 +245,7 @@ module LazyCupid
 
       @app.pre_roll_actions
 
-      @app.scheduler.every '30m', :mutex => 'tracker' do
+      @app.scheduler.every '30m', :allow_overlapping => false, :mutex => 'tracker' do
         # if @has_unread_messages is true
         @app.scrape_inbox
         #   @has_unread_messages = false
@@ -261,28 +261,17 @@ module LazyCupid
       #   # @has_unread_messages = true if @app.unread_messages > 0
       end
 
-      @app.scheduler.every '5m', :mutex => 'tracker' do
+      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'tracker' do
         @app.scrape_ajax_matches
       end
 
-      @app.scheduler.every '6h', :mutex => 'that_mutex' do
-        @app.run_new_user_focus_crawl
-      end
-
       @app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
-        # if Time.now.to_i >= @stop_time.to_i
-        # puts "Roll session complete."
-        # job.unschedule
-        # else
-        # loop do
         @app.roll
-        # end
-        # end
       end
 
-      @app.scheduler.every '1m', :allow_overlapping => false, :mutex => 'bloat' do
-        BloatCheck.log("some label")
-      end
+      # @app.scheduler.every '1m', :allow_overlapping => false, :mutex => 'bloat' do
+      #   BloatCheck.log("some label")
+      # end
 
       @app.scheduler.join
     end

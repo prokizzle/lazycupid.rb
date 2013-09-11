@@ -629,10 +629,9 @@ module LazyCupid
 
     def set_inactive(username)
       begin
-        @db.exec( "update matches set inactive=$2 where name=$1", [username, true])
+        @db.exec( "update matches set inactive = true where name=$1", [username])
       rescue
-        add_user(username, "Q", "set_inactive")
-        @db.exec( "update matches set inactive=$2 where name=$1", [username, true])
+        @db.exec( "insert into matches (name, inactive) values ($1, true)", [username])
       end
     end
 

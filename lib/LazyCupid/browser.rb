@@ -45,7 +45,7 @@ module LazyCupid
       # Mechanize settings
       agent.keep_alive               = false
       agent.idle_timeout             = 5
-      agent.read_timeout             = 2
+      agent.read_timeout             = 5
       agent.user_agent_alias         = ['Mac Safari', 'Mac Firefox'].sample
       agent.agent.http.debug_output  = $stderr if debug
 

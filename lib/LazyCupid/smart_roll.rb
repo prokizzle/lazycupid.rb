@@ -46,6 +46,8 @@ module LazyCupid
     def cache
       if @roll_list.empty?
         @roll_list = build_user_list(@db.followup_query)
+        puts "#{@roll_list.size} users queued"
+        return @roll_list
       else
         @roll_list
       end
@@ -88,7 +90,7 @@ module LazyCupid
       @total_visits = 0
       @start_time = Time.now.to_i
       payload
-      puts "","Running..." unless verbose
+      puts "","Running..." #unless verbose
     end
 
     def added_from(username)

@@ -11,9 +11,10 @@ module LazyCupid
       @settings = args[ :settings]
       # RegEx = RegEx.new
       @account = @db.login
-      @prev_total_messages = 0
+      @prev_total_messages = -1
       @queries = MatchQueries.new
       # RegEx = RegEx.new
+      @debug = true
     end
 
     def current_user
@@ -152,7 +153,7 @@ module LazyCupid
     def track_msg_dates(msg_page)
       result = async_response(msg_page)
       message_list = result[:body].scan(/"message_(\d+)"/)
-
+      @total_msg_on_page = message_list.size
       message_list.each do |message_id|
         message_id      = message_id[0]
         msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
@@ -284,18 +285,30 @@ module LazyCupid
     def scrape_inbox
       puts "Scraping inbox" if verbose
       result = async_response("http://www.okcupid.com/messages")
+      # begin
       begin
-        @total_msg    = result[:body].match(/"pg_total.>(\d+)</)[1].to_i
+        @total_msg = result[:body].match(/Page 1 of <a href="\/messages\?low\=(\d+)\&amp\;folder\=1">\d+/)[1].to_i
       rescue
-        @total_msg    = 0
+        @total_msg = 0
       end
+      # @total_msg    = total_pages * 30
+      # rescue
+      # @total_msg    = 0
+      # end
       puts "Total messages: #{@total_msg}" if verbose
       sleep 2
       unless @total_msg == @prev_total_messages
-        puts "#{@total_msg - @prev_total_messages} new messages..." if @total_msg > 0
         track_msg_dates("http://www.okcupid.com/messages")
+        if @total_msg > 0
+          puts "#{@total_msg - @prev_total_messages} new messages..."
+        else
+          puts @total_msg_on_page
+          @total_msg = @total_msg_on_page
+        end
         low = 31
         until low >= @total_msg
+          # puts "Scraping inbox: #{((low.to_f/@total_msg.to_f)*100).to_i}%" if debug
+          # puts low if debug
           low += 30
           track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
           sleep (1..6).to_a.sample.to_i

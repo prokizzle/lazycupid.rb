@@ -138,13 +138,11 @@ module LazyCupid
           similar_user = similar_user.shift
           if user_[:gender] == @settings.gender
             @database.add_user(similar_user, user_[:gender], "similar_users")
-            @database.set_state(:username => similar_user, :state => @user[:state])
-            # @database.set_gender(:username => similar_user, :gender => @user[:gender])
-            @database.set_distance(:username => similar_user, :distance => @user[:distance])
+            @database.set_location(user: similar_user, city: user_[:city], state: user_[:state])
           end
         end
       else
-        puts "Not scraped: #{@user[:handle]}" if verbose
+        puts "Similar users not scraped: #{@user[:handle]}" if verbose
       end
 
 
@@ -212,10 +210,8 @@ module LazyCupid
         city        = user[4]
         state       = user[5]
         add_user(handle, gender)
-        @database.set_gender(:username => handle, :gender => gender)
+        @db.set_location(user: username, city: city, state: state)
         # @database.set_age(:username => handle, :age => age)
-        @database.set_state(:username => handle, :state => state)
-        # @database.set_city(:username => handle, :city => city)
       end
     end
   end

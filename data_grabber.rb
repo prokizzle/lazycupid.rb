@@ -36,28 +36,33 @@ end
 browser = LazyCupid::Browser.new(username: "***REMOVED***", password: "***REMOVED***")
 browser.login
 time_key = Time.now.to_i
-response = browser.request("http://www.okcupid.com/visitors", time_key)
-vistors_body = response[:body]
-vistors_page = response[:html]
-response = browser.request("http://www.okcupid.com/messages", time_key)
-inbox_body = response[:body]
-inbox_page = response[:html]
+# browser.send_request("http://www.okcupid.com/visitors", time_key)
+# response = browser.get_request(time_key)
+# vistors_body = response[:body]
+# vistors_page = response[:html]
+browser.send_request("http://www.okcupid.com/profile/***REMOVED***", time_key)
+response = browser.get_request(time_key)
+# inbox_body = response[:body]
+# inbox_page = response[:html]
+profile_body = response[:body]
+profile_page = response[:html]
+
 @messages = Array.new
 
 # File.open("visitors.html", "w") do |f|
 #   f.write(vistors_page)
 # end
 
-# File.open("messages.html", "w") do |f|
-#   f.write(inbox)
-# end
-#
-
-app = App.new(browser)
-app.inbox_page_scraper(inbox_body, inbox_page)
-app.messages.each do |thread|
-  app.analyze_message_thread(thread)
+File.open("profile.html", "w") do |f|
+  f.write(profile_body)
 end
+
+
+# app = App.new(browser)
+# app.inbox_page_scraper(inbox_body, inbox_page)
+# app.messages.each do |thread|
+#   app.analyze_message_thread(thread)
+# end
 
 
 # thread_page.scan(/"message_body">.+<.em>(.+)<em/).each {|r| puts r}

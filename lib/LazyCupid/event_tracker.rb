@@ -123,7 +123,10 @@ module LazyCupid
         @db.add_user(visitor, gender, "api_visitor")
         @db.ignore_user(visitor) unless gender == @settings.gender
         # @db.set_gender(:username => visitor, :gender => gender)
+
+        @db.set_city(visitor, city)
         @db.set_state(:username => visitor, :state => state)
+        @db.set_estimated_distance(visitor, city, state)
 
         @db.increment_visitor_counter(visitor)
       end
@@ -202,7 +205,7 @@ module LazyCupid
 
 
     def test_more_matches(query="http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
-      begin
+      # begin
         # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
         result = async_response(query)
         parsed = JSON.parse(result[:html].content).to_hash
@@ -211,11 +214,7 @@ module LazyCupid
         html_doc = Nokogiri::HTML(html)
         # @db.open
 
-        @gender     = Hash.new("Q")
-        @age        = Hash.new(0)
-        # @sexuality  = Hash.new(0)
-        @state      = Hash.new(0)
-        @city       = Hash.new(0)
+        @gender, @age, @state, @city     = {}
 
         @details.each do |user|
           result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
@@ -226,27 +225,28 @@ module LazyCupid
           # puts city, state
           username = user[0].to_s
           @db.add_user(username, gender, "ajax_match_search")
+          # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
           # @db.set_gender(:username => username, :gender => gender)
           @db.set_age(username, age)
-          begin
-            city = ""
-            state = ""
+          # begin
+            city, state = String.new
             location = /location.>(.+)</.match(result)[1]
             city = RegEx.parsed_location(location)[:city]
             state = RegEx.parsed_location(location)[:state]
-            @db.set_city(username, city)
-            @db.set_state(:username => username, :state => state)
-          rescue Exception => e
-            puts e.message
-            # Exceptional.handle(e, 'Location reg ex')
-          end
+            # @db.set_city(username, city)
+            # @db.set_state(:username => username, :state => state)
+            # @db.set_estimated_distance(username, city, state)
+            @db.set_location(user: username, city: city, state: state)
+          # rescue Exception => e
+            # puts e.message
+          # end
         end
 
         # @db.close
-      rescue Exception => e
-        puts e.message
+      # rescue Exception => e
+        # puts e.message
         # Exceptional.handle(e, 'More matches scraper')
-      end
+      # end
     end
 
     def async_response(url)

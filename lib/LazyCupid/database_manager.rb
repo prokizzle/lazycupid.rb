@@ -48,7 +48,7 @@ module LazyCupid
     end
 
     def db_tasks
-      import
+      # import
       puts "Executing db tasks..."
       delete_self_refs
       # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
@@ -302,7 +302,7 @@ module LazyCupid
         visit_straight = "Null"
       end
 
-  result          = @db.exec("
+      result          = @db.exec("
         select * from matches
         where account=$8
         and (last_visit <= $1 or last_visit is null)
@@ -315,19 +315,19 @@ module LazyCupid
          and (gender=$7)
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        order by counts ASC, distance ASC, last_online DESC, match_percent DESC, height #{height_sort}, age #{age_sort}
-        limit 50", [
-        min_time.to_i, #1
-        max_counts, #2
-        distance, #3
-        min_age, #4
-        max_age, #5
-        min_percent, #6
-        desired_gender, #7
-        @login, #8
-        visit_gay, #9
-        visit_straight, #10
-        visit_bisexual]) #11
+        order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
+        limit 20", [
+                                   min_time.to_i, #1
+                                   max_counts, #2
+                                   distance, #3
+                                   min_age, #4
+                                   max_age, #5
+                                   min_percent, #6
+                                   desired_gender, #7
+                                   @login, #8
+                                   visit_gay, #9
+                                   visit_straight, #10
+      visit_bisexual]) #11
 
       return result
     end

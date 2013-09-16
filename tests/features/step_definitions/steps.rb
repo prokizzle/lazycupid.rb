@@ -2,7 +2,7 @@
 require_relative '../../../lib/LazyCupid/includes'
 
 Before('login') do
- user = "dixiesugar86"
+  user = "dixiesugar86"
   @account = "***REMOVED***"
   @password = "***REMOVED***"
   url = "http://www.okcupid.com/profile/#{user}"
@@ -20,17 +20,17 @@ Before('scraper') do
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
   # @profile  = LazyCupid::Users.new(database: @db)
   # @db.delete_user("fake_user")
-  # @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
+  @browser = LazyCupid::Browser.new(username: @account, password: @password, log: @log)
   # puts "New login session"
-  # @browser.login
-  # request_id = Time.now.to_i
-  # @browser.request(url, request_id)
-  # until @browser.hash[request_id][:ready]
-    sleep 0.1
-  # end
-  # @page = @browser.hash[request_id]
-  # @html = @page[:html]
-  # @body = @page[:body]
+  @browser.login
+  request_id = Time.now.to_i
+  @browser.send_request(url, request_id)
+  until @browser.get_request(request_id)[:ready] == true
+  sleep 0.1
+  end
+  @page = @browser.get_request(request_id)
+  @html = @page[:source]
+  @body = @page[:body]
   # @browser.go_to("http://www.okcupid.com/logout")
 end
 

@@ -29,9 +29,6 @@ module LazyCupid
       unless File.exists?(@filename)
         # Create generic preference file
         config = {geo: {
-                    distance_filter_type: "distance",
-                    preferred_state: " ",
-                    preferred_city: " ", #match_preferences[:my_city],
                     distance: 50
                   },
                   matching: {
@@ -58,13 +55,6 @@ module LazyCupid
                     autodiscover_on: true,
                     import_hidden_users: false
                   },
-                  growl: {
-                    new_visits: false,
-                    new_mail: true,
-                    favorite_sign_on: false,
-                    favorite_sign_off: false,
-                    new_im: false
-                  },
                   development: {
                     verbose: true,
                     debug: false
@@ -84,10 +74,7 @@ module LazyCupid
 
 
       # Load settings attributes into variables for external reference
-      @distance_filter_type   = @settings[:geo][:distance_filter_type].to_s
-      @preferred_state        = @settings[:geo][:preferred_state].to_s
       @max_distance           = @settings[:geo][:distance].to_i
-      @preferred_city         = @settings[:geo][:preferred_city].to_s
       @visit_bisexual         = @settings[:matching][:visit_bisexual]
       @visit_straight         = @settings[:matching][:visit_straight]
       @visit_gay              = @settings[:matching][:visit_gay]

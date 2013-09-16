@@ -185,11 +185,10 @@ module LazyCupid
       matches_list.each do |username|
 
         add_user(username, gender)
-        @database.set_gender(:username => username, :gender => @gender[username])
         @database.set_age(username, @age[username])
-        @database.set_city(username, @city[username])
         @database.set_sexuality(username, @sexuality[username])
-        @database.set_state(:username => username, :state => @state[username])
+        # @database.set_gender(:username => username, :gender => @gender[username])
+        @db.set_location(user: username, city: city, state: state)
         #User.where(:name => username).update(gender: @gender[username], age: @age[username], city: @city[username], state: @state[username], sexuality: @sexuality[username])
       end
 

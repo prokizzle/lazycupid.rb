@@ -19,6 +19,13 @@ namespace :db do
     @db.db_tasks
   end
 
+  task :populate_distances do
+    config_path = File.expand_path("../config/", __FILE__)
+    @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
+    @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
+    @db.fix_blank_distance
+  end
+
   task :backup do
     backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
   end

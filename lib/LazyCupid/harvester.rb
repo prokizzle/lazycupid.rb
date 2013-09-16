@@ -202,12 +202,12 @@ module LazyCupid
       results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
 
       results.each do |user|
-        handle      = user[0]
-        age         = user[1]
-        gender      = user[2]
-        sexuality   = user[3]
-        city        = user[4]
-        state       = user[5]
+        handle      = user.shift #user[0]
+        age         = user.shift #user[1]
+        gender      = user.shift #user[2]
+        sexuality   = user.shift #user[3]
+        city        = user.shift #user[4]
+        state       = user.shift #user[5]
         add_user(handle, gender)
         @db.set_location(user: username, city: city, state: state)
         # @database.set_age(:username => handle, :age => age)

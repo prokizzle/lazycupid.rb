@@ -1,5 +1,6 @@
 require 'uuidtools'
 require 'pg'
+require 'progress_bar'
 
 module LazyCupid
 
@@ -24,9 +25,10 @@ module LazyCupid
                             :user => @settings.db_user
                             )
       import
-      tasks     = args[:tasks]
+      # tasks     = args[:tasks] unless @settings.debug
       open_db
-      db_tasks if tasks
+      # db_tasks if tasks
+      # fix_blank_distance
       @verbose  = @settings.verbose
       @debug    = @settings.debug
     end
@@ -54,6 +56,7 @@ module LazyCupid
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
       @db.exec("update matches set ignored=true where ignore_list=1")
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
+      fix_blank_distance
     end
 
     def action(stmt)
@@ -68,6 +71,40 @@ module LazyCupid
 
     def open
       open_db
+    end
+
+    def guess_distance(account, city, state)
+      result = @db.exec("select distance from matches where account=$1 and city=$2 and state=$3 and distance >= 0 limit 1", [account, city, state])
+      return result[0]["distance"] rescue nil
+
+    end
+
+    def fix_blank_distance
+      list = @db.exec("select city, state, account from matches where distance is null and city is not null and state is not null")
+      queue = []
+      list.to_a.each do |r|
+        queue << r
+      end
+      bar = ProgressBar.new(queue.to_set.to_a.size)
+      queue.to_set.to_a.each do |r|
+        # puts "Updating #{r["city"]}"
+        @db.exec("update matches set distance=$1 where account=$2 and city=$3 and state=$4 and distance is null", [guess_distance(r["account"], r["city"], r["state"]), r["account"], r["city"], r["state"]])
+        bar.increment!
+      end
+    end
+
+    def set_estimated_distance(user, city, state)
+      unless @db.exec("select * from matches where name=$1 and account=$2 and distance >= 0", [user, @login]).to_a.empty?
+        @db.exec("update matches set distance=$1 where name=$2 and account=$3", [guess_distance(@login, city, state), user, @login])
+      end
+    end
+
+    def set_location(args)
+      user = args[:user]
+      city = args[:city]
+      state = args[:state]
+      distance = guess_distance(@login, city, state)
+      @db.exec("update matches set distance=$1, city=$2, state=$3 where name=$4 and account=$5", [distance, city, state, user, @login])
     end
 
     def import

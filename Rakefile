@@ -1,3 +1,7 @@
+  require_relative 'lib/LazyCupid/database_manager'
+  require_relative 'lib/LazyCupid/settings'
+  require 'highline/import'
+  require 'progress_bar'
 namespace :db do
   task :migrate do
     result = %x{sequel -m db/migrations/ -E postgres://localhost/lazy_cupid}
@@ -8,9 +12,6 @@ namespace :db do
     result = %x{createdb lazy_cupid}
   end
 
-  require 'highline/import'
-  require_relative 'lib/LazyCupid/database_manager'
-  require_relative 'lib/LazyCupid/settings'
   task :tasks do
     username = ask("Username:  ")
     config_path = File.expand_path("../config/", __FILE__)

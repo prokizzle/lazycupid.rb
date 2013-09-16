@@ -4,6 +4,10 @@ module LazyCupid
       #
     end
   end
+
+  # Handler for API events
+  # Each event from the OKCupid API is assigned a method, with actions based on event type
+  # 
   class APIEvents
 
     # if you come across an unknown API event, add it to attr_reader as a workaround
@@ -28,6 +32,12 @@ module LazyCupid
 
     end
 
+    # Sends events to proper methods
+    #
+    # @param event  [Hash]    event specific details related to API event
+    # @param people [Hash]    user details for users related to API event
+    # @param key    [Integer] unique identifier for event
+    #
     def process(event, people, key)
       @event = event
       @people = people
@@ -43,14 +53,24 @@ module LazyCupid
       end
     end
 
+    # User readable time format
+    #
+    # @return [String]
+    #
     def formatted_time
       "#{Time.now.hour}:#{Time.now.min}"
     end
 
+    # Determines if event is valid for processing
+    #
+    # @return [Boolean]
+    #
     def invalid_event
-      @event["from"] == "0" || @people.nil? || @people == {}
+      @event["from"] == "0" || @people.nil? || @people == {} || @people.empty?
     end
 
+    # New mail notification
+    #
     def msg_notify
       # unless Time.now.to_i - @last_call <= 1
       p @event
@@ -65,14 +85,24 @@ module LazyCupid
       # end
     end
 
+    # Returns a HTML formatted link for a given profile
+    # @param profile [String] username for profile to display
+    #
+    # @return [String] formatted HTML link to profile
+    #
     def html_link(profile)
       "<a href='http://www.okcupid.com/profile/#{profile}'>profile</a>"
     end
 
+    # Probably somebody chose you
+    #
     def looks_vote
       @log.debug "looks_vote: #{@event["from"]}"
     end
 
+    # New instant message
+    # Currently not working
+    #
     def im
       # unless @events_hash.has_key(this_event_time)
       puts "New IM from #{@event["from"]}" #unless @event["server_gmt"] == @gmt
@@ -82,10 +112,14 @@ module LazyCupid
       @event
     end
 
+    # One of your favorites uploaded a new photo
+    #
     def orbit_picture_upload
       #something
     end
 
+    # OKCupid terminology for an incoming visit
+    #
     def stalk
       people = @people
       event = @event
@@ -95,7 +129,10 @@ module LazyCupid
       @stalks[event["server_gmt"]] = people["screenname"]
     end
 
-
+    # New featured user. These users jump to the top of your match searches
+    # and all of them paid $2 for 20 minutes of exposure time. Might as well
+    # add them to the db. ;)
+    #
     # needs @people, @event, @spotlight, @tracker
     def new_spotlight_user
       handle_ = @people["screenname"]
@@ -109,23 +146,28 @@ module LazyCupid
       # print_event_info
     end
 
+    # No idea what this does
+    #
     def toolbar_trigger
       @log.debug "Toolbar trigger"
       # print_event_info
     end
 
 
-    # needs @event
+    # Favorite user signed out
+    #
     def orbit_user_signoff
       @log.debug "orbit_user_signoff: #{@event['screenname']}"
     end
 
-    # needs @event
+    # Favorite user signed in
+    #
     def orbit_user_signon
       @log.debug "orbit_user_signon: #{@event['screenname']}"
     end
 
-    # needs @event
+    # One of your favorites answered a new question
+    #
     def orbit_nth_question
       @log.debug "orbit_nth_question: #{@event['screenname']}"
     end

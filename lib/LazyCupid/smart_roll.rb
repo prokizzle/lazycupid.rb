@@ -16,7 +16,7 @@ module LazyCupid
       @settings   = args[:settings]
       @console    = args[:gui]
       @tracker    = args[:tracker]
-      @roll_list  = Array.new
+      @roll_list  = {}
       @roll_list  = reload
       @verbose    = @settings.verbose
       @debug      = @settings.debug
@@ -191,7 +191,7 @@ module LazyCupid
       response = Profile.parse(result)
       # puts response[:handle], response[:a_list_name_change], response[:inactive]
       if response[:inactive]
-        puts "Inactive profile found: #{user}"
+        puts "Inactive profile found: #{user}" if verbose
         # @db.ignore_user(user)
         @db.set_inactive(user)
 
@@ -217,23 +217,6 @@ module LazyCupid
       end
     end
 
-    def roll
-      current_user = next_user
-      # puts "Waiting..."
-      # wait = gets.chomp
-      unless current_user == @db.login
-        unless current_user.nil? || current_user == ""
-          puts "Visting #{current_user}." if debug
-          puts "Rolling..." unless @already_rolling
-          visit_user(current_user)
-          @already_idle = false
-          @already_rolling = true
-        else
-          puts "Idle..." unless @already_idle
-          @already_idle = true
-          @already_rolling = false
-        end
-      end
-    end
+
   end
 end

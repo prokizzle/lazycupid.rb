@@ -317,5 +317,9 @@ module LazyCupid
       end
     end
 
+    def scrape_im_page
+      puts "Scraping IM page" if verbose
+      result = async_response("http://www.okcupid.com/imhistory")
+    end
   end
 end

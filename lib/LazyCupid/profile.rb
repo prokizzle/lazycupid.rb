@@ -79,10 +79,6 @@ module LazyCupid
       wait = gets.chomp
     end
 
-    def self.asl
-      /(\d{2}) \/ (F|M) \/ (Straight|Bisexual|Gay) \/ (Single|Seeing someone|Available|Married|Unknown) \/ (.+)\s<\/p>/.match(@body)
-    end
-
     def self.handle
 
       # log = Logger.new("logs/user_test_#{Time.now}.log")

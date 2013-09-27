@@ -98,6 +98,15 @@ module LazyCupid
       @db_user                = @db_settings["development"]["username"].to_s
       @db_pass                = @db_settings["development"]["password"].to_s
       @db_adapter             = @db_settings["development"]["adapter"].to_s
+
+      # Global variables for mid-session reloads
+      $max_distance = @max_distance
+    end
+
+    def reload_config
+      settings = YAML.load_file(@filename)
+      $max_distance = settings[:geo][:distance].to_i
+      $min_percent  = settings[:matching][:min_percent].to_i
     end
 
   end

@@ -290,8 +290,8 @@ module LazyCupid
       height_sort         = @settings.height_sort
       last_online_cutoff  = @settings.last_online_cutoff
       max_counts          = @settings.max_followup
-      min_percent         = @settings.min_percent
-      distance            = @settings.max_distance
+      min_percent         = $settings.min_percent
+      distance            = $settings.max_distance
 
       if @settings.visit_gay
         visit_gay = "Gay"

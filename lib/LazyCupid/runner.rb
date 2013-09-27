@@ -93,6 +93,9 @@ module LazyCupid
       @blocklist.import_hidden_users
     end
 
+    def reload_settings
+      @settings.reload_settings
+    end
 
     def harvest_home_page
       @harvester.scrape_home_page
@@ -263,6 +266,10 @@ module LazyCupid
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'tracker' do
         @app.scrape_ajax_matches
+      end
+
+      @app.scheduler.every '5m', :mutex => 'that_mutex' do
+        @app.reload_settings
       end
 
       @app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|

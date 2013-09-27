@@ -188,9 +188,9 @@ module LazyCupid
         # p result
       end
       @browser.delete_response(request_id)
-      response = Profile.parse(result)
-      # puts response[:handle], response[:a_list_name_change], response[:inactive]
-      if response[:inactive]
+      profile = Profile.parse(result)
+      # puts profile[:handle], profile[:a_list_name_change], profile[:inactive]
+      if profile[:inactive]
         puts "Inactive profile found: #{user}" if verbose
         # @db.ignore_user(user)
         @db.set_inactive(user)
@@ -198,22 +198,23 @@ module LazyCupid
       else
 
         begin
-          @db.ignore_user(response[:handle]) if response[:enemy_percentage] > response[:match_percentage]
+          @db.ignore_user(profile[:handle]) if profile[:enemy_percentage] > profile[:match_percentage]
         rescue
         end
-        puts "Name change: #{response[:a_list_name_change]}" if debug
-        if response[:a_list_name_change]
-          @db.rename_alist_user(user, response[:handle])
-          puts "(SR) A-list name change: #{user} is now #{response[:handle]}"
+        puts "Name change: #{profile[:a_list_name_change]}" if debug
+        if profile[:a_list_name_change]
+          @db.rename_alist_user(user, profile[:handle])
+          puts "(SR) A-list name change: #{user} is now #{profile[:handle]}"
         end
-        # puts response
-        sexuality_filter(response[:handle], response[:sexuality])
-        @console.log(response) if verbose
+        # puts profile
+        sexuality_filter(profile[:handle], profile[:sexuality])
+        # StatHat::API.ez_post_count("outgoing visits", "nick@prokes.ch", 1)
+        @console.log(profile) if verbose
         @tally += 1
-        # puts "Logging user #{response}"
-        @db.log2(response)
+        # puts "Logging user #{profile}"
+        @db.log2(profile)
         # @harvester.body = @user.body
-        autodiscover_new_users(response) if response[:gender] == @settings.gender
+        autodiscover_new_users(profile) if profile[:gender] == @settings.gender
       end
     end
 

@@ -129,7 +129,7 @@ module LazyCupid
         user_ = user_body
         @body = user_[:body]
         puts "Scraping: leftbar" if verbose
-        array = @body.scan(/\/([\w\d_-]+)\?leftbar_match/)
+        array = @body.scan(/\/([\w\d_-]+)\?cf\=leftbar_match/)
         array.each { |user| @database.add_user(user.shift, @settings.gender, "leftbar") }
         puts "Scraping: similar users" if verbose
         similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)

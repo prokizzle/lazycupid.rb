@@ -57,6 +57,7 @@ module LazyCupid
          inactive: false,
          a_list_name_change: intended_handle.downcase != handle.downcase,
          new_handle: @new_handle,
+         image: profile_picture,
          body: @body,
          html: @html }
       end
@@ -230,6 +231,10 @@ module LazyCupid
       end
     end
 
+    def self.profile_picture
+      # @html.parser.xpath("//div[@id='thumb0']/a").href
+      nil
+    end
 
     def self.sexuality
       @html.parser.xpath("//span[@id='ajax_orientation']").text

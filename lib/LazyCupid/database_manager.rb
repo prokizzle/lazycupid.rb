@@ -74,17 +74,26 @@ module LazyCupid
     end
 
     def guess_distance(account, city, state)
-      result = @db.exec("select distance from matches where account=$1 and city=$2 and state=$3 and distance >= 0 limit 1", [account, city, state])
-      return result[0]["distance"] rescue nil
+      result = @db.exec("select distance from matches where account=$1 and city=$2 and state=$3 and distance is not null limit 1", [account, city, state])
+      alt = @db.exec("select distance from matches where account=$1 and state=$2 and distance is not null limit 1", [account, state])
+      begin
+        return result[0]["distance"]
+      rescue
+        return alt[0]["distance"] rescue nil
+      end
+
 
     end
 
     def fix_blank_distance
-      list = @db.exec("select city, state, account from matches where distance is null and city is not null and state is not null")
+      list = @db.exec("select city, state, account, added_from from matches where distance is null and city is not null and state is not null")
       queue = []
+      a_from = Hash.new
       list.to_a.each do |r|
         queue << r
+        a_from[r["added_from"]] += 1 rescue a_from[r["added_from"]] = 1
       end
+      puts a_from
       bar = ProgressBar.new(queue.to_set.to_a.size)
       queue.to_set.to_a.each do |r|
         # puts "Updating #{r["city"]}"

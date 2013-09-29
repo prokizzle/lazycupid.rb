@@ -94,7 +94,7 @@ module LazyCupid
     end
 
     def reload_settings
-      @settings.reload_settings
+      @config.reload_config
     end
 
     def harvest_home_page
@@ -268,7 +268,7 @@ module LazyCupid
         @app.scrape_ajax_matches
       end
 
-      @app.scheduler.every '5m', :mutex => 'that_mutex' do
+      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'this_mutex' do
         @app.reload_settings
       end
 

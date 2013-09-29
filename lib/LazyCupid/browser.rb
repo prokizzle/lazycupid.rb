@@ -21,7 +21,6 @@ module LazyCupid
   # @param password [Symbol] [password to login with]
   # @param log      [Symbol] [the path to folder containing log files]
   class Browser
-    attr_reader :debug
     attr_accessor :agent, :body, :current_user, :url, :hash, :page, :page_source, :login_status
 
 
@@ -31,7 +30,6 @@ module LazyCupid
       @agent = Mechanize.new
       @log      = args[ :log]
       @hash = Hash.new { |hash, key| hash[key] = 0 }
-      @debug = false
       delete_keys = lambda {|k| k.delete(key)}
       retrieved_responses = lambda {|h,k| k[:retrieved] == true}
       # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
@@ -47,7 +45,7 @@ module LazyCupid
       agent.idle_timeout             = 5
       agent.read_timeout             = 5
       agent.user_agent_alias         = ['Mac Safari', 'Mac Firefox'].sample
-      agent.agent.http.debug_output  = $stderr if debug
+      agent.agent.http.debug_output  = $stderr if $debug
 
       # OKCupid login sequence
       @page                           = agent.get("http://www.okcupid.com/")

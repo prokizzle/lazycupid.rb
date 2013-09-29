@@ -28,7 +28,7 @@ module LazyCupid
       # tasks     = args[:tasks] unless @settings.debug
       open_db
       # db_tasks if tasks
-      # fix_blank_distance
+      fix_blank_distance
       @verbose  = @settings.verbose
       @debug    = @settings.debug
     end

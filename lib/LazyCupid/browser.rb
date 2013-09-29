@@ -110,12 +110,12 @@ module LazyCupid
     end
 
     def is_deactivated?
-      (page_source =~ /Restore your account/).swag?
+      (page_source =~ /\bRestore your account\b/).swag?
     end
 
     def wrong_password?
       # p page_source
-      (page_source =~ /your info was incorrect/).swag?
+      (page_source =~ /\byour info was incorrect\b/).swag?
     end
 
     # Determines if OKCupid login session has been ended
@@ -131,7 +131,7 @@ module LazyCupid
     # @return [Boolean] [True if account has been deleted]
     #
     def is_deleted?
-      (page_source =~ /account was deleted/).swag?
+      (page_source =~ /\baccount was deleted\b/).swag?
     end
 
 
@@ -252,7 +252,7 @@ module LazyCupid
     # Detects an invalid account or profile
     # @return [Boolean] [True if account is deleted]
     def account_deleted
-      @body.match(/Uh\-oh/)
+      @body.match(/\bUh\-oh\b/)
     end
   end
 end

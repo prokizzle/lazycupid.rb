@@ -281,6 +281,7 @@ module LazyCupid
     end
 
     def followup_query
+      puts "**********", "Current distance: #{$max_distance}", "**********"
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
       desired_gender      = @settings.gender
@@ -290,8 +291,8 @@ module LazyCupid
       height_sort         = @settings.height_sort
       last_online_cutoff  = @settings.last_online_cutoff
       max_counts          = @settings.max_followup
-      min_percent         = $settings.min_percent
-      distance            = $settings.max_distance
+      min_percent         = $min_percent
+      distance            = $max_distance
 
       if @settings.visit_gay
         visit_gay = "Gay"

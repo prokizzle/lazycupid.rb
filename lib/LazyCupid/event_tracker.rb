@@ -283,7 +283,7 @@ module LazyCupid
     end
 
     def scrape_inbox
-      puts "Scraping inbox" if verbose
+      puts "Scraping inbox" if $verbose
       result = async_response("http://www.okcupid.com/messages")
       # begin
       begin
@@ -295,7 +295,7 @@ module LazyCupid
       # rescue
       # @total_msg    = 0
       # end
-      puts "Total messages: #{@total_msg}" if verbose
+      puts "Total messages: #{@total_msg}" if $verbose
       sleep 2
       unless @total_msg == @prev_total_messages
         track_msg_dates("http://www.okcupid.com/messages")
@@ -307,8 +307,8 @@ module LazyCupid
         end
         low = 31
         until low >= @total_msg
-          # puts "Scraping inbox: #{((low.to_f/@total_msg.to_f)*100).to_i}%" if debug
-          # puts low if debug
+          # puts "Scraping inbox: #{((low.to_f/@total_msg.to_f)*100).to_i}%" if $debug
+          # puts low if $debug
           low += 30
           track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
           sleep (1..6).to_a.sample.to_i
@@ -318,7 +318,7 @@ module LazyCupid
     end
 
     def scrape_im_page
-      puts "Scraping IM page" if verbose
+      puts "Scraping IM page" if $verbose
       result = async_response("http://www.okcupid.com/imhistory")
     end
   end

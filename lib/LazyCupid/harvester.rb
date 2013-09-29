@@ -12,8 +12,8 @@ module LazyCupid
       # @user         = args[ :profile_scraper]
       @settings     = args[ :settings]
       @events       = args[ :events]
-      @verbose      = @settings.verbose
-      @debug        = @settings.debug
+      # @verbose      = @settings.verbose
+      # @debug        = @settings.debug
 
       @min_match_percentage = @settings.min_percent
       @min_age              = @settings.min_age
@@ -100,14 +100,14 @@ module LazyCupid
     # @return [Boolean]
     #
     def meets_preferences?
-      puts "Match met:        #{match_percent_criteria_met?}" if verbose
-      puts "Distance met:     #{distance_criteria_met?}" if verbose
-      puts "Age met:          #{age_criteria_met?}" if verbose
-      puts "Height met:       #{height_criteria_met?}" if verbose
-      puts "Sexuality met:    #{sexuality_criteria_met?}" if verbose
+      puts "Match met:        #{match_percent_criteria_met?}" if $verbose
+      puts "Distance met:     #{distance_criteria_met?}" if $verbose
+      puts "Age met:          #{age_criteria_met?}" if $verbose
+      puts "Height met:       #{height_criteria_met?}" if $verbose
+      puts "Sexuality met:    #{sexuality_criteria_met?}" if $verbose
 
       unless height_criteria_met?
-        puts "Ignoring #{@user[:handle]} based on their height." if verbose
+        puts "Ignoring #{@user[:handle]} based on their height." if $verbose
         @database.ignore_user(@user[:handle])
       end
 
@@ -128,10 +128,10 @@ module LazyCupid
       if meets_preferences?
         user_ = user_body
         @body = user_[:body]
-        puts "Scraping: leftbar" if verbose
+        puts "Scraping: leftbar" if $verbose
         array = @body.scan(/\/([\w\d_-]+)\?cf\=leftbar_match/)
         array.each { |user| @database.add_user(user.shift, @settings.gender, "leftbar") }
-        puts "Scraping: similar users" if verbose
+        puts "Scraping: similar users" if $verbose
         similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)
         similars = similars.to_set
         similars.each do |similar_user|
@@ -142,7 +142,7 @@ module LazyCupid
           end
         end
       else
-        puts "Similar users not scraped: #{@user[:handle]}" if verbose
+        puts "Similar users not scraped: #{@user[:handle]}" if $verbose
       end
 
 
@@ -197,7 +197,7 @@ module LazyCupid
     # Scrapes the OKCupid home page for users to add to database
     #
     def scrape_home_page
-      puts "Scraping home page." if verbose
+      puts "Scraping home page." if $verbose
       @browser.go_to("http://www.okcupid.com/home?cf=logo")
       results = body.scan(/class="username".+\/profile\/([\d\w]+)\?cf=home_matches.+(\d{2})\s\/\s(F|M)\s\/\s([\w\s]+)\s\/\s[\w\s]+\s.+"location".([\w\s]+)..([\w\s]+)/)
 

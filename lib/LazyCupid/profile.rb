@@ -11,8 +11,8 @@ module LazyCupid
     public 
 
     def self.initialize
-      @verbose  = true
-      @debug    = true
+      # $verbose  = true
+      # @debug    = true
     end
 
     # Parses a profile page for user attributes
@@ -96,7 +96,7 @@ module LazyCupid
       unless result == @intended_handle.to_s
         # @db.rename_alist_user(@intended_handle, result)
         @new_handle = result
-        puts "(UC) A-list name change: #{intended_handle} is now #{result}" if @verbose
+        puts "(UC) A-list name change: #{intended_handle} is now #{result}" if $verbose
       end
 
       # puts result

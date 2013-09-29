@@ -27,9 +27,9 @@ module LazyCupid
       @source = user_page[:source]
       # puts @html
       # wait = gets.chomp
-      @url = user_page[:url]
+      url = user_page[:url]
       inactive = @body.match(/we don’t have anyone by that name/)
-      @intended_handle = URI.decode(/\/profile\/(.+)/.match(@url)[1])
+      @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
       if inactive
         {inactive: true}
       else

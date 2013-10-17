@@ -48,8 +48,9 @@ module LazyCupid
                     visit_bisexual: true
                   },
                   visit_freq: {
-                    days_ago: 5,
-                    max_followup: 25
+                    days_ago: 10,
+                    max_followup: 2,
+                    roll_frequency: 6 #in seconds
                   },
                   scraping: {
                     autodiscover_on: true,

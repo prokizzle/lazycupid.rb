@@ -35,7 +35,7 @@ module LazyCupid
       # wait = gets.chomp
       unless current_user == @db.login
         unless current_user.nil? || current_user == ""
-          puts "Visting #{current_user}." if debug
+          puts "Visting #{current_user}." if $debug
           puts "Rolling..." unless @already_rolling
           visit_user(current_user)
           @already_idle = false
@@ -80,13 +80,13 @@ module LazyCupid
       unless results == {}
         results.each do |user|
           array.push(user["name"]) if user.has_key?("name")
-          # puts user["name"] if debug
+          # puts user["name"] if $debug
         end
       end
       # array
       return array.to_set.to_a
     end
-    
+
     # Wrapper array for user queue
     # Auto reloads queue if empty
     # @return [Array]
@@ -189,7 +189,7 @@ module LazyCupid
       profile = Profile.parse(result)
       # puts profile[:handle], profile[:a_list_name_change], profile[:inactive]
       if profile[:inactive]
-        puts "Inactive profile found: #{user}" if verbose
+        puts "Inactive profile found: #{user}" if $verbose
         # @db.ignore_user(user)
         @db.set_inactive(user)
 
@@ -199,7 +199,7 @@ module LazyCupid
           @db.ignore_user(profile[:handle]) if profile[:enemy_percentage] > profile[:match_percentage]
         rescue
         end
-        puts "Name change: #{profile[:a_list_name_change]}" if debug
+        puts "Name change: #{profile[:a_list_name_change]}" if $debug
         if profile[:a_list_name_change]
           @db.rename_alist_user(user, profile[:handle])
           puts "(SR) A-list name change: #{user} is now #{profile[:handle]}"
@@ -207,7 +207,7 @@ module LazyCupid
         # puts profile
         sexuality_filter(profile[:handle], profile[:sexuality])
         # StatHat::API.ez_post_count("outgoing visits", "nick@prokes.ch", 1)
-        @console.log(profile) if verbose
+        @console.log(profile) if $verbose
         @tally += 1
         # puts "Logging user #{profile}"
         @db.log2(profile)

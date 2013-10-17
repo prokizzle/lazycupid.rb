@@ -43,13 +43,15 @@ or
 ##Todo:
 
 + Alter database schema to mutli tables
++ + Users table
++ + Messages table
++ + 
 + Switch to ActiveRecord database format (Sequel gem)
 + Share stored user details among all tenants
 + Parse individual message threads
 + Minimize API usage
 + Improve visitors page parser
 + Store links or file records for user profile thumbnails
-+ Detect account status on login (disabled, deleted, logged in, wrong password, etc)
 + Create Rails app
   + visualizing patterns, data
   + success rates

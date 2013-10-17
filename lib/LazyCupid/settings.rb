@@ -91,7 +91,9 @@ module LazyCupid
       @last_online_cutoff     = @settings[:matching][:last_online_cutoff].to_i
       @days_ago               = @settings[:visit_freq][:days_ago].to_i
       @max_followup           = @settings[:visit_freq][:max_followup].to_i
+      @roll_frequency         = @settings[:visit_freq][:roll_frequency].to_s
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
+      @match_frequency        = @settings[:scraping][:match_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true

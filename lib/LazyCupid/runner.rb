@@ -249,10 +249,7 @@ module LazyCupid
       @app.pre_roll_actions
 
       @app.scheduler.every '30m', :allow_overlapping => false, :mutex => 'tracker' do
-        # if @has_unread_messages is true
         @app.scrape_inbox
-        #   @has_unread_messages = false
-        # end
       end
       #
       # app.scheduler.every '3h', :mutex => 'that_mutex' do
@@ -261,7 +258,6 @@ module LazyCupid
 
       @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
         @app.check_events
-      #   # @has_unread_messages = true if @app.unread_messages > 0
       end
 
       @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do

@@ -264,11 +264,11 @@ module LazyCupid
         @app.scrape_ajax_matches
       end
 
-      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'this_mutex' do
+      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
         @app.reload_settings
       end
 
-      @app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
+      @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'roller' do #|job|
         @app.roll
       end
 

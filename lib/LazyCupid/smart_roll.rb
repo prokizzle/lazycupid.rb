@@ -135,9 +135,7 @@ module LazyCupid
     #
     def payload
       puts "Getting new matches..." unless verbose
-      3.times do
-        @tracker.test_more_matches
-      end
+      @tracker.default_match_search
       puts "Checking for new messages..." unless verbose
       @tracker.scrape_inbox
       # check_visitors

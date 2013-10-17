@@ -264,7 +264,7 @@ module LazyCupid
       #   # @has_unread_messages = true if @app.unread_messages > 0
       end
 
-      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'tracker' do
+      @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
         @app.scrape_ajax_matches
       end
 

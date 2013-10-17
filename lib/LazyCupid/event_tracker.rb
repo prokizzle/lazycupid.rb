@@ -3,18 +3,16 @@ module LazyCupid
     # include RegEx
     # include MatchQueries
 
-    attr_reader :verbose, :debug, :body, :account
+    attr_reader :body
 
     def initialize(args)
-      @browser = args[ :browser]
+      @browser = args[:browser]
       @db = args[:database]
       @settings = args[ :settings]
       # RegEx = RegEx.new
-      @account = @db.login
       @prev_total_messages = -1
-      @queries = MatchQueries.new
+      # @queries = MatchQueries.new
       # RegEx = RegEx.new
-      @debug = true
     end
 
     def current_user
@@ -194,58 +192,46 @@ module LazyCupid
     end
 
     def default_match_search
-      test_more_matches(@queries.default_query)
+      5.times { test_more_matches(MatchQueries.default_query) }
     end
-
-    def focus_new_users
-      @queries.focus_new_users_query
-    end
-
-
-
 
     def test_more_matches(query="http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
       # begin
-        # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
-        result = async_response(query)
-        parsed = JSON.parse(result[:html].content).to_hash
-        html = parsed["html"]
-        @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
-        html_doc = Nokogiri::HTML(html)
-        # @db.open
+      # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
+      result = async_response(query)
+      parsed = JSON.parse(result[:html].content).to_hash
+      html = parsed["html"]
+      @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
+      html_doc = Nokogiri::HTML(html)
+      # @db.open
 
-        @gender, @age, @state, @city     = {}
+      @gender, @age, @state, @city     = {}
 
-        @details.each do |user|
-          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+      @details.each do |user|
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+        result2 = html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
+        age = "#{result.match(/(\d{2})/)}".to_i
+        gender = "#{result.match(/(M|F)</)[1]}"
+        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
+        username = user[0].to_s
+        @db.add_user(username, gender, "ajax_match_search")
+        # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
+        # @db.set_gender(:username => username, :gender => gender)
+        @db.set_age(username, age)
+        city, state = String.new
+        location = /location.>(.+)</.match(result)[1]
+        city = RegEx.parsed_location(location)[:city]
+        state = RegEx.parsed_location(location)[:state]
+        @db.set_location(user: username, city: city, state: state)
+        match_percent = /(\d+)%<\/span> Match/.match(result2)[1]
+        # puts "#{username} #{match_percent} match"
+        @db.set_match_percentage(username, match_percent)
+      end
 
-          age = "#{result.match(/(\d{2})/)}".to_i
-          gender = "#{result.match(/(M|F)</)[1]}"
-          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
-          # puts city, state
-          username = user[0].to_s
-          @db.add_user(username, gender, "ajax_match_search")
-          # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
-          # @db.set_gender(:username => username, :gender => gender)
-          @db.set_age(username, age)
-          # begin
-            city, state = String.new
-            location = /location.>(.+)</.match(result)[1]
-            city = RegEx.parsed_location(location)[:city]
-            state = RegEx.parsed_location(location)[:state]
-            # @db.set_city(username, city)
-            # @db.set_state(:username => username, :state => state)
-            # @db.set_estimated_distance(username, city, state)
-            @db.set_location(user: username, city: city, state: state)
-          # rescue Exception => e
-            # puts e.message
-          # end
-        end
-
-        # @db.close
+      # @db.close
       # rescue Exception => e
-        # puts e.message
-        # Exceptional.handle(e, 'More matches scraper')
+      # puts e.message
+      # Exceptional.handle(e, 'More matches scraper')
       # end
     end
 

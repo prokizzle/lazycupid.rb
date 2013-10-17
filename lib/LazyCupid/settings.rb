@@ -53,7 +53,8 @@ module LazyCupid
                   },
                   scraping: {
                     autodiscover_on: true,
-                    import_hidden_users: false
+                    import_hidden_users: false,
+                    match_frequency: 2 #in minutes
                   },
                   development: {
                     verbose: true,
@@ -101,12 +102,14 @@ module LazyCupid
 
       # Global variables for mid-session reloads
       $max_distance = @max_distance
+      $match_frequency = @match_frequency
     end
 
     def reload_config
       settings = YAML.load_file(@filename)
       $max_distance = settings[:geo][:distance].to_i
       $min_percent  = settings[:matching][:min_percent].to_i
+      $match_frequency = settings[:scraping][:match_frequency].to_s
     end
 
   end

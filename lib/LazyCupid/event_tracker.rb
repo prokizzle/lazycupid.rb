@@ -156,16 +156,22 @@ module LazyCupid
       message_list = result[:body].scan(/"message_(\d+)"/)
       @total_msg_on_page = message_list.size
       message_list.each do |message_id|
-        message_id      = message_id[0]
-        msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
-        sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
-        timestamp_block = result[:html].parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
-        timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
-        sender          = sender.to_s
-        gender          = "Q"
-
-        register_message(sender, timestamp, gender)
-
+        begin
+          message_id      = message_id.first
+          msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
+          # unless !(msg_block =~ /"subject">OKCupid!</).nil?
+          sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
+          timestamp_block = result[:html].parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
+          timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
+          sender          = sender.to_s
+          gender          = "Q"
+          # r = {"sender" => sender, "timestamp" => timestamp, "gender" => gender}
+          # puts r
+          register_message(sender, timestamp, gender)
+          # end
+        rescue
+          puts "Error tracking message"
+        end
       end
     end
 

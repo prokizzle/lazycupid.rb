@@ -130,13 +130,13 @@ module LazyCupid
         @body = user_[:body]
         puts "Scraping: leftbar" if $verbose
         array = @body.scan(/\/([\w\d_-]+)\?cf\=leftbar_match/)
-        array.each { |user| @database.add_user(user.shift, @settings.gender, "leftbar") }
+        array.each { |user| @database.add_user(user.shift, $gender, "leftbar") }
         puts "Scraping: similar users" if $verbose
         similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)
         similars = similars.to_set
         similars.each do |similar_user|
           similar_user = similar_user.shift
-          if user_[:gender] == @settings.gender
+          if user_[:gender] == $gender || user_[:gender] == $alt_gender
             @database.add_user(similar_user, user_[:gender], "similar_users")
             @database.set_location(user: similar_user, city: user_[:city], state: user_[:state])
           end

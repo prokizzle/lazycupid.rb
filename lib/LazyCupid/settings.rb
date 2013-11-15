@@ -39,6 +39,7 @@ module LazyCupid
                     max_age: 50, #match_preferences[:max_age],
                     age_sort: "ASC", #prefer younger
                     gender: "F",
+                    alt_gender: "R",
                     min_height: 0, #flatlanders!
                     max_height: 300, #giants!
                     height_sort: "ASC", #prefer shorter
@@ -82,6 +83,7 @@ module LazyCupid
       @visit_gay              = @settings[:matching][:visit_gay]
       @min_percent            = @settings[:matching][:min_percent].to_i
       @gender                 = @settings[:matching][:gender].to_s
+      @alt_gender             = @settings[:matching][:alt_gender].to_s
       @min_age                = @settings[:matching][:min_age].to_i
       @max_age                = @settings[:matching][:max_age].to_i
       @age_sort               = @settings[:matching][:age_sort].to_s
@@ -110,6 +112,8 @@ module LazyCupid
       $debug          = @debug
       $roll_frequency = @roll_frequency
       $match_frequency = @match_frequency
+      $gender          = @gender
+      $alt_gender      = @alt_gender
     end
 
     def reload_config

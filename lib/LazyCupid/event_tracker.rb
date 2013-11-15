@@ -119,7 +119,7 @@ module LazyCupid
 
 
         @db.add_user(visitor, gender, "api_visitor")
-        @db.ignore_user(visitor) unless gender == @settings.gender
+        @db.ignore_user(visitor) unless gender == $gender || gender == $alt_gender
         # @db.set_gender(:username => visitor, :gender => gender)
 
         @db.set_city(visitor, city)

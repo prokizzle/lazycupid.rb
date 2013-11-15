@@ -196,7 +196,7 @@ module LazyCupid
       5.times { test_more_matches(MatchQueries.default_query) }
     end
 
-    def test_more_matches(query="http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1")
+    def test_more_matches(query="http://www.okcupid.com/match?timekey=1384469612&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&match_card_class=just_appended&low=81&count=10&ajax_load=1")
       # begin
       # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
       result = async_response(query)
@@ -207,27 +207,36 @@ module LazyCupid
       # @db.open
 
       @gender, @age, @state, @city     = {}
-
-      @details.each do |user|
-        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
-        result2 = html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
-        age = "#{result.match(/(\d{2})/)}".to_i
-        gender = "#{result.match(/(M|F)</)[1]}"
-        result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
-        username = user[0].to_s
-        @db.add_user(username, gender, "ajax_match_search")
-        # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
-        # @db.set_gender(:username => username, :gender => gender)
-        @db.set_age(username, age)
-        city, state = String.new
-        location = /location.>(.+)</.match(result)[1]
-        city = RegEx.parsed_location(location)[:city]
-        state = RegEx.parsed_location(location)[:state]
-        @db.set_location(user: username, city: city, state: state)
-        match_percent = /(\d+)%<\/span> Match/.match(result2)[1]
-        # puts "#{username} #{match_percent} match"
-        @db.set_match_percentage(username, match_percent)
-      end
+        @details.each do |user|
+      # begin
+          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
+          result2 = html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
+          age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
+          # age = "#{result.match(/(\d{2})/)}".to_i
+          # gender = "#{result.match(/(M|F)</)[1]}"
+          gender = result2.match(/\bYour rating of her\b/) ? 'F' : 'M'
+          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
+          username = user[0].to_s
+          puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
+          @db.add_user(username, gender, "ajax_match_search")
+          # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
+          # @db.set_gender(:username => username, :gender => gender)
+          @db.set_age(username, age)
+          city, state = String.new
+          location = /span.class=.dot.>·<.span>(.+)$/.match(result2)[1]
+          city = RegEx.parsed_location(location)[:city]
+          state = RegEx.parsed_location(location)[:state]
+          puts "city: #{city}, state: #{state}" if $debug
+          @db.set_location(user: username, city: city, state: state)
+          match_percent = /(\d+)%<\/span> Match/.match(result2)[1]
+          # puts "#{username} #{match_percent} match"
+          @db.set_match_percentage(username, match_percent)
+      # rescue
+      #   File.open("result.html", 'w') { |file| file.write(result2) }
+      #   break
+      #   Kernel.exit
+      # end
+        end
 
       # @db.close
       # rescue Exception => e

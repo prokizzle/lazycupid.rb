@@ -18,10 +18,12 @@ module LazyCupid
       @tracker    = args[:tracker]
       @roll_list  = {}
       @roll_list  = reload
+      @last_query_time = Time.now.to_i
       @verbose    = @settings.verbose
       @debug      = @settings.debug
       @alt_reload = false
       @already_idle = true
+      @already_delayed = false
       @already_rolling = false
     end
 
@@ -93,8 +95,15 @@ module LazyCupid
     #
     def cache
       if @roll_list.empty?
-        @roll_list = build_user_list(@db.followup_query)
-        puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+        if Time.now.to_i - @last_query_time >= 60
+          @already_delayed = false
+          @roll_list = build_user_list(@db.followup_query)
+          @last_query_time = Time.now.to_i
+          puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+        else
+          puts "Delaying query..." unless @already_delayed
+          @already_delayed = true
+        end
         return @roll_list
       else
         return @roll_list

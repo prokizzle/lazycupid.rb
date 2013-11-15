@@ -212,7 +212,7 @@ module LazyCupid
         # puts "Logging user #{profile}"
         @db.log2(profile)
         # @harvester.body = @user.body
-        autodiscover_new_users(profile) if profile[:gender] == @settings.gender
+        autodiscover_new_users(profile) if profile[:gender] == $gender || profile[:gender] == $alt_gender
       end
     end
 

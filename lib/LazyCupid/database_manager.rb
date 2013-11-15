@@ -284,7 +284,8 @@ module LazyCupid
       puts "**********", "Current distance: #{$max_distance}", "**********" if $debug
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-      desired_gender      = @settings.gender
+      desired_gender      = $gender
+      alt_gender          = $alt_gender
       min_age             = @settings.min_age
       max_age             = @settings.max_age
       age_sort            = @settings.age_sort
@@ -322,7 +323,7 @@ module LazyCupid
          and (inactive = false or inactive is null)
          and (age between $4 and $5 or age is null)
          and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
-         and (gender=$7)
+         and (gender=$7 or gender=$12)
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
         order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
@@ -337,7 +338,8 @@ module LazyCupid
                                    @login, #8
                                    visit_gay, #9
                                    visit_straight, #10
-      visit_bisexual]) #11
+      visit_bisexual, #11
+      alt_gender]) #12
 
       return result
     end

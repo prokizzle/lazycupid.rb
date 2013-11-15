@@ -39,7 +39,7 @@ module LazyCupid
       print @username
       last_online = Time.at(user[:last_online]||0).ago.to_words
       last_online = "Online now" if last_online == "47 years ago"
-      result = {user: user[:handle], match_percent: user[:match_percentage], enemy: user[:enemy_percentage], friend: user[:friend_percentage], age: user[:age], city: user[:city], state: user[:state], distance: user[:distance], sexuality: user[:sexuality], count: @you.visited(user[:handle]), last_online: last_online, prev_visit: @you.prev_visit(user[:handle])}
+      result = {user: user[:handle], gender: user[:gender], match_percent: user[:match_percentage], enemy: user[:enemy_percentage], friend: user[:friend_percentage], age: user[:age], city: user[:city], state: user[:state], distance: user[:distance], sexuality: user[:sexuality], count: @you.visited(user[:handle]), last_online: last_online, prev_visit: @you.prev_visit(user[:handle])}
       puts result
     end
 

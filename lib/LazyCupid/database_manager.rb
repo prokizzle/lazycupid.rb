@@ -27,8 +27,7 @@ module LazyCupid
       import
       # tasks     = args[:tasks] unless @settings.debug
       open_db
-      # db_tasks if tasks
-      fix_blank_distance
+      # db_tasks if args[:tasks]
       @verbose  = @settings.verbose
       @debug    = @settings.debug
     end
@@ -95,10 +94,13 @@ module LazyCupid
       end
       puts a_from
       bar = ProgressBar.new(queue.to_set.to_a.size)
+      c = 0
       queue.to_set.to_a.each do |r|
         # puts "Updating #{r["city"]}"
         @db.exec("update matches set distance=$1 where account=$2 and city=$3 and state=$4 and distance is null", [guess_distance(r["account"], r["city"], r["state"]), r["account"], r["city"], r["state"]])
         bar.increment!
+        c += 1
+        # break if c >= 50
       end
     end
 

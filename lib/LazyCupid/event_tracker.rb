@@ -1,18 +1,13 @@
 module LazyCupid
   class EventTracker
-    # include RegEx
-    # include MatchQueries
-
+    require_relative 'global_regex'
     attr_reader :body
 
     def initialize(args)
       @browser = args[:browser]
       @db = args[:database]
       @settings = args[ :settings]
-      # RegEx = RegEx.new
       @prev_total_messages = -1
-      # @queries = MatchQueries.new
-      # RegEx = RegEx.new
     end
 
     def current_user
@@ -279,7 +274,8 @@ module LazyCupid
       result = async_response("http://www.okcupid.com/messages")
       # begin
       begin
-        @total_msg = result[:body].match(/Page 1 of <a href="\/messages\?low\=(\d+)\&amp\;folder\=1">\d+/)[1].to_i
+        # @total_msg = result[:body].match(/Page 1 of <a href="\/messages\?low\=(\d+)\&amp\;folder\=1">\d+/)[1].to_i
+        @total_msg = result[:body].match($total_messages)[1].to_i
       rescue
         @total_msg = 0
       end

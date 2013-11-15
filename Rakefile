@@ -8,6 +8,10 @@ namespace :db do
     puts result
   end
 
+  task :reinstall do
+    %x{gem uninstall pg && bundle install}
+  end
+
   task :create do
     result = %x{createdb lazy_cupid}
   end

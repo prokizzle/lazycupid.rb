@@ -260,9 +260,9 @@ module LazyCupid
         @app.check_events
       end
 
-      # @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
-        # @app.scrape_ajax_matches
-      # end
+      @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
+        @app.scrape_ajax_matches
+      end
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
         @app.reload_settings

@@ -97,6 +97,8 @@ module LazyCupid
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
       @match_frequency        = @settings[:scraping][:match_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
+      @scrape_match_search    = @settings[:scraping][:scrape_match_search]      == true
+
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
       @db_name                = @db_settings["development"]["database"].to_s
@@ -106,24 +108,25 @@ module LazyCupid
       @db_adapter             = @db_settings["development"]["adapter"].to_s
 
       # Global variables for mid-session reloads
-      $max_distance = @max_distance
-      $min_percent    = @min_percent
-      $verbose        = @verbose
-      $debug          = @debug
-      $roll_frequency = @roll_frequency
-      $match_frequency = @match_frequency
-      $gender          = @gender
-      $alt_gender      = @alt_gender
+      $max_distance     = @max_distance
+      $min_percent      = @min_percent
+      $verbose          = @verbose
+      $debug            = @debug
+      $roll_frequency   = @roll_frequency
+      $match_frequency  = @match_frequency
+      $gender           = @gender
+      $alt_gender       = @alt_gender
+      $scrape_match_search    = @scrape_match_search
     end
 
     def reload_config
-      settings = YAML.load_file(@filename)
-      $max_distance   = settings[:geo][:distance].to_i
-      $min_percent    = settings[:matching][:min_percent].to_i
-      $verbose        = settings[:development][:verbose]       == true
-      $debug          = settings[:development][:debug]         == true
-      $roll_frequency = settings[:visit_freq][:roll_frequency].to_s
-      $match_frequency = settings[:scraping][:match_frequency].to_s
+      settings          = YAML.load_file(@filename)
+      $max_distance     = settings[:geo][:distance].to_i
+      $min_percent      = settings[:matching][:min_percent].to_i
+      $verbose          = settings[:development][:verbose]       == true
+      $debug            = settings[:development][:debug]         == true
+      $roll_frequency   = settings[:visit_freq][:roll_frequency].to_s
+      $match_frequency  = settings[:scraping][:match_frequency].to_s
 
     end
 

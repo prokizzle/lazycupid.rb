@@ -214,7 +214,8 @@ module LazyCupid
           age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
           # age = "#{result.match(/(\d{2})/)}".to_i
           # gender = "#{result.match(/(M|F)</)[1]}"
-          gender = result2.match(/\bYour rating of her\b/) ? 'F' : 'M'
+          # gender = result2.match(/\bYour rating of her\b/) ? 'F' : 'M'
+          gender = $gender
           result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
           username = user[0].to_s
           puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug

@@ -56,7 +56,8 @@ module LazyCupid
                   scraping: {
                     autodiscover_on: true,
                     import_hidden_users: false,
-                    match_frequency: 2 #in minutes
+                    match_frequency: 2, #in minutes,
+                    scrape_match_search: false #off until viable solution found
                   },
                   development: {
                     verbose: true,

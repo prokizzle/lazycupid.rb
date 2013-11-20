@@ -3,12 +3,13 @@ module LazyCupid
   # OKCupid profile page parser
   # Class methods for turning a scraped Mechanize page for an OKCupid user profile
   # into a hash of attributes for easy data manipulation and storage.
-  # 
+  #
   class Profile
+    require_relative '../lingua/lib/readability'
 
     attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
 
-    public 
+    public
 
     def self.initialize
       @verbose  = true
@@ -16,10 +17,10 @@ module LazyCupid
     end
 
     # Parses a profile page for user attributes
-    # 
+    #
     # @param user_page [Hash] [A browser request hash containing body, url, and Mechanize page object]
     # @return [Hash] a hash of attributes scraped from the profile page
-    # 
+    #
     def self.parse(user_page)
       @new_handle = nil
       @body = user_page[:body]
@@ -30,6 +31,17 @@ module LazyCupid
       url = user_page[:url]
       inactive = @body.match(/we don’t have anyone by that name/)
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
+      readability = Lingua::EN::Readability.new(essays)
+
+      # num = readability.flesch.ceil
+      # case num
+      # when num > 60 then grade = "middle school"
+      # when num 50..59 then grade = "high school"
+      # when num 30..49 then grade = "college"
+      # when num < 30 then grade = "college grad"
+      # else grade = ""
+      # end
+      # puts grade
       if inactive
         {inactive: true}
       else
@@ -58,13 +70,29 @@ module LazyCupid
          a_list_name_change: intended_handle.downcase != handle.downcase,
          new_handle: @new_handle,
          image: profile_picture,
+         essays: essays,
+         kincaid: kincaid,
+         fog: fog,
+         flesch: flesch,
          body: @body,
          html: @html }
       end
-      
+
     end
 
     private
+
+    def self.kincaid
+      return readability.kincaid.ceil rescue nil
+    end
+
+    def self.fog
+      return readability.fog.ceil rescue nil
+    end
+
+    def self.flesch
+      return readability.flesch.ceil rescue nil
+    end
 
     def self.intended_handle
       @intended_handle
@@ -260,5 +288,17 @@ module LazyCupid
     #   @db.is_ignored(handle)
     # end
 
+    def self.essays
+      text = ""
+      text += @html.parser.xpath("//div[@id='essay_text_0']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_1']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_2']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_3']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_6']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_7']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_8']").text
+      text += " \n" + @html.parser.xpath("//div[@id='essay_text_9']").text
+      return text.to_s
+    end
   end
 end

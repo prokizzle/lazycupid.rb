@@ -193,7 +193,7 @@ module LazyCupid
     end
 
     def default_match_search
-      5.times { test_more_matches(MatchQueries.default_query) }
+      5.times { test_more_matches(MatchQueries.default_query) } if $scrape_match_search
     end
 
     def test_more_matches(query="http://www.okcupid.com/match?timekey=1384469612&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&match_card_class=just_appended&low=81&count=10&ajax_load=1")

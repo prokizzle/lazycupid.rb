@@ -51,7 +51,7 @@ module LazyCupid
 
       # OKCupid login sequence
       @page                           = agent.get("http://www.okcupid.com/")
-      form                            = page.forms.first
+      form                            = page.forms[1]
       form['username']                = @username
       form['password']                = @password
       @page                           = form.submit

@@ -202,21 +202,15 @@ module LazyCupid
       result = async_response(query)
       parsed = JSON.parse(result[:html].content).to_hash
       html = parsed["html"]
-      @details = html.scan(/<div class="match_row match_row_alt\d clearfix " id="usr-([\w\d_-]+)">/)
+      @details = html.scan(/<div id="usr-([\w\d_-]+)-wrapper" class="match_card_wrapper user-not-hidden ">/)
       html_doc = Nokogiri::HTML(html)
-      # @db.open
 
       @gender, @age, @state, @city     = {}
         @details.each do |user|
       # begin
-          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[1]").to_s
-          result2 = html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
+          result2 = html_doc.xpath("//div[@id='usr-#{user[0]}-wrapper']").to_s
           age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
-          # age = "#{result.match(/(\d{2})/)}".to_i
-          # gender = "#{result.match(/(M|F)</)[1]}"
-          # gender = result2.match(/\bYour rating of her\b/) ? 'F' : 'M'
           gender = $gender
-          result = html_doc.xpath("//div[@id='usr-#{user[0]}']/div[1]/div[1]/p[2]").to_s
           username = user[0].to_s
           puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
           @db.add_user(username, gender, "ajax_match_search")
@@ -229,8 +223,8 @@ module LazyCupid
           state = RegEx.parsed_location(location)[:state]
           puts "city: #{city}, state: #{state}" if $debug
           @db.set_location(user: username, city: city, state: state)
-          match_percent = /(\d+)%<\/span> Match/.match(result2)[1]
-          # puts "#{username} #{match_percent} match"
+          match_percent = /"match">\n\s+(\d+)%/.match(result2)[1]
+          puts "#{username} #{match_percent} match" if $debug
           @db.set_match_percentage(username, match_percent)
       # rescue
       #   File.open("result.html", 'w') { |file| file.write(result2) }

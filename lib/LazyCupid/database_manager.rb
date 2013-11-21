@@ -22,7 +22,8 @@ module LazyCupid
       @settings = args[:settings]
       @db = PGconn.connect( :dbname => @settings.db_name,
                             :password => @settings.db_pass,
-                            :user => @settings.db_user
+                            :user => @settings.db_user,
+                            :host => @settings.db_host
                             )
       import
       # tasks     = args[:tasks] unless @settings.debug

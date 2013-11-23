@@ -207,30 +207,19 @@ module LazyCupid
 
       @gender, @age, @state, @city     = {}
         @details.each do |user|
-      # begin
           result2 = html_doc.xpath("//div[@id='usr-#{user[0]}-wrapper']").to_s
           age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
           gender = $gender
           username = user[0].to_s
           puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
-          @db.add_user(username, gender, "ajax_match_search")
-          # @db.add(username: username, gender:gender, added_From: "ajax_match_search", age: age, city: city, state: state)
-          # @db.set_gender(:username => username, :gender => gender)
-          @db.set_age(username, age)
-          city, state = String.new
-          location = /span.class=.dot.>·<.span>(.+)$/.match(result2)[1]
-          city = RegEx.parsed_location(location)[:city]
-          state = RegEx.parsed_location(location)[:state]
+          city, state   = String.new
+          location      = /span.class=.dot.>·<.span>(.+)$/.match(result2)[1]
+          city          = RegEx.parsed_location(location)[:city]
+          state         = RegEx.parsed_location(location)[:state]
           puts "city: #{city}, state: #{state}" if $debug
-          @db.set_location(user: username, city: city, state: state)
-          match_percent = /"match">\n\s+(\d+)%/.match(result2)[1]
+          match_percent = /(\d+)% Match/.match(result2)[1]
           puts "#{username} #{match_percent} match" if $debug
-          @db.set_match_percentage(username, match_percent)
-      # rescue
-      #   File.open("result.html", 'w') { |file| file.write(result2) }
-      #   break
-      #   Kernel.exit
-      # end
+          @db.add(username: username, gender: gender, added_From: "ajax_match_search", age: age, city: city, state: state, match_percent: match_percent, age: age)
         end
 
       # @db.close

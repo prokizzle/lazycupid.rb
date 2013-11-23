@@ -56,6 +56,7 @@ module LazyCupid
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
       @db.exec("update matches set ignored=true where ignore_list=1")
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
+
       fix_blank_distance
     end
 
@@ -153,7 +154,7 @@ module LazyCupid
         last_online integer,
         ignore_list integer        )")
       rescue Exception => e
-        puts e.message if $verbose
+        puts e.message if $debug
       end
 
       begin
@@ -355,7 +356,7 @@ module LazyCupid
                                    @login, #8
                                    visit_gay, #9
                                    visit_straight, #10
-      visit_bisexual, #11
+                                   visit_bisexual, #11
       alt_gender]) #12
 
       return result

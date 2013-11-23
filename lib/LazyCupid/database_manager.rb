@@ -224,6 +224,20 @@ module LazyCupid
       end
     end
 
+    def add(user)
+
+      unless existsCheck(user[:username]) || user[:username] == "pictures"
+        puts "Adding user:        #{user[:username]}" if $verbose
+
+        distance = guess_distance(@login, user[:city], user[:state])
+
+        @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
+      else
+        @db.exec("update matches set inactive=false where name=$1", [user[:username]])
+        puts "User already in db: #{user[:username]}" if $verbose
+      end
+    end
+
     def delete_user(username)
       puts "Deleting #{username}"
       # @db.exec("delete from matches where name=$1 and account=$2", [username, @login])

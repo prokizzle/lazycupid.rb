@@ -7,7 +7,7 @@ module LazyCupid
 
   # Handler for API events
   # Each event from the OKCupid API is assigned a method, with actions based on event type
-  # 
+  #
   class APIEvents
 
     # if you come across an unknown API event, add it to attr_reader as a workaround
@@ -83,6 +83,10 @@ module LazyCupid
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
       @last_call = Time.now.to_i
       # end
+    end
+
+    def mutual_match
+      puts "* New mutual match: #{@event["from"]} *"
     end
 
     # Returns a HTML formatted link for a given profile

@@ -49,7 +49,7 @@ module LazyCupid
 
       # OKCupid login sequence
       @page                           = agent.get("http://www.okcupid.com/")
-      form                            = page.forms.first
+      form                            = page.forms[1]
       form['username']                = @username
       form['password']                = @password
       @page                           = form.submit
@@ -169,6 +169,7 @@ module LazyCupid
       # agent.read_timeout=30
       page_object = agent.get(url)
       # @log.debug "#{@url}"
+      page_object.encoding = 'utf-8'
       page_body = page_object.parser.xpath("//html").to_html
       @hash[request_id] = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true}
       {url: url.to_s, body: page_body.to_s, html: page_object, hash: request_id.to_i}
@@ -186,6 +187,7 @@ module LazyCupid
       url                   = URI.escape(link)
       agent.read_timeout    = 30
       page_object           = agent.get(link)
+      page_object.encoding  = 'utf-8'
       page_body             = page_object.parser.xpath("//body").to_html
       page_source           = page_object.parser.xpath("//html").to_html
       @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false}
@@ -217,6 +219,7 @@ module LazyCupid
       url = URI.escape(link)
       agent.read_timeout=30
       page_object = agent.get(link)
+      page_object.encoding = 'utf-8'
       # @log.debug "#{@url}"
       page_body = page_object.parser.xpath("//body").to_html
       @hash[request_id] = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true}

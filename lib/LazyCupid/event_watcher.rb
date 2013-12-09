@@ -96,6 +96,7 @@ module LazyCupid
       begin
         JSON.parse(content.gsub('\"', '"')).to_hash
       rescue JSON::ParserError
+        puts content
         {}
       end
     end
@@ -107,6 +108,7 @@ module LazyCupid
     def check_events
       temp              = poll_response
       index             = 0
+      puts temp if $debug
       begin
         if temp.has_key?("people")
           temp["people"].each do |user|
@@ -115,24 +117,26 @@ module LazyCupid
             end
           end
         end
+        unless temp == {}
+          begin
+            temp["events"].each do |event|
+              key = "#{event['server_seqid']}#{event['type']}"
+              unless @hash[key] == event["server_gmt"]
+                # puts event
+                @api.process(event, @people_hash[event['from']]||nil, key)
+                @hash[key] = event["server_gmt"]
+              end
 
-        begin
-          temp["events"].each do |event|
-            key = "#{event['server_seqid']}#{event['type']}"
-            unless @hash[key] == event["server_gmt"]
-              # puts event
-              @api.process(event, @people_hash[event['from']]||nil, key)
-              @hash[key] = event["server_gmt"]
             end
-
+          rescue
+            # puts "*****"
+            #@log.debug temp["events"]
+            # puts "*****"
+            puts temp
           end
-        rescue
-          # puts "*****"
-          @log.debug temp["events"]
-          # puts "*****"
         end
       rescue Exception => e
-        puts e.message, e.backtrace
+        # puts e.message, e.backtrace
       end
 
     end

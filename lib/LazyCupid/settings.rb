@@ -27,6 +27,7 @@ module LazyCupid
         end
       end
       unless File.exists?(@filename)
+        # [todo] - add default options for readability score filtering
         # Create generic preference file
         config = {geo: {
                     distance: 50
@@ -76,6 +77,7 @@ module LazyCupid
       # Load database config
       @db_settings = YAML.load_file(@db_file)
 
+      # [todo] - add support for readability score filtering
 
       # Load settings attributes into variables for external reference
       @max_distance           = @settings[:geo][:distance].to_i
@@ -122,12 +124,14 @@ module LazyCupid
 
     def reload_config
       settings          = YAML.load_file(@filename)
+
       $max_distance     = settings[:geo][:distance].to_i
       $min_percent      = settings[:matching][:min_percent].to_i
       $verbose          = settings[:development][:verbose]       == true
       $debug            = settings[:development][:debug]         == true
       $roll_frequency   = settings[:visit_freq][:roll_frequency].to_s
       $match_frequency  = settings[:scraping][:match_frequency].to_s
+      $scrape_match_search = settings[:scraping][:scrape_match_search]      == true
 
     end
 

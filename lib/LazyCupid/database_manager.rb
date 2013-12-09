@@ -299,6 +299,8 @@ module LazyCupid
     end
 
     def followup_query
+      # [todo] - add support for readability score filtering
+
       puts "**********", "Current distance: #{$max_distance}", "**********" if $debug
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i

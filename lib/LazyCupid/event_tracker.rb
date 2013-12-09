@@ -171,6 +171,11 @@ module LazyCupid
     end
 
     def register_message(sender, timestamp, gender)
+
+      # [todo] - add messages table to db
+      # [todo] - register message with timestamp, account, sender, and message id
+      # [todo] - check to see if this message is unique/new
+
       # @stored_time     = @db.get_last_received_message_date(sender).to_i
       if timestamp.to_i >= Time.now.to_i - 1800
         puts "New message from #{sender}"
@@ -193,10 +198,10 @@ module LazyCupid
     end
 
     def default_match_search
-      5.times { test_more_matches(MatchQueries.default_query) } if $scrape_match_search
+      5.times { scrape_match_search_page(MatchQueries.default_query) } if $scrape_match_search
     end
 
-    def test_more_matches(query="http://www.okcupid.com/match?timekey=1384469612&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&match_card_class=just_appended&low=81&count=10&ajax_load=1")
+    def scrape_match_search_page(query="http://www.okcupid.com/match?timekey=1384469612&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&match_card_class=just_appended&low=81&count=10&ajax_load=1")
       # begin
       # result = @browser.body_of("http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&low=11&count=10&&filter7=6,604800&ajax_load=1", Time.now.to_i)
       result = async_response(query)

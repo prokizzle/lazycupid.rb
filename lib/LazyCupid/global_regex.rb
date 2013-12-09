@@ -8,7 +8,7 @@
 
 # Profile
 #
-$inactive_profile               = Regexp.new(/\bwe don’t have anyone by that name\b/)
+$inactive_profile               = Regexp.new(/\bwe don’t have anyone by that name\b/u)
 $handle                         = Regexp.new(/<div class="userinfo"> <div class="details"> <p class="username">(.+)<.p> <p class="info">/)
 $relative_distance              = Regexp.new(/\((\d+) miles*\)/)
 

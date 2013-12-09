@@ -38,13 +38,17 @@ module LazyCupid
       unless current_user == @db.login
         unless current_user.nil? || current_user == ""
           puts "Visting #{current_user}." if $debug
-          puts "Rolling..." unless @already_rolling
+          if $verbose
+            puts "Rolling..." unless @already_rolling
+          end
           visit_user(current_user)
           @already_idle = false
           @already_rolling = true
           # return {user: obj, rolling: @already_rolling}
         else
-          puts "Idle..." unless @already_idle
+          if $verbose
+            puts "Idle..." unless @already_idle
+          end
           @already_idle = true
           @already_rolling = false
           # return {rolling: @already_rolling}
@@ -99,9 +103,11 @@ module LazyCupid
           @already_delayed = false
           @roll_list = build_user_list(@db.followup_query)
           @last_query_time = Time.now.to_i
-          puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+          if $verbose
+            puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+          end
         else
-          puts "Delaying query..." unless @already_delayed
+          # puts "Delaying query..." unless @already_delayed
           @already_delayed = true
         end
         return @roll_list

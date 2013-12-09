@@ -1,5 +1,9 @@
 require './includes'
-
+# [todo] - bring up to date with latest changes to event_watcher and browser
+# [fix] - make api_tester work
+# [todo] - do elongated testing against okcupid api
+# [todo] - rework the event parser
+# [todo] - rework the already-see-events tracking system (the de-duplicator)
 
 
 @debug = false

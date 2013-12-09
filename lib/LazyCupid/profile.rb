@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module LazyCupid
 
   # OKCupid profile page parser
@@ -22,14 +24,18 @@ module LazyCupid
     # @return [Hash] a hash of attributes scraped from the profile page
     #
     def self.parse(user_page)
+
+      # [todo] - separate response hashes into match & user specific table data
       @new_handle = nil
-      @body = user_page[:body]
+      @body = user_page[:body].encode!('UTF-16', 'UTF-8', :invalid => :replace, :replace => '').encode!('UTF-8', 'UTF-16')
       @html = user_page[:html]
       @source = user_page[:source]
-      # puts @html
-      # wait = gets.chomp
       url = user_page[:url]
-      inactive = @body.match(/we don’t have anyone by that name/)
+      # begin
+        inactive = !(@body =~ $inactive_profile).nil?
+      # rescue
+        # puts @body
+      # end
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
       readability = Lingua::EN::Readability.new(essays)
 

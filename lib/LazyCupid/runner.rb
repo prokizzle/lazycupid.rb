@@ -9,7 +9,7 @@ module LazyCupid
       @password     = args[ :password]
       config_path   = File.dirname($0) + '/../config/'
       log_path      = File.dirname($0) + '/../logs/'
-      @log          = Logger.new("#{log_path}#{@username}_#{Time.now}.log")
+      @log          = nil #Logger.new("#{log_path}#{@username}_#{Time.now}.log")
       BloatCheck.logger = Logger.new("#{log_path}bloat_#{Time.now}.log")
       @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
       @config       = Settings.new(username: username, path: config_path, browser: @browser)
@@ -249,10 +249,7 @@ module LazyCupid
       @app.pre_roll_actions
 
       @app.scheduler.every '30m', :allow_overlapping => false, :mutex => 'tracker' do
-        # if @has_unread_messages is true
         @app.scrape_inbox
-        #   @has_unread_messages = false
-        # end
       end
       #
       # app.scheduler.every '3h', :mutex => 'that_mutex' do
@@ -261,18 +258,17 @@ module LazyCupid
 
       @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
         @app.check_events
-      #   # @has_unread_messages = true if @app.unread_messages > 0
       end
 
-      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'tracker' do
+      @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
         @app.scrape_ajax_matches
       end
 
-      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'this_mutex' do
+      @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
         @app.reload_settings
       end
 
-      @app.scheduler.every '6s', :allow_overlapping => false, :mutex => 'that_mutex' do #|job|
+      @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'roller' do #|job|
         @app.roll
       end
 

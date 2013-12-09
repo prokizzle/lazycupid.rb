@@ -9,26 +9,24 @@ module LazyCupid
     end
 
     def visited(user)
-      @db.get_visit_count(user)
+      return @db.get_visit_count(user)
     end
 
     def were_visited(user)
-      @db.get_visitor_count(user)
+      return @db.get_visitor_count(user)
     end
 
     def last_visited(match_name)
       result = @db.get_my_last_visit_date(match_name)
       if result >1
-        Time.at(result).ago.to_words
+        return Time.at(result).ago.to_words
       else
-        "never"
+        return "never"
       end
     end
 
     def prev_visit(user)
-      result = @db.get_prev_visit(user)
-      # Time.at(result).ago.to_words unless result == 0
-      result
+      return @db.get_prev_visit(user)
     end
   end
 end

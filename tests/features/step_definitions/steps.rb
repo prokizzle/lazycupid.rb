@@ -1,10 +1,12 @@
 # require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "includes.rb"))
 require_relative '../../../lib/LazyCupid/includes'
+# [fix] - login session for tests seems broken
+# [fix] - get scraper tests to pass
 
 Before('login') do
-  user = "dixiesugar86"
-  @account = "***REMOVED***"
-  @password = "***REMOVED***"
+  user = "***REMOVED***"
+  @account = "----ryan"
+  @password = "666yoshi"
   url = "http://www.okcupid.com/profile/#{user}"
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)
@@ -12,9 +14,9 @@ Before('login') do
 end
 
 Before('scraper') do
-  user = "dixiesugar86"
-  @account = "***REMOVED***"
-  @password = "***REMOVED***"
+  user = "***REMOVED***"
+  @account = "----ryan"
+  @password = "666yoshi"
   url = "http://www.okcupid.com/profile/#{user}"
   @settings = LazyCupid::Settings.new(username: @account, path: File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "..", "config")))
   @db = LazyCupid::DatabaseMgr.new(login_name: @account, settings: @settings)

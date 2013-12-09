@@ -27,6 +27,7 @@ module LazyCupid
         end
       end
       unless File.exists?(@filename)
+        # [todo] - add default options for readability score filtering
         # Create generic preference file
         config = {geo: {
                     distance: 50
@@ -39,6 +40,7 @@ module LazyCupid
                     max_age: 50, #match_preferences[:max_age],
                     age_sort: "ASC", #prefer younger
                     gender: "F",
+                    alt_gender: "R",
                     min_height: 0, #flatlanders!
                     max_height: 300, #giants!
                     height_sort: "ASC", #prefer shorter
@@ -48,12 +50,15 @@ module LazyCupid
                     visit_bisexual: true
                   },
                   visit_freq: {
-                    days_ago: 5,
-                    max_followup: 25
+                    days_ago: 10,
+                    max_followup: 2,
+                    roll_frequency: 6 #in seconds
                   },
                   scraping: {
                     autodiscover_on: true,
-                    import_hidden_users: false
+                    import_hidden_users: false,
+                    match_frequency: 2, #in minutes,
+                    scrape_match_search: false #off until viable solution found
                   },
                   development: {
                     verbose: true,
@@ -72,6 +77,7 @@ module LazyCupid
       # Load database config
       @db_settings = YAML.load_file(@db_file)
 
+      # [todo] - add support for readability score filtering
 
       # Load settings attributes into variables for external reference
       @max_distance           = @settings[:geo][:distance].to_i
@@ -80,6 +86,7 @@ module LazyCupid
       @visit_gay              = @settings[:matching][:visit_gay]
       @min_percent            = @settings[:matching][:min_percent].to_i
       @gender                 = @settings[:matching][:gender].to_s
+      @alt_gender             = @settings[:matching][:alt_gender].to_s
       @min_age                = @settings[:matching][:min_age].to_i
       @max_age                = @settings[:matching][:max_age].to_i
       @age_sort               = @settings[:matching][:age_sort].to_s
@@ -89,8 +96,12 @@ module LazyCupid
       @last_online_cutoff     = @settings[:matching][:last_online_cutoff].to_i
       @days_ago               = @settings[:visit_freq][:days_ago].to_i
       @max_followup           = @settings[:visit_freq][:max_followup].to_i
+      @roll_frequency         = @settings[:visit_freq][:roll_frequency].to_s
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
+      @match_frequency        = @settings[:scraping][:match_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
+      @scrape_match_search    = @settings[:scraping][:scrape_match_search]      == true
+
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
       @db_name                = @db_settings["development"]["database"].to_s
@@ -100,16 +111,29 @@ module LazyCupid
       @db_adapter             = @db_settings["development"]["adapter"].to_s
 
       # Global variables for mid-session reloads
-      $max_distance = @max_distance
-      $min_percent  = @min_percent
-      $verbose      = @verbose
+
+      $max_distance     = @max_distance
+      $min_percent      = @min_percent
+      $verbose          = @verbose
+      $debug            = @debug
+      $roll_frequency   = @roll_frequency
+      $match_frequency  = @match_frequency
+      $gender           = @gender
+      $alt_gender       = @alt_gender
+      $scrape_match_search    = @scrape_match_search
     end
 
     def reload_config
-      settings = YAML.load_file(@filename)
-      $max_distance = settings[:geo][:distance].to_i
-      $min_percent  = settings[:matching][:min_percent].to_i
-      $verbose      = settings[:development][:verbose] == true
+      settings          = YAML.load_file(@filename)
+
+      $max_distance     = settings[:geo][:distance].to_i
+      $min_percent      = settings[:matching][:min_percent].to_i
+      $verbose          = settings[:development][:verbose]       == true
+      $debug            = settings[:development][:debug]         == true
+      $roll_frequency   = settings[:visit_freq][:roll_frequency].to_s
+      $match_frequency  = settings[:scraping][:match_frequency].to_s
+      $scrape_match_search = settings[:scraping][:scrape_match_search]      == true
+
 
     end
 

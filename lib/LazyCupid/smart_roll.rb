@@ -18,10 +18,14 @@ module LazyCupid
       @tracker    = args[:tracker]
       @roll_list  = {}
       @roll_list  = reload
-      # @verbose    = @settings.verbose
-      # @debug      = @settings.debug
+
+      @last_query_time = Time.now.to_i
+      @verbose    = $verbose
+      @debug      = $debug
+
       @alt_reload = false
       @already_idle = true
+      @already_delayed = false
       @already_rolling = false
     end
 
@@ -36,13 +40,17 @@ module LazyCupid
       unless current_user == @db.login
         unless current_user.nil? || current_user == ""
           puts "Visting #{current_user}." if $debug
-          puts "Rolling..." unless @already_rolling
+          if $verbose
+            puts "Rolling..." unless @already_rolling
+          end
           visit_user(current_user)
           @already_idle = false
           @already_rolling = true
           # return {user: obj, rolling: @already_rolling}
         else
-          puts "Idle..." unless @already_idle
+          if $verbose
+            puts "Idle..." unless @already_idle
+          end
           @already_idle = true
           @already_rolling = false
           # return {rolling: @already_rolling}
@@ -86,15 +94,24 @@ module LazyCupid
       # array
       return array.to_set.to_a
     end
-    
+
     # Wrapper array for user queue
     # Auto reloads queue if empty
     # @return [Array]
     #
     def cache
       if @roll_list.empty?
-        @roll_list = build_user_list(@db.followup_query)
-        puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+        if Time.now.to_i - @last_query_time >= 60
+          @already_delayed = false
+          @roll_list = build_user_list(@db.followup_query)
+          @last_query_time = Time.now.to_i
+          if $verbose
+            puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+          end
+        else
+          # puts "Delaying query..." unless @already_delayed
+          @already_delayed = true
+        end
         return @roll_list
       else
         return @roll_list
@@ -134,11 +151,10 @@ module LazyCupid
     # Actions to be executed on app launch
     #
     def payload
-      puts "Getting new matches..." unless $verbose
-      3.times do
-        @tracker.test_more_matches
-      end
-      puts "Checking for new messages..." unless $verbose
+
+      puts "Getting new matches..." unless verbose
+      @tracker.default_match_search
+      puts "Checking for new messages..." unless verbose
       @tracker.scrape_inbox
       # check_visitors
     end
@@ -214,7 +230,7 @@ module LazyCupid
         # puts "Logging user #{profile}"
         @db.log2(profile)
         # @harvester.body = @user.body
-        autodiscover_new_users(profile) if profile[:gender] == @settings.gender
+        autodiscover_new_users(profile) if profile[:gender] == $gender || profile[:gender] == $alt_gender
       end
     end
 

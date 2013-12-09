@@ -22,13 +22,13 @@ module LazyCupid
       @settings = args[:settings]
       @db = PGconn.connect( :dbname => @settings.db_name,
                             :password => @settings.db_pass,
-                            :user => @settings.db_user
+                            :user => @settings.db_user,
+                            :host => @settings.db_host
                             )
       import
       # tasks     = args[:tasks] unless @settings.debug
       open_db
-      # db_tasks if tasks
-      fix_blank_distance
+      # db_tasks if args[:tasks]
       @verbose  = @settings.verbose
       @debug    = @settings.debug
     end
@@ -56,6 +56,7 @@ module LazyCupid
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
       @db.exec("update matches set ignored=true where ignore_list=1")
       @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
+
       fix_blank_distance
     end
 
@@ -95,10 +96,13 @@ module LazyCupid
       end
       puts a_from
       bar = ProgressBar.new(queue.to_set.to_a.size)
+      c = 0
       queue.to_set.to_a.each do |r|
         # puts "Updating #{r["city"]}"
         @db.exec("update matches set distance=$1 where account=$2 and city=$3 and state=$4 and distance is null", [guess_distance(r["account"], r["city"], r["state"]), r["account"], r["city"], r["state"]])
         bar.increment!
+        c += 1
+        # break if c >= 50
       end
     end
 
@@ -150,7 +154,7 @@ module LazyCupid
         last_online integer,
         ignore_list integer        )")
       rescue Exception => e
-        puts e.message if verbose
+        puts e.message if $debug
       end
 
       begin
@@ -165,7 +169,7 @@ module LazyCupid
         ")
         @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
       rescue Exception => e
-        puts e.message if verbose
+        puts e.message if $verbose
       end
       @did_migrate = true
     end
@@ -210,14 +214,28 @@ module LazyCupid
 
     def add_user(username, gender, added_from)
       unless existsCheck(username) || username == "pictures"
-        puts "Adding user:        #{username}" if verbose
+        puts "Adding user:        #{username}" if $verbose
         # @db.transaction
         @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from) values ($1, $2, $3, $4, $5, $6, $7)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender, added_from])
         # @db.commit
         stats_add_new_user
       else
         @db.exec("update matches set inactive=false where name=$1", [username])
-        puts "User already in db: #{username}" if verbose
+        puts "User already in db: #{username}" if $verbose
+      end
+    end
+
+    def add(user)
+
+      unless existsCheck(user[:username]) || user[:username] == "pictures"
+        puts "Adding user:        #{user[:username]}" if $verbose
+
+        distance = guess_distance(@login, user[:city], user[:state])
+
+        @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
+      else
+        @db.exec("update matches set inactive=false where name=$1", [user[:username]])
+        puts "User already in db: #{user[:username]}" if $verbose
       end
     end
 
@@ -257,12 +275,12 @@ module LazyCupid
     # end
 
     def update_visit_count(match_name, number)
-      puts "Updating visit count: #{match_name}" if verbose
+      puts "Updating visit count: #{match_name}" if $verbose
       @db.exec( "update matches set counts=$1 where name=$2 and account=$3", [number.to_i, match_name, @login] )
     end
 
     def increment_visit_count(match_name)
-      puts "Incrementing visit count: #{match_name}" if verbose
+      puts "Incrementing visit count: #{match_name}" if $verbose
       @db.exec("update matches set counts=counts + 1 where name=$1 and account=$2", [match_name, @login])
     end
 
@@ -281,10 +299,13 @@ module LazyCupid
     end
 
     def followup_query
-      puts "**********", "Current distance: #{$max_distance}", "**********"
+      # [todo] - add support for readability score filtering
+
+      puts "**********", "Current distance: #{$max_distance}", "**********" if $debug
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
-      desired_gender      = @settings.gender
+      desired_gender      = $gender
+      alt_gender          = $alt_gender
       min_age             = @settings.min_age
       max_age             = @settings.max_age
       age_sort            = @settings.age_sort
@@ -322,7 +343,7 @@ module LazyCupid
          and (inactive = false or inactive is null)
          and (age between $4 and $5 or age is null)
          and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
-         and (gender=$7)
+         and (gender=$7 or gender=$12)
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
         order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
@@ -337,7 +358,8 @@ module LazyCupid
                                    @login, #8
                                    visit_gay, #9
                                    visit_straight, #10
-      visit_bisexual]) #11
+                                   visit_bisexual, #11
+      alt_gender]) #12
 
       return result
     end
@@ -518,7 +540,7 @@ module LazyCupid
     end
 
     def increment_received_messages_count(user)
-      puts "Recieved msg count updated: #{user}" if verbose
+      puts "Recieved msg count updated: #{user}" if $verbose
       @db.exec("update matches set r_msg_count=r_msg_count+1 where name=$1 and account=$2", [user, @login])
     end
 
@@ -528,7 +550,7 @@ module LazyCupid
     end
 
     def set_last_received_message_date(user, date)
-      puts "Last Msg date updated: #{user}:#{date}" if verbose
+      puts "Last Msg date updated: #{user}:#{date}" if $verbose
       @db.exec("update matches set last_msg_time=$1 where name=$2 and account=$3", [date.to_i, user, @login])
     end
 
@@ -575,14 +597,14 @@ module LazyCupid
     def set_my_last_visit_date(user, date=Time.now.to_i)
       prev = get_my_last_visit_date(user)
       now = Time.now.to_i
-      puts "Last visit: #{prev}" if debug
-      puts "Now: #{now}" if debug
+      puts "Last visit: #{prev}" if $debug
+      puts "Now: #{now}" if $debug
       @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
       @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
     end
 
     def set_visitor_timestamp(visitor, timestamp)
-      puts "Updating last visit time: #{visitor}" if verbose
+      puts "Updating last visit time: #{visitor}" if $verbose
       @db.exec( "update matches set visitor_timestamp=$1 where name=$2 and account=$3", [timestamp, visitor, @login])
     end
 
@@ -617,7 +639,7 @@ module LazyCupid
         increment_visit_count(user[:handle])
         set_my_last_visit_date(user[:handle])
         set_user_details(user)
-        p "Height: #{user[:height]}" if debug
+        p "Height: #{user[:height]}" if $debug
       end
       stats_add_visit(user[:handle])
     end
@@ -658,11 +680,11 @@ module LazyCupid
         add_user(username, "Q", "hidden_users")
       end
       unless is_ignored(username)
-        puts "Added to ignore list: #{username}" if verbose
+        puts "Added to ignore list: #{username}" if $verbose
         @db.exec( "update matches set ignore_list=$3 where name=$1 and account=$2", [username, @login, 1])
         @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
       else
-        puts "User already ignored: #{username}" if verbose
+        puts "User already ignored: #{username}" if $verbose
       end
     end
 

@@ -96,7 +96,7 @@ module LazyCupid
       begin
         return JSON.parse(content.gsub('\"', '\'')).to_hash
       rescue JSON::ParserError
-        return JSON.parse(content.gsub('\"', '"').gsub('"topic" : false }"}]', '"topic" : false }"')).to_hash
+        return content
       end
     end
 

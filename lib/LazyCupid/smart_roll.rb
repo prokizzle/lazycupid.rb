@@ -66,7 +66,7 @@ module LazyCupid
       @total_visitors = 0
       @total_visits = 0
       @start_time = Time.now.to_i
-      payload
+      payload unless $fast_launch
       puts "","Running..." #unless $verbose
     end
 

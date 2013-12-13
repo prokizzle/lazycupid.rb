@@ -62,7 +62,8 @@ module LazyCupid
                   },
                   development: {
                     verbose: true,
-                    debug: false
+                    debug: false,
+                    fast_launch: false
                   }
                   }
         File.open(@filename, "w") do |f|
@@ -104,6 +105,7 @@ module LazyCupid
 
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
+      @fast_launch                = @settings[:development][:fast_launch]       == true
       @db_name                = @db_settings["development"]["database"].to_s
       @db_host                = @db_settings["development"]["host"].to_s
       @db_user                = @db_settings["development"]["username"].to_s
@@ -121,6 +123,7 @@ module LazyCupid
       $gender           = @gender
       $alt_gender       = @alt_gender
       $scrape_match_search    = @scrape_match_search
+      $fast_launch                = @fast_launch
     end
 
     def reload_config

@@ -10,12 +10,12 @@ module LazyCupid
       @settings = args[:settings]
 
 
-      @db = Sequel.connect(
-        :adapter =>   'postgres',
-        :host =>      'localhost',
-        :database =>  'lzc',
+      @sequel = Sequel.connect(
+        :adapter =>   @settings.db_adapter,
+        :host =>      @settings.db_host,
+        :database =>  @settings.db_name,
         :user =>      @settings.db_user,
-        :password =>  @settings.db_pass,
+        :password =>  @settings.db_pass
       )
       # begin
       # create_tables
@@ -181,35 +181,22 @@ module LazyCupid
         user = Hash.new(
 
         )
-        begin
-          @users.insert(:name => args["name"],
-                        :age => args["age"],
-                        :gender => args["gender"],
-                        :sexuality => args["sexuality"],
-                        :relationship_status => args["relationship_status"],
-                        :city => args["city"],
-                        :state => args["state"],
-                        :height => args["height"],
-                        :last_online => args["last_online"],
-                        :smoking => args["smoking"],
-                        :drinking => args["drinking"],
-                        :drugs => args["drugs"],
-                        :body_type => args["body_type"])
-        rescue
-          @users.where(:name => args["name"]).update(
-            :age => args["age"],
-            :gender => args["gender"],
-            :sexuality => args["sexuality"],
-            :relationship_status => args["relationship_status"],
-            :city => args["city"],
-            :state => args["state"],
-            :height => args["height"],
-            :last_online => args["last_online"],
-            :smoking => args["smoking"],
-            :drinking => args["drinking"],
-            :drugs => args["drugs"],
-          :body_type => args["body_type"])
-        end
+          @users.find_or_create(:name => args["name"]) do |user|
+
+                        user.age =  args["age"]
+                        user.gender =  args["gender"]
+                        user.sexuality =  args["sexuality"]
+                        user.relationship_status =  args["relationship_status"]
+                        user.city =  args["city"]
+                        user.state =  args["state"]
+                        user.height =  args["height"]
+                        user.last_online =  args["last_online"]
+                        user.smoking =  args["smoking"]
+                        user.drinking =  args["drinking"]
+                        user.drugs =  args["drugs"]
+                        user.body_type =  args["body_type"]
+            end
+
       end
     end
 

@@ -1,8 +1,15 @@
 require 'uuidtools'
 require 'pg'
 require 'progress_bar'
+require 'sequel'
 
 module LazyCupid
+$db = Sequel.postgres(
+        :host =>      'localhost',
+        :database =>  $db_name,
+        :user =>      $db_user,
+        :database =>  'lazy_cupid',
+      )
 
   # A Postgres database SQL wrapper for reading and writing data to and from
   # the database.
@@ -680,6 +687,23 @@ module LazyCupid
                 user[:friend_percentage],
                 user[:enemy_percentage],
                 user[:handle]])
+
+      User.find_or_create(:name => user[:handle]) do |u|
+                        u.age =  user[:age]
+                        u.gender =  user[:gender]
+                        u.sexuality =  user[:sexuality]
+                        # u.relationship_status =  user[:relationship_status]
+                        u.city =  user[:city]
+                        u.state =  user[:state]
+                        u.height =  user[:height]
+                        u.last_online =  user[:last_online]
+                        u.smokes =  (user[:smoking] != "No")
+                        u.drinks =  (user[:drinking] != "Not at all")
+                        u.bodytype = user[:bodytype]
+                        u.ethnicity = user[:ethnicity]
+                        u.drugs =  (user[:drugs] != "Never")
+                        u.bodytype =  user[:body_type]
+      end
     end
 
     def is_ignored(username, gender="Q")
@@ -770,6 +794,10 @@ module LazyCupid
     end
 
   end
+
+    class User < Sequel::Model
+      # set_primary_key [:name]
+    end
 
     class IncomingMessage < Sequel::Model
       set_primary_key [:message_id]

@@ -151,7 +151,7 @@ module LazyCupid
       message_list = result[:body].scan(/"message_(\d+)"/)
       @total_msg_on_page = message_list.size
       message_list.each do |message_id|
-        begin
+        # begin
           message_id      = message_id.first
           msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
           # unless !(msg_block =~ /"subject">OKCupid!</).nil?
@@ -162,15 +162,15 @@ module LazyCupid
           gender          = "Q"
           # r = {"sender" => sender, "timestamp" => timestamp, "gender" => gender}
           # puts r
-          register_message(sender, timestamp, gender)
+          register_message(sender, timestamp, gender, message_id)
           # end
-        rescue
-          puts "Error tracking message"
-        end
+        # rescue
+          # puts "Error tracking message"
+        # end
       end
     end
 
-    def register_message(sender, timestamp, gender)
+    def register_message(sender, timestamp, gender, message_id)
 
       # [todo] - add messages table to db
       # [todo] - register message with timestamp, account, sender, and message id
@@ -183,6 +183,8 @@ module LazyCupid
 
       @db.add_user(sender, gender, "inbox")
       @db.ignore_user(sender)
+
+      @db.add_message(username: sender, message_id: message_id, timestamp: timestamp)
 
       # unless @stored_time == timestamp.to_i
       # puts "New message found: #{sender} at #{Time.at(timestamp)}"

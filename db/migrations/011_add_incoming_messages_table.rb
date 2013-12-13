@@ -4,6 +4,7 @@ Sequel.migration do
       Integer :username
       String :account
       Integer :timestamp
+      String :message_id, unique: true
     end
     alter_table :incoming_messages do
       add_primary_key(:id)

@@ -106,6 +106,24 @@ module LazyCupid
       end
     end
 
+    def add_message(args)
+      user = args[:username]
+      message_id = args[:message_id]
+      timestamp = args[:timestamp]
+
+      # @db.exec("insert into incoming_messages(account, username, message_id, timestamp) values($1, $2, $3, $4)", [@login, user, message_id, timestamp])
+      # begin
+      IncomingMessage.find_or_create(message_id: message_id) do |m|
+        m.account = @login
+        m.timestamp = timestamp
+        m.username = user
+      end
+    # rescue Sequel::DatabaseError => e
+      # puts e.sql
+      # sleep 10000
+    # end
+    end
+
     def set_estimated_distance(user, city, state)
       unless @db.exec("select * from matches where name=$1 and account=$2 and distance >= 0", [user, @login]).to_a.empty?
         @db.exec("update matches set distance=$1 where name=$2 and account=$3", [guess_distance(@login, city, state), user, @login])
@@ -752,4 +770,8 @@ module LazyCupid
     end
 
   end
+
+    class IncomingMessage < Sequel::Model
+      set_primary_key [:message_id]
+    end
 end

@@ -80,10 +80,6 @@ $db = Sequel.postgres(
       db.commit
     end
 
-    def open_db
-      import unless @did_migrate
-    end
-
     def open
       open_db
     end
@@ -150,60 +146,6 @@ $db = Sequel.postgres(
       state = args[:state]
       distance = guess_distance(@login, city, state)
       @db.exec("update matches set distance=$1, city=$2, state=$3 where name=$4 and account=$5", [distance, city, state, user, @login])
-    end
-
-    def import
-      begin
-        @db.exec("CREATE TABLE matches(
-        name text,
-        account text,
-        counts integer,
-        ignored text,
-        visitor_timestamp integer,
-        visit_count integer,
-        last_visit integer,
-        gender text,
-        sexuality text,
-        age integer,
-        relationship_status text,
-        match_percentage integer,
-        state text,
-        added_from text,
-        city text,
-        time_added text,
-        smoking text,
-        drinking text,
-        kids text,
-        drugs text,
-        height text,
-        body_type text,
-        distance integer,
-        match_percent integer,
-        friend_percent integer,
-        enemy_percent integer,
-        last_msg_time integer,
-        r_msg_count integer,
-        last_online integer,
-        ignore_list integer        )")
-      rescue Exception => e
-        puts e.message if $debug
-      end
-
-      begin
-        @db.exec("
-        create table stats(
-          total_visits integer,
-          total_visitors integer,
-          new_users integer,
-          total_messages integer,
-          account text
-          )
-        ")
-        @db.exec("insert into stats(total_visitors, total_visits, new_users, total_messages, account) values ($1, $2, $3, $4, $5)", [0, 0, 0, 0, @login])
-      rescue Exception => e
-        puts e.message if $verbose
-      end
-      @did_migrate = true
     end
 
     def stats_add_visit(name)

@@ -1,5 +1,6 @@
 require 'yaml'
 
+
 module LazyCupid
   class Settings
     attr_reader :distance_filter_type, :preferred_state, :visit_bisexual, :visit_gay, :visit_straight, :preferred_city, :max_distance,
@@ -123,6 +124,11 @@ module LazyCupid
       $gender           = @gender
       $alt_gender       = @alt_gender
       $scrape_match_search    = @scrape_match_search
+      $db_host                = @db_host
+      $db_user                = @db_user
+      $db_adapter             = @db_adapter
+      $db_pass                = @db_pass
+      $db_name                = @db_name
       $fast_launch                = @fast_launch
     end
 

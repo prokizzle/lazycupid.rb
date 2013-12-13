@@ -10,6 +10,9 @@ $db = Sequel.postgres(
         :user =>      $db_user,
         :database =>  'lazy_cupid',
       )
+#   class User < Sequel::Model
+#     set_primary_key [:name]
+#   end
 
   # A Postgres database SQL wrapper for reading and writing data to and from
   # the database.
@@ -335,6 +338,38 @@ $db = Sequel.postgres(
                                    visit_bisexual, #11
       alt_gender]) #12
 
+      # result = Match.where(
+      #   account => @login,
+      #   last_visit <=
+      #   )
+
+      # result = Match.where("account=?
+        # and (last_visit <= ? or last_visit is null)
+         # and (counts <= ? or counts is null)
+         # and (distance <= ? or distance is null)
+         # and (ignored = false or ignored is null)
+         # and (inactive = false or inactive is null)
+         # and (age between ? and ? or age is null)
+         # and (match_percent between ? and 100 or match_percent is null or match_percent=0)
+         # and (gender=? or gender=?)
+         # and (sexuality=? or sexuality=? or sexuality=? or sexuality is null)
+         # and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
+        # ",
+                                   # @login, #8
+                                  # min_time.to_i, #1
+                                   # max_counts, #2
+                                   # distance, #3
+                                   # min_age, #4
+                                   # max_age, #5
+                                   # min_percent, #6
+                                   # desired_gender, #7
+                                  # alt_gender,
+                                   # visit_gay, #9
+                                   # visit_straight, #10
+                                   # visit_bisexual #11
+      # ).to_hash(:name) #12
+# order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
+#         limit 20"
       return result
     end
 

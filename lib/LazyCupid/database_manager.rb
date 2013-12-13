@@ -27,17 +27,24 @@ $db = Sequel.postgres(
       @did_migrate = false
       @login    = args[:login_name]
       @settings = args[:settings]
+      @db = $db
       @db = PGconn.connect( :dbname => @settings.db_name,
                             :password => @settings.db_pass,
                             :user => @settings.db_user,
                             :host => @settings.db_host
                             )
-      import
       # tasks     = args[:tasks] unless @settings.debug
-      open_db
       # db_tasks if args[:tasks]
       @verbose  = @settings.verbose
       @debug    = @settings.debug
+      $sequel = Sequel.postgres(
+        :host =>      @settings.db_host,
+        :database =>  @settings.db_name,
+        :user =>      @settings.db_user,
+        :password =>  @settings.db_pass
+      )
+# @sequel = Sequel.connect("#{@settings.db_adapter}://#{@settings.db_user}:#{@settings.db_pass}@#{@settings.db_host}/#{@settings.db_name}")
+      # @users            = @sequel[:users]
     end
 
     def db
@@ -801,5 +808,9 @@ $db = Sequel.postgres(
 
     class IncomingMessage < Sequel::Model
       set_primary_key [:message_id]
+    end
+
+    class Match < Sequel::Model
+      set_primary_key [:account, :name]
     end
 end

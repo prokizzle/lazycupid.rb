@@ -7,7 +7,7 @@ module LazyCupid
   # into a hash of attributes for easy data manipulation and storage.
   #
   class Profile
-    require_relative '../lingua/lib/readability'
+    require 'lingua'
 
     attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
 
@@ -37,9 +37,9 @@ module LazyCupid
         # puts @body
       # end
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
-      readability = Lingua::EN::Readability.new(essays)
+      @readability = Lingua::EN::Readability.new(essays)
 
-      # num = readability.flesch.ceil
+      # num = @readability.flesch.ceil
       # case num
       # when num > 60 then grade = "middle school"
       # when num 50..59 then grade = "high school"
@@ -89,15 +89,25 @@ module LazyCupid
     private
 
     def self.kincaid
-      return readability.kincaid.ceil rescue nil
+      return @readability.kincaid.ceil rescue nil
     end
 
     def self.fog
-      return readability.fog.ceil rescue nil
+      score = @readability.fog.ceil rescue nil
+      unless score == "NaN"
+        return score
+      else
+        return nil
+      end
     end
 
     def self.flesch
-      return readability.flesch.ceil rescue nil
+      score = @readability.flesch.ceil rescue nil
+      unless score == "NaN"
+        return score
+      else
+        return nil
+      end
     end
 
     def self.intended_handle

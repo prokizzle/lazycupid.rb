@@ -81,7 +81,8 @@ module LazyCupid
       # p key
       unless @messages.has_key?(key)
         # puts "New message from #{@event["from"]}"
-        @tracker.register_message(@event["from"], @event["server_gmt"], @people["gender"])
+        # @tracker.register_message(@event["from"], @event["server_gmt"], @people["gender"])
+        @tracker.scrape_inbox
       end
       @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
       @last_call = Time.now.to_i

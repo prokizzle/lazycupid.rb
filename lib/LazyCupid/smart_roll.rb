@@ -171,14 +171,14 @@ module LazyCupid
     # @param [user]       [String] match's username
     # @param [sexuality]  [String] sexuality of match
     #
-    def sexuality_filter(user, sexuality)
-      case sexuality
+    def sexuality_filter(profile)
+      case profile[:sexuality]
       when "Gay"
-        @db.ignore_user(user) unless @settings.visit_gay == true
+        @db.ignore_user(profile[:handle]) unless @settings.visit_gay == true
       when "Bisexual"
-        @db.ignore_user(user) unless @settings.visit_bisexual == true
+        @db.ignore_user(profile[:handle]) unless @settings.visit_bisexual == true
       when "Straight"
-        @db.ignore_user(user) unless @settings.visit_straight == true
+        @db.ignore_user(profile[:handle]) unless @settings.visit_straight == true
       end
     end
 
@@ -223,8 +223,7 @@ module LazyCupid
           puts "(SR) A-list name change: #{user} is now #{profile[:handle]}"
         end
         # puts profile
-        sexuality_filter(profile[:handle], profile[:sexuality])
-        # StatHat::API.ez_post_count("outgoing visits", "nick@prokes.ch", 1)
+        # sexuality_filter(profile)
         @console.log(profile) if $verbose
         @tally += 1
         # puts "Logging user #{profile}"

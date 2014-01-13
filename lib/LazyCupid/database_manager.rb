@@ -189,31 +189,57 @@ $db = Sequel.postgres(
       result[0]["total_messages"].to_i
     end
 
-    def add_user(username, gender, added_from)
-      unless existsCheck(username) || username == "pictures"
-        puts "Adding user:        #{username}" if $verbose
-        # @db.transaction
-        @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from) values ($1, $2, $3, $4, $5, $6, $7)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender, added_from])
-        # @db.commit
-        stats_add_new_user
-      else
-        @db.exec("update matches set inactive=false where name=$1", [username])
-        puts "User already in db: #{username}" if $verbose
+    def add_user(user)
+      # unless existsCheck(username) || username == "pictures"
+      #   puts "Adding user:        #{username}" if $verbose
+      #   # @db.transaction
+      #   @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from) values ($1, $2, $3, $4, $5, $6, $7)", [username.to_s, 0, Time.now.to_i, @login.to_s, 0, gender, added_from])
+      #   # @db.commit
+      #   # stats_add_new_user
+      # else
+      #   @db.exec("update matches set inactive=false where name=$1", [username])
+      #   puts "User already in db: #{username}" if $verbose
+      # end'
+      puts "Adding:\t\t#{user[:username]}" if $verbose
+      distance = guess_distance(@login, user[:city], user[:state]) if user[:city]
+
+      Match.find_or_create(:name => user[:username], :account => @login) do |u|
+        u.gender = user[:gender]
+        u.age = user[:age] if user[:age]
+        u.city = user[:city] if user[:city]
+        u.state = user[:state] if user[:state]
+        u.distance = distance if distance
+        u.added_from ||= user[:added_from]
+        u.inactive = false
+        u.ignored = user[:ignored] if user[:ignored]
       end
     end
 
     def add(user)
 
-      unless existsCheck(user[:username]) || user[:username] == "pictures"
+      # unless existsCheck(user[:username]) || user[:username] == "pictures"
         puts "Adding user:        #{user[:username]}" if $verbose
 
-        distance = guess_distance(@login, user[:city], user[:state])
+        distance = guess_distance(@login, user[:city], user[:state]) unless user[:distance]
 
-        @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
-      else
-        @db.exec("update matches set inactive=false where name=$1", [user[:username]])
-        puts "User already in db: #{user[:username]}" if $verbose
+      #   @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
+      # else
+      #   @db.exec("update matches set inactive=false where name=$1", [user[:username]])
+      #   puts "User already in db: #{user[:username]}" if $verbose
+      # end
+
+      Match.find_or_create(:name => user[:username], :account => @login) do |u|
+        u.age = user[:age]
+        u.match_percent = user[:match_percent]
+        u.distance = distance || user[:distance]
+        u.time_added ||= Time.now.to_i
+        u.gender = user[:gender]
+        u.added_from ||= user[:added_from]
+        u.city = user[:city]
+        u.state = user[:state]
+        u.inactive = false
       end
+
     end
 
     def delete_user(username)

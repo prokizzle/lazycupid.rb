@@ -37,7 +37,7 @@ $db = Sequel.postgres(
                             :host => @settings.db_host
                             )
       # tasks     = args[:tasks] unless @settings.debug
-      # db_tasks if args[:tasks]
+      #db_tasks #if args[:tasks]
       @verbose  = @settings.verbose
       @debug    = @settings.debug
       $sequel = Sequel.postgres(
@@ -69,11 +69,11 @@ $db = Sequel.postgres(
       puts "Executing db tasks..."
       delete_self_refs
       # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
-      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
-      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
-      @db.exec("update matches set ignored=true where ignore_list=1")
-      @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
-
+      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
+      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
+      # @db.exec("update matches set ignored=true where ignore_list=1")
+      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
+      # @db.exec("update matches set ignored=false where account=$1 and ignored=true", [@login])
       fix_blank_distance
     end
 

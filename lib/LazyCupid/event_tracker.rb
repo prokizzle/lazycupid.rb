@@ -96,6 +96,8 @@ module LazyCupid
       end
     end
 
+    # [todo] - add incoming_visits table, or update model if already exists
+    # [todo] - create a new visitor row here instead of updating stats or matches tables
     def register_visit(person)
       visitor   = person['screenname']
       timestamp = person['server_gmt']

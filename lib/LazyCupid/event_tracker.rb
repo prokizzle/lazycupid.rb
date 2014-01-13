@@ -112,15 +112,8 @@ module LazyCupid
       unless @stored_timestamp == timestamp
         puts "* New visitor: #{visitor} *"
 
-
-        @db.add_user(visitor, gender, "api_visitor")
-        @db.ignore_user(visitor) unless gender == $gender || gender == $alt_gender
-        # @db.set_gender(:username => visitor, :gender => gender)
-
-        @db.set_city(visitor, city)
-        @db.set_state(:username => visitor, :state => state)
-        @db.set_estimated_distance(visitor, city, state)
-
+        @db.add_user(username: visitor, gender: gender, added_from: "api_visitor", city: city, state: state, )
+        # @db.ignore_user(visitor) unless gender == $gender || gender == $alt_gender
         @db.increment_visitor_counter(visitor)
       end
       @db.set_visitor_timestamp(visitor, timestamp)
@@ -151,22 +144,14 @@ module LazyCupid
       message_list = result[:body].scan(/"message_(\d+)"/)
       @total_msg_on_page = message_list.size
       message_list.each do |message_id|
-        # begin
           message_id      = message_id.first
           msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
           # unless !(msg_block =~ /"subject">OKCupid!</).nil?
-          sender          = /\/([\w\d_-]+)\?cf=messages/.match(msg_block)[1]
-          timestamp_block = result[:html].parser.xpath("//li[@id='message_#{message_id.to_s}']/span/script/text()").to_html
-          timestamp       = timestamp_block.match(/(\d{10}), 'MAI/)[1].to_i
+            sender          = /\/([\w\d_-]+)\?cf=messages/.match( msg_block)[1]
+          timestamp       = msg_block.match(/(\d{10}), 'BRIEF/)[1].to_i
           sender          = sender.to_s
           gender          = "Q"
-          # r = {"sender" => sender, "timestamp" => timestamp, "gender" => gender}
-          # puts r
           register_message(sender, timestamp, gender, message_id)
-          # end
-        # rescue
-          # puts "Error tracking message"
-        # end
       end
     end
 
@@ -181,8 +166,7 @@ module LazyCupid
         puts "New message from #{sender}"
       end
 
-      @db.add_user(sender, gender, "inbox")
-      @db.ignore_user(sender)
+      @db.add_user(username: sender, gender: gender, added_From: "inbox", ignored: true)
 
       @db.add_message(username: sender, message_id: message_id, timestamp: timestamp)
 

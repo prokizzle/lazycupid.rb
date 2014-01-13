@@ -46,9 +46,9 @@ module LazyCupid
     # @param user [String] username of user to be added
     # @param gender [String] gender of user to be added
     #
-    def add_user(user, gender)
+    def add_user(user)
       method_name = caller[0][/`.*'/].to_s.match(/`(.+)'/)[1]
-      @database.add_user(user, gender, method_name)
+      @database.add_user(username: user[:username], gender: user[:gender], added_from: method_name)
     end
 
 
@@ -130,15 +130,14 @@ module LazyCupid
         @body = user_[:body]
         puts "Scraping: leftbar" if $verbose
         array = @body.scan(/\/([\w\d_-]+)\?cf\=leftbar_match/)
-        array.each { |user| @database.add_user(user.shift, $gender, "leftbar") }
+        array.each { |user| @database.add_user(username: user.shift, gender: $gender, added_from: "leftbar") }
         puts "Scraping: similar users" if $verbose
         similars = @body.scan(/\/([\w\d _-]+)....profile_similar/)
         similars = similars.to_set
         similars.each do |similar_user|
           similar_user = similar_user.shift
           if user_[:gender] == $gender || user_[:gender] == $alt_gender
-            @database.add_user(similar_user, user_[:gender], "similar_users")
-            @database.set_location(user: similar_user, city: user_[:city], state: user_[:state])
+            @database.add_user(username: similar_user, gender: user_[:gender], added_from: "similar_users", city: user_[:city], state: user_[:state])
           end
         end
       else
@@ -184,12 +183,8 @@ module LazyCupid
       @count  = 0
       matches_list.each do |username|
 
-        add_user(username, gender)
-        @database.set_age(username, @age[username])
-        @database.set_sexuality(username, @sexuality[username])
-        # @database.set_gender(:username => username, :gender => @gender[username])
-        @db.set_location(user: username, city: city, state: state)
-        #User.where(:name => username).update(gender: @gender[username], age: @age[username], city: @city[username], state: @state[username], sexuality: @sexuality[username])
+        add_user(username: username, gender: gender, age: age, sexuality: sexuality, city: city, state: state)
+        # Match.find_or_create(username: username, gender: gender, age: age, sexuality: sexuality, city: city, state: state, added_from: 'ajax_match_search')
       end
 
     end
@@ -208,8 +203,7 @@ module LazyCupid
         sexuality   = user.shift #user[3]
         city        = user.shift #user[4]
         state       = user.shift #user[5]
-        add_user(handle, gender)
-        @db.set_location(user: username, city: city, state: state)
+        add_user(username: handle, gender: gender, city: city, state: state)
         # @database.set_age(:username => handle, :age => age)
       end
     end

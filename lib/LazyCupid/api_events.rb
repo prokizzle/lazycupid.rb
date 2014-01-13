@@ -69,6 +69,9 @@ module LazyCupid
       @event["from"] == "0" || @people.nil? || @people == {} || @people.empty?
     end
 
+    def orbit_profile_updated
+    end
+
     # New mail notification
     #
     def msg_notify

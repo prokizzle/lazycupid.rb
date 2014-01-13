@@ -289,16 +289,9 @@ $db = Sequel.postgres(
 
     def rename_alist_user(old_name, new_name)
       @db.exec("update matches set name=$1 where name=$2", [new_name, old_name])
-    end
-
-    def new_user_smart_query
-      @db.exec("select * from matches
-    where account=$2
-    and counts = 0
-    and inactive = false
-    and (ignore_list=0 or ignore_list is null)
-    and (gender=$1)
-    order by last_online desc, time_added asc", [@settings.gender, @login])
+      UsernameChange.find_or_create(:old_name => old_name) do |u|
+        u.new_name = new_name
+      end
     end
 
     def followup_query
@@ -810,10 +803,14 @@ $db = Sequel.postgres(
     end
 
     class IncomingMessage < Sequel::Model
-      set_primary_key [:message_id]
+      # set_primary_key [:message_id, :timestamp]
     end
 
     class Match < Sequel::Model
-      set_primary_key [:account, :name]
+      # set_primary_key [:account, :name]
+    end
+
+    class UsernameChange < Sequel::Model
+
     end
 end

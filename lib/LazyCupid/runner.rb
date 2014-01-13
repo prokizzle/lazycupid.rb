@@ -71,8 +71,8 @@ module LazyCupid
       @browser.login_status
     end
 
-    def scrape_ajax_matches
-      @tracker.default_match_search
+    def scrape_ajax_matches(number=1)
+      @tracker.default_match_search(number)
     end
 
     def scrape_ajax_new_matches
@@ -261,7 +261,7 @@ module LazyCupid
       end
 
       @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
-        @app.scrape_ajax_matches
+        @app.scrape_ajax_matches(3)
       end
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do

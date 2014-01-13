@@ -8,7 +8,5 @@ gem "pg"
 gem "rufus-scheduler", '2.0.24'
 gem "sequel"
 gem "uuidtools"
-gem "tzinfo-data"
 gem "bloat_check"
 gem "lingua"
-gem "sequel"

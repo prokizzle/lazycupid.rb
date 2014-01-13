@@ -220,9 +220,8 @@ module LazyCupid
         puts "Name change: #{profile[:a_list_name_change]}" if $debug
         if profile[:a_list_name_change]
           @db.rename_alist_user(user, profile[:handle])
-          puts "(SR) A-list name change: #{user} is now #{profile[:handle]}"
+          puts "A-list name change: #{user} is now #{profile[:handle]}"
         end
-        # puts profile
         # sexuality_filter(profile)
         @console.log(profile) if $verbose
         @tally += 1

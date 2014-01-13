@@ -586,7 +586,7 @@ $db = Sequel.postgres(
       result = @db.exec("select last_msg_time from matches where name=$1 and account=$2", [user, @login])
       begin
         result.first["last_msg_time"].to_i
-      rescue Exception => e
+      rescue
         # puts e.message
         # puts e.backtrace
         # sleep 10

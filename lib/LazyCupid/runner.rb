@@ -276,7 +276,12 @@ module LazyCupid
       #   BloatCheck.log("some label")
       # end
 
-      @app.scheduler.join
+      begin
+        @app.scheduler.join
+      rescue SystemExit, Interrupt
+        puts "","Goodbye!"
+        exit
+      end
     end
 
     def menu

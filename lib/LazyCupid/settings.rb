@@ -33,6 +33,11 @@ module LazyCupid
         config = {geo: {
                     distance: 50
                   },
+                  personal: {
+                    sexuality: "straight",
+                    gender: "M"
+                    },
+
                   matching: {
                     min_percent: 50,
                     friend_percent: 0,

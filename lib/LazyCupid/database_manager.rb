@@ -329,6 +329,19 @@ $db = Sequel.postgres(
         visit_straight = "Null"
       end
 
+      # if bisexual-m
+      #   (sexuality="Bisexual" && gender="F")
+      #   or (sexuality="Bisexual" && gender="M")
+      #   or (sexuality="Gay" && gender="M")
+      #   or (sexuality="Straight" && gender="F")
+      # end
+      # if bisexual-f
+      #   (sexuality="Bisexual" && gender="M")
+      #   or (sexuality="Bisexual" && gender="F")
+      #   or (sexuality="Gay" && gender="F")
+      #   or (sexuality="Straight" && gender="M")
+      # end
+
       result          = @db.exec("
         select * from matches
         where account=$8

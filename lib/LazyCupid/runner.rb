@@ -275,7 +275,7 @@ module LazyCupid
         @app.reload_settings
       end
 
-      @app.scheduler.every '2m', :allow_overlapping => false, :mutex => 'roller' do
+      @app.scheduler.every '1m', :allow_overlapping => false, :mutex => 'autorater' do
         @app.rate
       end
 

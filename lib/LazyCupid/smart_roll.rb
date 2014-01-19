@@ -211,6 +211,9 @@ module LazyCupid
         # @db.ignore_user(user)
         @db.set_inactive(user)
 
+      elsif profile[:gender] != "M" && profile[:gender] != "F"
+        puts "* Straight person found * #{user}"
+        Match.find(:name => profile[:handle]).set(:sexuality => profile[:sexuality])
       else
 
         begin

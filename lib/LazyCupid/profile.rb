@@ -33,6 +33,7 @@ module LazyCupid
       url = user_page[:url]
       # begin
         inactive = !(@body =~ $inactive_profile).nil?
+        straight = !(@body =~ $straight_person).nil?
       # rescue
         # puts @body
       # end
@@ -50,6 +51,9 @@ module LazyCupid
       # puts grade
       if inactive
         {inactive: true}
+      elsif straight
+        return {handle: intended_handle,
+          sexuality: "Straight"}
       else
         {handle: handle,
          match_percentage: match_percentage,

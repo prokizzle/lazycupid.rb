@@ -13,6 +13,7 @@ require_relative 'regular_expressions'
 require_relative 'event_tracker'
 require_relative 'api_events'
 require_relative 'match_queries'
+require_relative 'auto_rater'
 
 require 'mechanize'
 require 'highline/import'

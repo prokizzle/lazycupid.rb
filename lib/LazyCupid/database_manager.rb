@@ -355,7 +355,7 @@ $db = Sequel.postgres(
          and (gender=$7 or gender=$12)
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
+        order by distance ASC, counts ASC, sexuality DESC, last_online DESC, match_percent DESC, height #{height_sort}, age #{age_sort}
         limit 20", [
                                    min_time.to_i, #1
                                    max_counts, #2

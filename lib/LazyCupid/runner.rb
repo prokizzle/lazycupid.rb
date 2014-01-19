@@ -125,6 +125,7 @@ module LazyCupid
 
     def logout
       @browser.logout
+      @autorater.logout
     end
 
     def range_roll
@@ -289,6 +290,7 @@ module LazyCupid
       begin
         @app.scheduler.join
       rescue SystemExit, Interrupt
+        @app.logout
         puts "","Goodbye!"
         exit
       end

@@ -29,5 +29,9 @@ module LazyCupid
       @browser.ul(:id => 'stars').li(:index => (stars-1)).click
     end
 
+    def logout
+      @browser.close
+    end
+
   end
 end

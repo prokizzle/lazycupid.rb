@@ -17,6 +17,7 @@ module LazyCupid
       @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
+      @autorater    = AutoRater.new(username: @username, password: @password)
       @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
@@ -101,6 +102,10 @@ module LazyCupid
       @harvester.scrape_home_page
     end
 
+    def rate
+      @autorater.rate
+    end
+
     def scrape_activity_feed
       @harvester.scrape_activity_feed
     end
@@ -115,6 +120,7 @@ module LazyCupid
 
     def login
       @browser.login
+      @autorater.login
     end
 
     def logout
@@ -266,6 +272,10 @@ module LazyCupid
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
         @app.reload_settings
+      end
+
+      @app.scheduler.every '2m', :allow_overlapping => false, :mutex => 'roller' do
+        @app.rate
       end
 
       @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'roller' do #|job|

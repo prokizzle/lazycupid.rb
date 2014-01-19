@@ -3,10 +3,11 @@ require 'highline/import'
 
 module LazyCupid
   class AutoRater
-    def initialize(*args)
+    def initialize(args)
       @username = args[:username]
       @password = args[:password]
       @browser  = Watir::Browser.new :phantomjs
+    end
 
     def login
       puts "AutoRater logging in with PhantomJS" if $verbose

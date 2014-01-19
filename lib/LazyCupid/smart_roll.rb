@@ -101,7 +101,7 @@ module LazyCupid
     #
     def cache
       if @roll_list.empty?
-        if Time.now.to_i - @last_query_time >= 60
+        if Time.now.to_i - @last_query_time >= $roll_frequency.to_i*10
           @already_delayed = false
           @roll_list = build_user_list(@db.followup_query)
           @last_query_time = Time.now.to_i

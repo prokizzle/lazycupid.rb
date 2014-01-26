@@ -310,6 +310,23 @@ $db = Sequel.postgres(
       max_counts          = @settings.max_followup
       min_percent         = $min_percent
       distance            = $max_distance
+      query_size          = 30
+
+      sort_criteria = [
+        "age DESC",
+        "distance ASC",
+        "counts ASC",
+        "sexuality ASC",
+        "last_online DESC",
+        "match_percent DESC",
+        "height #{height_sort}"
+      ]
+
+      sort_string = sort_criteria.shift.to_s
+      until sort_criteria.empty?
+        sort_string += ", #{sort_criteria.shift}"
+      end
+      puts sort_string
 
       if @settings.visit_gay
         visit_gay = "Gay"
@@ -341,6 +358,7 @@ $db = Sequel.postgres(
       #   or (sexuality="Gay" && gender="F")
       #   or (sexuality="Straight" && gender="M")
       # end
+      # order by #{sort_1}, #{sort_2}, #{sort_3}, #{sort_4}, #{sort_5}, #{sort_6}, #{sort_7}
 
       result          = @db.exec("
         select * from matches
@@ -355,8 +373,8 @@ $db = Sequel.postgres(
          and (gender=$7 or gender=$12)
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        order by distance ASC, counts ASC, sexuality DESC, last_online DESC, match_percent DESC, height #{height_sort}, age #{age_sort}
-        limit 20", [
+        order by #{sort_string}
+        limit #{query_size}", [
                                    min_time.to_i, #1
                                    max_counts, #2
                                    distance, #3

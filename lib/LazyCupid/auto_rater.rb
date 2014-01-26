@@ -7,6 +7,7 @@ module LazyCupid
       @username = args[:username]
       @password = args[:password]
       @browser  = Watir::Browser.new :phantomjs
+      @count    = 0
     end
 
     def login
@@ -26,7 +27,12 @@ module LazyCupid
     end
 
     def rate(stars=4)
-      @browser.ul(:id => 'stars').li(:index => (stars-1)).click
+      # if @count > 6
+
+        # @count = 0
+      # end
+      @browser.ul(:id => 'stars').li(:index => (stars-1)).click rescue @browser.goto("http://www.okcupid.com/quickmatch")
+      # @count += 1
     end
 
     def logout

@@ -125,7 +125,7 @@ module LazyCupid
 
     def logout
       @browser.logout
-      @autorater.logout
+      @autorater.logout rescue nil
     end
 
     def range_roll

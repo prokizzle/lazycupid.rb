@@ -138,7 +138,12 @@ module LazyCupid
 
       # rescue
       # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
-      result = @body.match(/<div class="userinfo"> <div class="details"> <p class="username">(.+)<.p> <p class="info">/)[1]
+      begin
+      result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
+      rescue
+        puts @body
+        sleep 100
+      end
       # end
 
       unless result == @intended_handle.to_s

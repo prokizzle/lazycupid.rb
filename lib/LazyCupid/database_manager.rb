@@ -4,12 +4,6 @@ require 'progress_bar'
 require 'sequel'
 
 module LazyCupid
-$db = Sequel.postgres(
-        :host =>      'localhost',
-        :database =>  $db_name,
-        :user =>      $db_user,
-        :database =>  'lazy_cupid',
-      )
 #   class User < Sequel::Model
 #     set_primary_key [:name]
 #   end
@@ -27,6 +21,9 @@ $db = Sequel.postgres(
 
 
     def initialize(args)
+  line = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
+$db = Sequel.connect(line)
+require_relative 'models'
       @did_migrate = false
       @login    = args[:login_name]
       @settings = args[:settings]
@@ -40,12 +37,12 @@ $db = Sequel.postgres(
       #db_tasks #if args[:tasks]
       @verbose  = @settings.verbose
       @debug    = @settings.debug
-      $sequel = Sequel.postgres(
-        :host =>      @settings.db_host,
-        :database =>  @settings.db_name,
-        :user =>      @settings.db_user,
-        :password =>  @settings.db_pass
-      )
+      # $sequel = Sequel.postgres(
+        # :host =>      @settings.db_host,
+        # :database =>  @settings.db_name,
+        # :user =>      @settings.db_user,
+        # :password =>  @settings.db_pass
+      # )
 # @sequel = Sequel.connect("#{@settings.db_adapter}://#{@settings.db_user}:#{@settings.db_pass}@#{@settings.db_host}/#{@settings.db_name}")
       # @users            = @sequel[:users]
     end
@@ -829,19 +826,4 @@ $db = Sequel.postgres(
 
   end
 
-    class User < Sequel::Model
-      # set_primary_key [:name]
-    end
-
-    class IncomingMessage < Sequel::Model
-      # set_primary_key [:message_id, :timestamp]
-    end
-
-    class Match < Sequel::Model
-      # set_primary_key [:account, :name]
-    end
-
-    class UsernameChange < Sequel::Model
-
-    end
 end

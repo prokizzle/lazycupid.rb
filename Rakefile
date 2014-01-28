@@ -34,4 +34,12 @@ namespace :db do
   task :backup do
     backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
   end
+
+  task :import_from_heroku
+  puts "- Capturing Heroku postgres backup snapshot"
+  %x{heroku pgbackups:capture --app ***REMOVED***}
+  puts "- Dumping database"
+  %x{curl -o latest.dump `heroku pgbackups:url --app ***REMOVED***`}
+  puts "- Importing database into localhost"
+  %x{pg_restore --verbose --clean --no-acl --no-owner -h localhost -U ***REMOVED*** -d lazy_cupid latest.dump}
 end

@@ -309,15 +309,8 @@ require_relative 'models'
       distance            = $max_distance
       query_size          = 30
 
-      sort_criteria = [
-        "age DESC",
-        "distance ASC",
-        "counts ASC",
-        "sexuality ASC",
-        "last_online DESC",
-        "match_percent DESC",
-        "height #{height_sort}"
-      ]
+      # sort_criteria = $sort_criteria
+      sort_criteria = ["counts ASC, distance ASC, age ASC, match_percent DESC"]
 
       sort_string = sort_criteria.shift.to_s
       until sort_criteria.empty?
@@ -371,7 +364,7 @@ require_relative 'models'
          and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
          and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
         order by #{sort_string}
-        limit #{query_size}", [
+        limit 30", [
                                    min_time.to_i, #1
                                    max_counts, #2
                                    distance, #3

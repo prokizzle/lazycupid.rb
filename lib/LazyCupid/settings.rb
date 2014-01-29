@@ -58,7 +58,16 @@ module LazyCupid
                   visit_freq: {
                     days_ago: 10,
                     max_followup: 2,
-                    roll_frequency: 6 #in seconds
+                    roll_frequency: 6, #in seconds
+                    sort_criteria: [
+                      "counts ASC",
+                      "distance ASC",
+                      "match_percent DESC",
+                      "last_online DESC",
+                      "age ASC",
+                      "height ASC"
+                    ],
+                    queue_size: 20
                   },
                   scraping: {
                     autodiscover_on: true,
@@ -104,6 +113,8 @@ module LazyCupid
       @days_ago               = @settings[:visit_freq][:days_ago].to_i
       @max_followup           = @settings[:visit_freq][:max_followup].to_i
       @roll_frequency         = @settings[:visit_freq][:roll_frequency].to_s
+      @sort_criteria          = @settings[:visit_freq][:sort_criteria]
+      @queue_size             = @settings[:visit_freq][:queue_size].to_i
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
       @match_frequency        = @settings[:scraping][:match_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
@@ -111,7 +122,7 @@ module LazyCupid
 
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
-      @fast_launch                = @settings[:development][:fast_launch]       == true
+      @fast_launch            = @settings[:development][:fast_launch]       == true
       @db_name                = @db_settings["development"]["database"].to_s
       @db_host                = @db_settings["development"]["host"].to_s
       @db_user                = @db_settings["development"]["username"].to_s
@@ -120,33 +131,49 @@ module LazyCupid
 
       # Global variables for mid-session reloads
 
-      $max_distance     = @max_distance
-      $min_percent      = @min_percent
-      $verbose          = @verbose
-      $debug            = @debug
-      $roll_frequency   = @roll_frequency
-      $match_frequency  = @match_frequency
-      $gender           = @gender
-      $alt_gender       = @alt_gender
+      $max_distance           = @max_distance
+      $min_percent            = @min_percent
+      $verbose                = @verbose
+      $debug                  = @debug
+      $roll_frequency         = @roll_frequency
+      $match_frequency        = @match_frequency
+      $gender                 = @gender
+      $alt_gender             = @alt_gender
       $scrape_match_search    = @scrape_match_search
+      $db_adapter             = @db_adapter
       $db_host                = @db_host
       $db_user                = @db_user
-      $db_adapter             = @db_adapter
       $db_pass                = @db_pass
       $db_name                = @db_name
-      $fast_launch                = @fast_launch
+      $fast_launch            = @fast_launch
+      $sort_criteria          = @sort_criteria
+      $queue_size             = @queue_size
     end
 
-    def reload_config
-      settings          = YAML.load_file(@filename)
+    def debug_this(method)
+      if $debug
+        puts "Debug call"
+        send(method)
+        sleep 20
+        puts ""
+      end
+    end
 
-      $max_distance     = settings[:geo][:distance].to_i
-      $min_percent      = settings[:matching][:min_percent].to_i
-      $verbose          = settings[:development][:verbose]       == true
-      $debug            = settings[:development][:debug]         == true
-      $roll_frequency   = settings[:visit_freq][:roll_frequency].to_s
-      $match_frequency  = settings[:scraping][:match_frequency].to_s
-      $scrape_match_search = settings[:scraping][:scrape_match_search]      == true
+
+    def reload_config
+      settings                = YAML.load_file(@filename)
+      
+      $max_distance           = settings[:geo][:distance].to_i
+      $min_percent            = settings[:matching][:min_percent].to_i
+      $verbose                = settings[:development][:verbose]              == true
+      $debug                  = settings[:development][:debug]                == true
+      $roll_frequency         = settings[:visit_freq][:roll_frequency].to_s
+      $match_frequency        = settings[:scraping][:match_frequency].to_s
+      $scrape_match_search    = settings[:scraping][:scrape_match_search]     == true
+      # $sort_criteria          = settings[:visit_freq][:sort_criteria].to_a
+      # debug_this("puts $sort_criteria")
+      # $queue_size             = settings[:visit_freq][:queue_size].to_i
+
 
 
     end

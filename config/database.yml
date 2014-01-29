@@ -1,6 +1,7 @@
 development:
   adapter: postgresql
-  host: localhost
-  username: ***REMOVED***
-  password: 123456
-  database: lazy_cupid
+  host: ec2-54-225-127-246.compute-1.amazonaws.com
+  username: hifzjiwjkgmlsk
+  password: GcjMuJiZAMW8XbszsfzEOUnSJn
+  database: d3t0sqhm9m25k1
+

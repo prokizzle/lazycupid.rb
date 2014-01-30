@@ -5,7 +5,7 @@ Sequel.migration do
       String :name
       String :account
       Integer :counts
-      Boolean :ignored
+      Boolean :ignored, :default => false
       Integer :visitor_timestamp
       Integer :visit_count
       Integer :last_visit

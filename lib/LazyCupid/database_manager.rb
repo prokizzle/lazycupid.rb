@@ -21,22 +21,20 @@ module LazyCupid
 
 
     def initialize(args)
-  line = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
-$db = Sequel.connect(line)
-require_relative 'models'
-      @did_migrate = false
-      @login    = args[:login_name]
-      @settings = args[:settings]
-      @db = $db
-      @db = PGconn.connect( :dbname => @settings.db_name,
+      $db           = Sequel.connect($db_url)
+      require_relative 'models'
+      @did_migrate  = false
+      @login        = args[:login_name]
+      @settings     = args[:settings]
+      @db           = PGconn.connect( :dbname => @settings.db_name,
                             :password => @settings.db_pass,
                             :user => @settings.db_user,
                             :host => @settings.db_host
                             )
       # tasks     = args[:tasks] unless @settings.debug
       #db_tasks #if args[:tasks]
-      @verbose  = @settings.verbose
-      @debug    = @settings.debug
+      @verbose      = @settings.verbose
+      @debug        = @settings.debug
       # $sequel = Sequel.postgres(
         # :host =>      @settings.db_host,
         # :database =>  @settings.db_name,
@@ -349,34 +347,64 @@ require_relative 'models'
       #   or (sexuality="Straight" && gender="M")
       # end
       # order by #{sort_1}, #{sort_2}, #{sort_3}, #{sort_4}, #{sort_5}, #{sort_6}, #{sort_7}
+      # result = Match.filter(
+      #   :account => @login,
+      #   :ignored => [false, nil],
+      #   :inactive => [false, nil]).where{
+      #   last_visit < min_time.to_i
+      # }
 
-      result          = @db.exec("
-        select * from matches
-        where account=$8
-        and (last_visit <= $1 or last_visit is null)
-         and (counts <=$2 or counts is null)
-         and (distance <= $3 or distance is null)
-         and (ignored = false or ignored is null)
-         and (inactive = false or inactive is null)
-         and (age between $4 and $5 or age is null)
-         and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
-         and (gender=$7 or gender=$12)
-         and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
-         and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        order by #{sort_string}
-        limit 30", [
-                                   min_time.to_i, #1
-                                   max_counts, #2
-                                   distance, #3
-                                   min_age, #4
-                                   max_age, #5
-                                   min_percent, #6
-                                   desired_gender, #7
-                                   @login, #8
-                                   visit_gay, #9
-                                   visit_straight, #10
-                                   visit_bisexual, #11
-      alt_gender]) #12
+      result = Match.filter(
+        :account => @login, 
+        :ignored => false, 
+        :inactive => false, 
+        :distance => 0..$max_distance, 
+        :age => min_age..max_age, 
+        :counts => 0..max_counts,
+        :match_percent => $min_percent..100,
+        :gender => [desired_gender, alt_gender], 
+        :sexuality => ["Straight", "Bisexual", nil]).where{
+        last_visit < min_time || last_visit == 0
+        }.order(:age).take(query_size).to_a
+
+# result.each do |u|
+#   begin
+# u = u.to_hash
+# u[:age] = u[:age].to_i unless u[:age].is_a? Integer
+# Match.where(:name => u[:name]).update(:age => u[:age])
+# puts "Success #{u[:name]}"
+# rescue
+#   puts "Error"
+# end
+# end
+
+      # result          = @db.exec("
+        # select * from matches
+        # where account=$8
+        # and last_visit <= $1
+         # and counts <=$2
+         # and distance <= $3
+         # and ignored = false
+         # and inactive = false
+         # and (age between $4 and $5)
+         # and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
+         # and (gender=$7 or gender=$12)
+         # and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
+         # and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
+        # order by #{sort_string}
+        # limit 30", [
+                                   # min_time.to_i, #1
+                                   # max_counts, #2
+                                   # distance, #3
+                                   # min_age, #4
+                                   # max_age, #5
+                                   # min_percent, #6
+                                   # desired_gender, #7
+                                   # @login, #8
+                                   # visit_gay, #9
+                                   # visit_straight, #10
+                                   # visit_bisexual, #11
+      # alt_gender]) #12
 
       # result = Match.where(
       #   account => @login,

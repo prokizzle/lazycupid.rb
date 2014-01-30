@@ -1,10 +1,20 @@
   require_relative 'lib/LazyCupid/database_manager'
   require_relative 'lib/LazyCupid/settings'
+    config_path = File.expand_path("../config/", __FILE__)
+
+    @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
+
+    @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
+
+  require_relative 'lib/LazyCupid/models'
   require 'highline/import'
   require 'progress_bar'
 namespace :db do
+    @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
+    @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
+
   task :migrate do
-    result = %x{sequel -m db/migrations/ -E postgres://localhost/lazy_cupid}
+    result = %x{sequel -m db/migrations/ -E #{$db_url}}
     puts result
   end
 
@@ -26,8 +36,6 @@ namespace :db do
 
   task :populate_distances do
     config_path = File.expand_path("../config/", __FILE__)
-    @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
-    @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
     @db.fix_blank_distance
   end
 
@@ -35,11 +43,24 @@ namespace :db do
     backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
   end
 
-  task :import_from_heroku
-  puts "- Capturing Heroku postgres backup snapshot"
-  %x{heroku pgbackups:capture --app ***REMOVED***}
-  puts "- Dumping database"
-  %x{curl -o latest.dump `heroku pgbackups:url --app ***REMOVED***`}
-  puts "- Importing database into localhost"
-  %x{pg_restore --verbose --clean --no-acl --no-owner -h localhost -U ***REMOVED*** -d lazy_cupid latest.dump}
+  task :copy_ages do
+
+
+    m = Match.where(:ages => 25).order(:name)
+
+    m.each do |user|
+      u = user.to_hash
+      puts "Updating ages for #{u[:name]}"
+      Match.where(:name => u[:name]).update(:ages => u[:age].to_i)
+    end
+  end
+
+  task :import_from_heroku do
+    puts "- Capturing Heroku postgres backup snapshot"
+    %x{heroku pgbackups:capture --app ***REMOVED***}
+    puts "- Dumping database"
+    %x{curl -o latest.dump `heroku pgbackups:url --app ***REMOVED***`}
+    puts "- Importing database into localhost"
+    %x{pg_restore --verbose --clean --no-acl --no-owner -h localhost -U ***REMOVED*** -d lazy_cupid latest.dump}
+  end
 end

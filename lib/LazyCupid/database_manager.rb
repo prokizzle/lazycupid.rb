@@ -497,7 +497,7 @@ module LazyCupid
         result = @db.exec("select visitor_timestamp from matches where name=$1 and account=$2", [visitor, @login])
         result[0]["visitor_timestamp"].to_i
       else
-        @db.exec("insert into matches(name, counts, visitor_timestamp, ignore_list, account, added_from) values ($1, $2, $3, $4, $5, $6)", [visitor, 0, Time.now.to_i, 0, @login, "visitors"])
+        @db.exec("insert into matches(name, counts, visitor_timestamp, ignored, account, added_from) values ($1, $2, $3, $4, $5, $6)", [visitor, 0, Time.now.to_i, false, @login, "visitors"])
         set_visitor_timestamp(visitor, Time.now.to_i)
         Time.now.to_i
       end
@@ -568,11 +568,11 @@ module LazyCupid
     def is_ignored(username, gender="Q")
       array = Array.new
       add_user(username, "Q", "ignore_list") unless existsCheck(username)
-      result = @db.exec( "select ignore_list from matches where name=$1 and account=$2", [username, @login])
+      result = @db.exec( "select ignored from matches where name=$1 and account=$2", [username, @login])
       result.each do |man|
         array.push(man)
       end
-      array.shift["ignore_list"].to_i == 1
+      array.shift["ignored"]
     end
 
     def ignore_user(username)
@@ -582,7 +582,6 @@ module LazyCupid
       end
       unless is_ignored(username)
         puts "Added to ignore list: #{username}" if $verbose
-        @db.exec( "update matches set ignore_list=$3 where name=$1 and account=$2", [username, @login, 1])
         @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
       else
         puts "User already ignored: #{username}" if $verbose

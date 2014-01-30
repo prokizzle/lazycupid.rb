@@ -1,3 +1,4 @@
+
     class User < Sequel::Model
       # set_primary_key [:name]
     end
@@ -9,6 +10,8 @@
     class Match < Sequel::Model
       # set_primary_key [:account, :name]
     end
+    
+    Match.plugin :timestamps, :create=>:created_on, :update=>:updated_on
 
     class UsernameChange < Sequel::Model
 

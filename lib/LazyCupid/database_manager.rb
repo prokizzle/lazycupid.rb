@@ -337,9 +337,9 @@ module LazyCupid
         :counts => 0..max_counts,
         :match_percent => $min_percent..100,
         :gender => [desired_gender, alt_gender], 
-        :sexuality => ["Straight", "Bisexual", nil]).where{
+        :sexuality => sexualities).where{
         last_visit < min_time || last_visit == 0
-        }.order(:age).take(query_size).to_a
+        }.order(:counts, :distance, :age).take(query_size).to_a
 
 # result.each do |u|
 #   begin

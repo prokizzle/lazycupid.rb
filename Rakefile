@@ -43,6 +43,14 @@ namespace :db do
     backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
   end
 
+  task :update_counts do
+    t = OutgoingVisit.all
+    t.each do |visit|
+      puts "#{visit[:account]}: #{visit[:name]}"
+      Match.where(:account => visit[:account], :name => visit[:name]).update(:counts => Sequel.expr(1) + :counts)
+    end
+  end
+
   task :copy_ages do
 
 
@@ -53,6 +61,22 @@ namespace :db do
       puts "Updating ages for #{u[:name]}"
       Match.where(:name => u[:name]).update(:ages => u[:age].to_i)
     end
+  end
+
+  task :join do
+
+
+  puts Match.where(:account => "***REMOVED***", :name => "***REMOVED***")
+  
+end
+
+
+  task :any_counts do
+     puts Match.filter(:account => "***REMOVED***", :last_visit => 0).first.to_hash
+  end
+
+  task :fix_match_percents do
+    Match.where(:match_percent => nil).update(:match_percent => 100)
   end
 
   task :import_from_heroku do

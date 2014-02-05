@@ -8,7 +8,7 @@ Sequel.migration do
       Boolean :ignored, :default => false
       Integer :visitor_timestamp
       Integer :visit_count
-      Integer :last_visit
+      Integer :last_visit, :default => 0
       String :gender
       String :age
       String :sexuality

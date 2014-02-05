@@ -25,6 +25,7 @@ module LazyCupid
       require_relative 'models'
       @did_migrate  = false
       @login        = args[:login_name]
+      $login        = @login
       @settings     = args[:settings]
       @db           = PGconn.connect( :dbname => @settings.db_name,
                             :password => @settings.db_pass,
@@ -121,11 +122,8 @@ module LazyCupid
 
       # @db.exec("insert into incoming_messages(account, username, message_id, timestamp) values($1, $2, $3, $4)", [@login, user, message_id, timestamp])
       # begin
-      IncomingMessage.find_or_create(message_id: message_id) do |m|
-        m.account = @login
-        m.timestamp = timestamp
-        m.username = user
-      end
+      IncomingMessage.find_or_create(message_id: message_id, account: @login).update(:timestamp => timestamp, :username => user )
+      
     # rescue Sequel::DatabaseError => e
       # puts e.sql
       # sleep 10000
@@ -255,12 +253,13 @@ module LazyCupid
     end
 
     def get_visit_count(user)
-      row = @db.exec( "select counts from matches where name=$1 and account=$2", [user, @login])
-      begin
-        row[0]["counts"].to_i
-      rescue
-        0
-      end
+      # row = @db.exec( "select counts from matches where name=$1 and account=$2", [user, @login])
+      # begin
+      #   row[0]["counts"].to_i
+      # rescue
+      #   0
+      # end
+      Match.where(:account => @login, :name => user).first.to_hash[:counts]
     end
 
     def set_visit_count(name, count)
@@ -302,6 +301,7 @@ module LazyCupid
       age_sort            = @settings.age_sort
       max_counts          = @settings.max_followup
       query_size          = 30
+      min_distance        = 0
 
       sexualities = [nil]
       sexualities << "Gay"      if @settings.visit_gay
@@ -327,19 +327,28 @@ module LazyCupid
       #   :inactive => [false, nil]).where{
       #   last_visit < min_time.to_i
       # }
+      # result = Match.filter(
+        # :account => @login, 
+        # :ignored => false, 
+        # :inactive => false, 
+        # :distance => 0..$max_distance, 
+        # :age => min_age..max_age, 
+        # :last_visit => 0..min_time,
+        # :counts => 0..max_counts,
+        # :match_percent => $min_percent..100,
+        # :gender => [desired_gender, alt_gender], 
+        # :sexuality => ["Straight", "Bisexual", nil]).order(Sequel.asc(:distance)).take(query_size).to_a
 
       result = Match.filter(
         :account => @login, 
         :ignored => false, 
         :inactive => false, 
-        :distance => 0..$max_distance, 
-        :age => min_age..max_age, 
-        :counts => 0..max_counts,
-        :match_percent => $min_percent..100,
-        :gender => [desired_gender, alt_gender], 
-        :sexuality => sexualities).where{
-        last_visit < min_time || last_visit == 0
-        }.order(:counts, :distance, :age).take(query_size).to_a
+        :distance => 0..$max_distance.to_i, 
+        :age => min_age.to_i..max_age.to_i, 
+        :last_visit => 0..min_time.to_i,
+        :counts => 0..max_counts.to_i,
+        :match_percent => $min_percent.to_i..100,
+        :gender => [desired_gender.to_s, alt_gender.to_s]).order(:counts).take(query_size).to_a
 
 # result.each do |u|
 #   begin
@@ -516,54 +525,91 @@ module LazyCupid
       # p user[:handle]
       # p user
       if user[:handle]
-        unless existsCheck(user[:handle])
-          add_user(user[:handle], user[:gender], "unknown")
-        end
 
-        increment_visit_count(user[:handle])
-        set_my_last_visit_date(user[:handle])
-        set_user_details(user)
-        p "Height: #{user[:height]}" if $debug
-      end
-      stats_add_visit(user[:handle])
-    end
-
-    def set_user_details(user)
-      @db.exec("update matches
-      set (gender, sexuality, match_percent, state, distance, age, city, height, last_online, last_visit, friend_percent, enemy_percent) =
-      ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-      where name=$13",
-               [user[:gender],
-                user[:sexuality],
-                user[:match_percent],
-                user[:state],
-                user[:distance],
-                user[:age],
-                user[:city],
-                user[:height],
-                user[:last_online],
-                Time.now.to_i,
-                user[:friend_percentage],
-                user[:enemy_percentage],
-                user[:handle]])
-
-      User.find_or_create(:name => user[:handle]) do |u|
-                        u.age =  user[:age]
-                        u.gender =  user[:gender]
-                        u.sexuality =  user[:sexuality]
+        Match.where(:name => user[:handle], :account => @login).update(
+          :gender => user[:gender],
+          :counts => Sequel.expr(1) + :counts,
+          :gender         => user[:gender],
+          :sexuality      => user[:sexuality],
+          :match_percent  => user[:match_percent],
+          :state          => user[:state],
+          :city           => user[:city],
+          :height         => user[:height],
+          :last_online    => user[:last_online],
+          :last_visit     => Time.now.to_i,
+          :friend_percent => user[:friend_percentage],
+          :enemy_percent  => user[:enemy_percentage],
+          :distance       => user[:distance],
+          :age            => user[:age]
+        )
+              User.find_or_create(:name => user[:handle]) do |u|
+                        u.age         =  user[:age]
+                        u.gender      =  user[:gender]
+                        u.sexuality   =  user[:sexuality]
                         # u.relationship_status =  user[:relationship_status]
-                        u.city =  user[:city]
-                        u.state =  user[:state]
-                        u.height =  user[:height]
+                        u.city        =  user[:city]
+                        u.state       =  user[:state]
+                        u.height      =  user[:height]
                         u.last_online =  user[:last_online]
-                        u.smokes =  (user[:smoking] != "No")
-                        u.drinks =  (user[:drinking] != "Not at all")
-                        u.bodytype = user[:bodytype]
-                        u.ethnicity = user[:ethnicity]
-                        u.drugs =  (user[:drugs] != "Never")
-                        u.bodytype =  user[:body_type]
+                        u.smokes      =  (user[:smoking] != "No")
+                        u.drinks      =  (user[:drinking] != "Not at all")
+                        u.bodytype    = user[:bodytype]
+                        u.ethnicity   = user[:ethnicity]
+                        u.drugs       =  (user[:drugs] != "Never")
+                        u.bodytype    =  user[:body_type]
+              end
+
+        OutgoingVisit.create(:name => user[:handle], :account => @login, :timestamp => Time.now.to_i)
+
+        # Stat.find_or_create(:account => @login) do |u|
+        #   u.total_visits += 1 rescue u.total_visits = 1
+        # end
+
+
+        # increment_visit_count(user[:handle])
+        # set_my_last_visit_date(user[:handle])
+        # set_user_details(user)
+        # p "Height: #{user[:height]}" if $debug
       end
+      # stats_add_visit(user[:handle])
     end
+
+
+    # TBD
+    # def set_user_details(user)
+
+    #   Match.where(:name => user[:handle]).update(
+    #     :gender         => user[:gender],
+    #     :sexuality      => user[:sexuality],
+    #     :match_percent  => user[:match_percent],
+    #     :state          => user[:state],
+    #     :city           => user[:city],
+    #     :height         => user[:height],
+    #     :last_online    => user[:last_online],
+    #     :last_visit     => Time.now.to_i,
+    #     :friend_percent => user[:friend_percentage],
+    #     :enemy_percent  => user[:enemy_percentage],
+    #     :distance       => user[:distance],
+    #     :age            => user[:age]
+    #     )
+
+    #   User.find_or_create(:name => user[:handle]) do |u|
+    #                     u.age         =  user[:age]
+    #                     u.gender      =  user[:gender]
+    #                     u.sexuality   =  user[:sexuality]
+    #                     # u.relationship_status =  user[:relationship_status]
+    #                     u.city        =  user[:city]
+    #                     u.state       =  user[:state]
+    #                     u.height      =  user[:height]
+    #                     u.last_online =  user[:last_online]
+    #                     u.smokes      =  (user[:smoking] != "No")
+    #                     u.drinks      =  (user[:drinking] != "Not at all")
+    #                     u.bodytype    = user[:bodytype]
+    #                     u.ethnicity   = user[:ethnicity]
+    #                     u.drugs       =  (user[:drugs] != "Never")
+    #                     u.bodytype    =  user[:body_type]
+    #   end
+    # end
 
     def is_ignored(username, gender="Q")
       array = Array.new
@@ -576,16 +622,19 @@ module LazyCupid
     end
 
     def ignore_user(username)
-      unless existsCheck(username)
-        puts "Adding user first: #{username}"
-        add_user(username, "Q", "hidden_users")
-      end
-      unless is_ignored(username)
+      # unless existsCheck(username)
+      #   puts "Adding user first: #{username}"
+      #   add_user(username, "Q", "hidden_users")
+      # end
+      # unless is_ignored(username)
         puts "Added to ignore list: #{username}" if $verbose
-        @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
-      else
-        puts "User already ignored: #{username}" if $verbose
-      end
+      #   @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
+      # else
+      #   puts "User already ignored: #{username}" if $verbose
+      # end
+
+      Match.find_or_create(:name => username, :account => @login).update(:ignored => true) 
+
     end
 
     def unignore_user(username)

@@ -4,9 +4,6 @@ require 'progress_bar'
 require 'sequel'
 
 module LazyCupid
-#   class User < Sequel::Model
-#     set_primary_key [:name]
-#   end
 
   # A Postgres database SQL wrapper for reading and writing data to and from
   # the database.

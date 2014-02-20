@@ -177,7 +177,6 @@ module LazyCupid
         u.distance = distance if distance
         u.added_from ||= user[:added_from]
         u.inactive = false
-        u.ignored = user[:ignored] if user[:ignored]
       end
     end
 
@@ -198,7 +197,7 @@ module LazyCupid
         u.age = user[:age]
         u.match_percent = user[:match_percent]
         u.distance = distance || user[:distance]
-        u.time_added ||= Time.now.to_i
+        u.time_added = Time.now.to_i if u.time_added.nil?
         u.gender = user[:gender]
         u.added_from ||= user[:added_from]
         u.city = user[:city]
@@ -506,9 +505,13 @@ module LazyCupid
     # end
 
     def ignore_user(username)
-
-      Match.find_or_create(:name => username, :account => @login).update(:ignored => true) 
-
+      puts "Added to ignore list: #{username}" if $verbose
+      Match.find_or_create(:name => username, account: @login) do |m|
+        m.gender ||= "Q"
+        m.ignored = true
+        m.distance = 1
+      end
+      # m.save
     end
 
     def unignore_user(username)

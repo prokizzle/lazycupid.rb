@@ -28,7 +28,7 @@ Before('scraper') do
   request_id = Time.now.to_i
   @browser.send_request(url, request_id)
   until @browser.get_request(request_id)[:ready] == true
-  sleep 0.1
+    sleep 0.1
   end
   @page = @browser.get_request(request_id)
   @html = @page[:source]
@@ -334,7 +334,7 @@ end
 Then(/"(.*?)" regular expression should return/) do |arg1|
   case arg1
   when "total messages"
-   @page.match(/Message storage.*(\d+) of/)[1].is_a Integer rescue !(@page =~ /No messages\!/).nil?
+    @page.match(/Message storage.*(\d+) of/)[1].is_a Integer rescue !(@page =~ /No messages\!/).nil?
   else false
   end
 end

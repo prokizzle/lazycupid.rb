@@ -283,11 +283,11 @@ module LazyCupid
         @app.reload_settings
       end
 
-      @app.scheduler.every '4m', :allow_overlapping => true, :mutex => 'autorater' do
+      @app.scheduler.every "#{$rate_frequency}", :allow_overlapping => false, :mutex => 'autorater' do
         @app.rate
       end
 
-      @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'roller' do #|job|
+      @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'headless' do #|job|
         @app.roll
       end
 

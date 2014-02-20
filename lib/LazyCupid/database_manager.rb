@@ -184,7 +184,7 @@ module LazyCupid
     def add(user)
 
       # unless existsCheck(user[:username]) || user[:username] == "pictures"
-        puts "Adding user:        #{user[:username]}" if $verbose
+      puts "Adding user:        #{user[:username]}" if $verbose
 
       distance = guess_distance(user[:city], user[:state]) unless user[:distance]
 
@@ -300,100 +300,18 @@ module LazyCupid
       #   :inactive => [false, nil]).where{
       #   last_visit < min_time.to_i
       # }
-      # result = Match.filter(
-        # :account => @login, 
-        # :ignored => false, 
-        # :inactive => false, 
-        # :distance => 0..$max_distance, 
-        # :age => min_age..max_age, 
-        # :last_visit => 0..min_time,
-        # :counts => 0..max_counts,
-        # :match_percent => $min_percent..100,
-        # :gender => [desired_gender, alt_gender], 
-        # :sexuality => ["Straight", "Bisexual", nil]).order(Sequel.asc(:distance)).take(query_size).to_a
 
+
+
+      # result = Match.join_table(:left, :users, :name => :name).filter(
       result = Match.filter(
-        :account => @login, 
-        :ignored => false, 
-        :inactive => false, 
-        :distance => 0..$max_distance.to_i, 
-        :age => min_age.to_i..max_age.to_i, 
+        :account => @login,
+        :ignored => false,
+        :inactive => false,
+        :distance => 0..$max_distance.to_i,
+        :age => min_age.to_i..max_age.to_i,
         :last_visit => 0..min_time.to_i,
         :counts => 0..max_counts.to_i,
-        :match_percent => $min_percent.to_i..100,
-        :gender => [desired_gender.to_s, alt_gender.to_s]).order(:counts).take(query_size).to_a
-
-# result.each do |u|
-#   begin
-# u = u.to_hash
-# u[:age] = u[:age].to_i unless u[:age].is_a? Integer
-# Match.where(:name => u[:name]).update(:age => u[:age])
-# puts "Success #{u[:name]}"
-# rescue
-#   puts "Error"
-# end
-# end
-
-      # result          = @db.exec("
-        # select * from matches
-        # where account=$8
-        # and last_visit <= $1
-         # and counts <=$2
-         # and distance <= $3
-         # and ignored = false
-         # and inactive = false
-         # and (age between $4 and $5)
-         # and (match_percent between $6 and 100 or match_percent is null or match_percent=0)
-         # and (gender=$7 or gender=$12)
-         # and (sexuality=$9 or sexuality=$10 or sexuality=$11 or sexuality is null)
-         # and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')))
-        # order by #{sort_string}
-        # limit 30", [
-                                   # min_time.to_i, #1
-                                   # max_counts, #2
-                                   # distance, #3
-                                   # min_age, #4
-                                   # max_age, #5
-                                   # min_percent, #6
-                                   # desired_gender, #7
-                                   # @login, #8
-                                   # visit_gay, #9
-                                   # visit_straight, #10
-                                   # visit_bisexual, #11
-      # alt_gender]) #12
-
-      # result = Match.where(
-      #   account => @login,
-      #   last_visit <=
-      #   )
-
-      # result = Match.where("account=?
-        # and (last_visit <= ? or last_visit is null)
-         # and (counts <= ? or counts is null)
-         # and (distance <= ? or distance is null)
-         # and (ignored = false or ignored is null)
-         # and (inactive = false or inactive is null)
-         # and (age between ? and ? or age is null)
-         # and (match_percent between ? and 100 or match_percent is null or match_percent=0)
-         # and (gender=? or gender=?)
-         # and (sexuality=? or sexuality=? or sexuality=? or sexuality is null)
-         # and (last_online > extract(epoch from (now() - interval '#{last_online_cutoff} days')) or last_online is null)
-        # ",
-                                   # @login, #8
-                                  # min_time.to_i, #1
-                                   # max_counts, #2
-                                   # distance, #3
-                                   # min_age, #4
-                                   # max_age, #5
-                                   # min_percent, #6
-                                   # desired_gender, #7
-                                  # alt_gender,
-                                   # visit_gay, #9
-                                   # visit_straight, #10
-                                   # visit_bisexual #11
-      # ).to_hash(:name) #12
-# order by counts ASC, last_online DESC, distance ASC, match_percent DESC, height #{height_sort}, age #{age_sort}
-#         limit 20"
       return result
     end
 
@@ -515,22 +433,25 @@ module LazyCupid
           :distance       => user[:distance],
           :age            => user[:age]
         )
-              User.find_or_create(:name => user[:handle]) do |u|
-                        u.age         =  user[:age]
-                        u.gender      =  user[:gender]
-                        u.sexuality   =  user[:sexuality]
-                        # u.relationship_status =  user[:relationship_status]
-                        u.city        =  user[:city]
-                        u.state       =  user[:state]
-                        u.height      =  user[:height]
-                        u.last_online =  user[:last_online]
-                        u.smokes      =  (user[:smoking] != "No")
-                        u.drinks      =  (user[:drinking] != "Not at all")
-                        u.bodytype    = user[:bodytype]
-                        u.ethnicity   = user[:ethnicity]
-                        u.drugs       =  (user[:drugs] != "Never")
-                        u.bodytype    =  user[:body_type]
-              end
+        User.find_or_create(:name => user[:handle]) do |u|
+          u.age         =  user[:age]
+          u.gender      =  user[:gender]
+          u.sexuality   =  user[:sexuality]
+          # u.relationship_status =  user[:relationship_status]
+          u.city        =  user[:city]
+          u.state       =  user[:state]
+          u.height      =  user[:height]
+          u.last_online =  user[:last_online]
+          u.smokes      =  (user[:smoking] != "No")
+          u.drinks      =  (user[:drinking] != "Not at all")
+          u.bodytype    = user[:bodytype]
+          u.ethnicity   = user[:ethnicity]
+          u.drugs       =  (user[:drugs] != "Never")
+          u.bodytype    =  user[:body_type]
+          u.fog         = user[:fog]
+          u.kincaid     = user[:kincaid]
+          u.flesch      = user[:flesch]
+        end
 
         OutgoingVisit.create(:name => user[:handle], :account => @login, :timestamp => Time.now.to_i)
 
@@ -584,27 +505,7 @@ module LazyCupid
     #   end
     # end
 
-    def is_ignored(username, gender="Q")
-      array = Array.new
-      add_user(username, "Q", "ignore_list") unless existsCheck(username)
-      result = @db.exec( "select ignored from matches where name=$1 and account=$2", [username, @login])
-      result.each do |man|
-        array.push(man)
-      end
-      array.shift["ignored"]
-    end
-
     def ignore_user(username)
-      # unless existsCheck(username)
-      #   puts "Adding user first: #{username}"
-      #   add_user(username, "Q", "hidden_users")
-      # end
-      # unless is_ignored(username)
-        puts "Added to ignore list: #{username}" if $verbose
-      #   @db.exec( "update matches set ignored=$3 where name=$1 and account=$2", [username, @login, true])
-      # else
-      #   puts "User already ignored: #{username}" if $verbose
-      # end
 
       Match.find_or_create(:name => username, :account => @login).update(:ignored => true) 
 

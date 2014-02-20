@@ -98,24 +98,18 @@ module LazyCupid
       # @db.exec("insert into incoming_messages(account, username, message_id, timestamp) values($1, $2, $3, $4)", [@login, user, message_id, timestamp])
       # begin
       IncomingMessage.find_or_create(message_id: message_id, account: @login).update(:timestamp => timestamp, :username => user )
-      
-    # rescue Sequel::DatabaseError => e
+
+      # rescue Sequel::DatabaseError => e
       # puts e.sql
       # sleep 10000
-    # end
-    end
-
-    def set_estimated_distance(user, city, state)
-      unless @db.exec("select * from matches where name=$1 and account=$2 and distance >= 0", [user, @login]).to_a.empty?
-        @db.exec("update matches set distance=$1 where name=$2 and account=$3", [guess_distance(@login, city, state), user, @login])
-      end
+      # end
     end
 
     def set_location(args)
       user = args[:user]
       city = args[:city]
       state = args[:state]
-      distance = guess_distance(@login, city, state)
+      distance = guess_distance(city, state)
       @db.exec("update matches set distance=$1, city=$2, state=$3 where name=$4 and account=$5", [distance, city, state, user, @login])
     end
 

@@ -81,36 +81,13 @@ module LazyCupid
       open_db
     end
 
-    def guess_distance(account, city, state)
-      result = @db.exec("select distance from matches where account=$1 and city=$2 and state=$3 and distance is not null limit 1", [account, city, state])
-      alt = @db.exec("select distance from matches where account=$1 and state=$2 and distance is not null limit 1", [account, state])
-      begin
-        return result[0]["distance"]
-      rescue
-        return alt[0]["distance"] rescue nil
-      end
-
-
+    def guess_distance(city, state)
+      return Match.where(:city => city, :account => @login, :state => state).avg(:distance).to_i
+      # state_avg_distance = Match.where(:state => state, :account => account).avg(:distance).to_i
     end
 
-    def fix_blank_distance
-      list = @db.exec("select city, state, account, added_from from matches where distance is null and city is not null and state is not null")
-      queue = []
-      a_from = Hash.new
-      list.to_a.each do |r|
-        queue << r
-        a_from[r["added_from"]] += 1 rescue a_from[r["added_from"]] = 1
-      end
-      puts a_from
-      bar = ProgressBar.new(queue.to_set.to_a.size)
-      c = 0
-      queue.to_set.to_a.each do |r|
-        # puts "Updating #{r["city"]}"
-        @db.exec("update matches set distance=$1 where account=$2 and city=$3 and state=$4 and distance is null", [guess_distance(r["account"], r["city"], r["state"]), r["account"], r["city"], r["state"]])
-        bar.increment!
-        c += 1
-        # break if c >= 50
-      end
+    def set_estimated_distance(user, city, state)
+      Match.where(:name => user, :account => login).update(:distance => guess_distance(city, state))
     end
 
     def add_message(args)
@@ -192,7 +169,11 @@ module LazyCupid
       #   puts "User already in db: #{username}" if $verbose
       # end'
       puts "Adding:\t\t#{user[:username]}" if $verbose
-      distance = guess_distance(@login, user[:city], user[:state]) if user[:city]
+      if user[:city]
+        distance = guess_distance(user[:city], user[:state])
+      else
+        distance = 0
+      end
 
       Match.find_or_create(:name => user[:username], :account => @login) do |u|
         u.gender = user[:gender]
@@ -211,7 +192,7 @@ module LazyCupid
       # unless existsCheck(user[:username]) || user[:username] == "pictures"
         puts "Adding user:        #{user[:username]}" if $verbose
 
-        distance = guess_distance(@login, user[:city], user[:state]) unless user[:distance]
+      distance = guess_distance(user[:city], user[:state]) unless user[:distance]
 
       #   @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
       # else

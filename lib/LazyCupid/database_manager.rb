@@ -311,6 +311,23 @@ module LazyCupid
         :age => min_age.to_i..max_age.to_i,
         :last_visit => 0..min_time.to_i,
         :counts => 0..max_counts.to_i,
+        :match_percent => $min_percent.to_i..102,
+        :gender => [desired_gender.to_s, alt_gender.to_s]
+      ).order(Sequel.desc(:match_percent)).take(query_size).to_a
+
+      # puts result.first.to_hash
+      if result.empty?
+        Match.filter(:account => $login).where(:gender => nil).update(:gender => $gender)
+        Match.where(:name => nil).delete
+        Match.where(:distance => nil).update(:distance => 0)
+        Match.where(:match_percent => nil).update(:match_percent => 100)
+
+        User.where(:name => nil).delete
+        User.where(:age => nil).update(:age => 25)
+        # User.where(:gender => nil).update(:gender => $gender)
+        User.where(:inactive => nil).update(:inactive => false)
+      end
+
       return result
     end
 

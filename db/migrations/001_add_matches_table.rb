@@ -26,13 +26,13 @@ Sequel.migration do
       Integer :distance
       Integer :enemy_percent
       Integer :friend_percent
-      Boolean :drugs
-      Boolean :smokes
-      Boolean :drinks
+      Boolean :drugs, :default => false
+      Boolean :smokes, :default => false
+      Boolean :drinks, :default => false
       String :ethnicity
-      Integer :last_online
-      Boolean :likes_cats
-      Boolean :likes_dogs
+      Integer :last_online, :default => 0
+      Boolean :likes_cats, :default => false
+      Boolean :likes_dogs, :default => false
       Integer :ignore_list
 
     end

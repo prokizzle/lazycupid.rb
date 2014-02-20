@@ -227,10 +227,10 @@ module LazyCupid
           puts "A-list name change: #{user} is now #{profile[:handle]}"
         end
         # sexuality_filter(profile)
-        @console.log(profile) if $verbose
         @tally += 1
         # puts "Logging user #{profile}"
         @db.log2(profile)
+        @console.log(profile) if $verbose
         # @harvester.body = @user.body
         autodiscover_new_users(profile) if profile[:gender] == $gender || profile[:gender] == $alt_gender
       end

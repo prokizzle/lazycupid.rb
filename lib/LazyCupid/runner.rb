@@ -15,6 +15,8 @@ module LazyCupid
       @config       = Settings.new(username: username, path: config_path, browser: @browser)
       @db           = DatabaseMgr.new(login_name: @username, settings: @config, tasks: true)
       @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
+      # @db2 = @db
+      # @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
       @autorater    = AutoRater.new(username: @username, password: @password) unless $debug

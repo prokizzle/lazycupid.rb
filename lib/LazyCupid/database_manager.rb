@@ -26,21 +26,21 @@ module LazyCupid
       $login        = @login
       @settings     = args[:settings]
       @db           = PGconn.connect( :dbname => @settings.db_name,
-                            :password => @settings.db_pass,
-                            :user => @settings.db_user,
-                            :host => @settings.db_host
-                            )
+                                      :password => @settings.db_pass,
+                                      :user => @settings.db_user,
+                                      :host => @settings.db_host
+                                      )
       # tasks     = args[:tasks] unless @settings.debug
       #db_tasks #if args[:tasks]
       @verbose      = @settings.verbose
       @debug        = @settings.debug
       # $sequel = Sequel.postgres(
-        # :host =>      @settings.db_host,
-        # :database =>  @settings.db_name,
-        # :user =>      @settings.db_user,
-        # :password =>  @settings.db_pass
+      # :host =>      @settings.db_host,
+      # :database =>  @settings.db_name,
+      # :user =>      @settings.db_user,
+      # :password =>  @settings.db_pass
       # )
-# @sequel = Sequel.connect("#{@settings.db_adapter}://#{@settings.db_user}:#{@settings.db_pass}@#{@settings.db_host}/#{@settings.db_name}")
+      # @sequel = Sequel.connect("#{@settings.db_adapter}://#{@settings.db_user}:#{@settings.db_pass}@#{@settings.db_host}/#{@settings.db_name}")
       # @users            = @sequel[:users]
     end
 

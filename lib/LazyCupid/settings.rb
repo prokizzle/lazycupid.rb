@@ -73,7 +73,8 @@ module LazyCupid
                     autodiscover_on: true,
                     import_hidden_users: false,
                     match_frequency: 2, #in minutes,
-                    scrape_match_search: true
+                    scrape_match_search: true,
+                    driver: 'phantomjs',
                   },
                   development: {
                     verbose: true,
@@ -146,10 +147,13 @@ module LazyCupid
       $db_pass                = @db_pass
       $db_name                = @db_name
       $fast_launch            = @fast_launch
-      $sort_criteria          = @sort_criteria
+      $sort_criteria          = "Sequel.#{@sort_criteria.shift}(#{@sort_criteria.shift.to_sym})"
       $queue_size             = @queue_size
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
+      $rate_frequency         = "5m"
+      $scrape_inbox_frequency = "5m"
       $driver                 = "phantomjs"
+      puts $sort_criteria
 
     end
 

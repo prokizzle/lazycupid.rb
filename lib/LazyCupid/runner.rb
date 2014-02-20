@@ -263,7 +263,7 @@ module LazyCupid
 
       @app.pre_roll_actions
 
-      @app.scheduler.every '30m', :allow_overlapping => false, :mutex => 'tracker' do
+      @app.scheduler.every "#{$scrape_inbox_frequency}", :allow_overlapping => false, :mutex => 'tracker' do
         @app.scrape_inbox
       end
       #

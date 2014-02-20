@@ -163,7 +163,7 @@ module LazyCupid
       end
     end
 
-    def register_message(sender, timestamp, gender, message_id)
+    def register_message(sender, timestamp, message_id)
 
       # [todo] - add messages table to db
       # [todo] - register message with timestamp, account, sender, and message id
@@ -174,21 +174,12 @@ module LazyCupid
         puts "New message from #{sender}"
       end
 
-      @db.add_user(username: sender, gender: gender, added_From: "inbox", ignored: true)
+      puts "Registering message #{message_id}"
+      @db.ignore_user(sender)
+      # @db
+      # @db.add_user(username: sender, gender: gender, added_From: "inbox", ignored: true)
 
       @db.add_message(username: sender, message_id: message_id, timestamp: timestamp)
-
-      # unless @stored_time == timestamp.to_i
-      # puts "New message found: #{sender} at #{Time.at(timestamp)}"
-      # p "Old timestamp: #{@stored_time}"
-      # p "New timestamp: #{timestamp}"
-      # @db.increment_received_messages_count(sender)
-      # @db.set_last_received_message_date(sender, timestamp.to_i)
-      # unless @db.get_user_info(sender)[0]["last_msg_time"] == timestamp
-      # @db.delete_user(sender)
-      # end
-      # @db.stats_add_new_message
-      # end
     end
 
     def default_match_search(number=1)
@@ -211,29 +202,37 @@ module LazyCupid
       # sleep 41
       html_doc = Nokogiri::HTML(html)
 
+      # puts html_doc
+      # sleep 30
+
       @gender, @age, @state, @city     = {}
-        @details.each do |user|
+      @details.each do |user|
         # if @c_test
-          result2 = html_doc.xpath("//div[@id='usr-#{user[0]}-wrapper']").to_s
-          age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
+        result2 = html_doc.xpath("//div[@id='usr-#{user[0]}-wrapper']").to_s
+        age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
         # else
 
-          result2 ||= html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
-          age ||= result2.match(/span.class=.age.>(\d{2})/)[1].to_i
+        result2 ||= html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
+        age ||= result2.match(/span.class=.age.>(\d{2})/)[1].to_i
         # end
-          gender = $gender
-          username = user[0].to_s
-          puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
-          city, state   = String.new
-          location      = /span.class=.dot.>·<.span>(.+)$/.match(result2)[1]
-          city          = RegEx.parsed_location(location)[:city]
-          state         = RegEx.parsed_location(location)[:state]
-          puts "city: #{city}, state: #{state}" if $debug
-          match_percent = /(\d+)%<.span> Match/.match(result2)[1] if b_test
-          match_percent = /(\d+)% Match/.match(result2)[1] unless b_test
-          puts "#{username} #{match_percent} match" if $debug
-          @db.add(username: username, gender: gender, added_From: "ajax_match_search", age: age, city: city, state: state, match_percent: match_percent, age: age)
-        end
+        gender = $gender
+        username = user[0].to_s
+        puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
+        city, state   = String.new
+        # begin
+        location      = /location.>(.+)<.span>/.match(result2)[1].to_s
+        # rescue
+        # puts result2
+        # sleep 40
+        # end
+        city          = RegEx.parsed_location(location)[:city]
+        state         = RegEx.parsed_location(location)[:state]
+        puts "city: #{city}, state: #{state}" if $debug
+        # match_percent = /(\d+)%<.span> Match/.match(result2)[1] if b_test
+        match_percent = /(\d+)% Match/.match(result2)[1]# unless b_test
+        puts "#{username} #{match_percent}% match" if $debug
+        @db.add(username: username, gender: gender, added_From: "ajax_match_search", age: age, city: city, state: state, match_percent: match_percent, age: age)
+      end
 
       # @db.close
       # rescue Exception => e

@@ -18,6 +18,7 @@ module LazyCupid
 
 
     def initialize(args)
+      puts "Connecting to database..." if $verbose
       $db           = Sequel.connect($db_url)
       require_relative 'models'
       @did_migrate  = false

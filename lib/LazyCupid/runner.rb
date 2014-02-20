@@ -17,7 +17,7 @@ module LazyCupid
       @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
-      @autorater    = AutoRater.new(username: @username, password: @password)
+      @autorater    = AutoRater.new(username: @username, password: @password) unless $debug
       @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
@@ -106,11 +106,16 @@ module LazyCupid
       @autorater.rate
     end
 
+    def delete_mutual_match_messages
+      @autorater.delete_mutual_match_messages
+    end
+
     def scrape_activity_feed
       @harvester.scrape_activity_feed
     end
 
     def scrape_inbox
+      # delete_mutual_match_messages
       @tracker.scrape_inbox
     end
 
@@ -198,6 +203,7 @@ module LazyCupid
     end
 
     def pre_roll_actions
+      # @autorater.delete_mutual_match_messages
       @blocklist.import_hidden_users if @config.import_hidden_users
       @smarty.pre_roll_actions
     end

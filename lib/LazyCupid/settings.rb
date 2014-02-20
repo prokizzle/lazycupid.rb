@@ -149,6 +149,7 @@ module LazyCupid
       $sort_criteria          = @sort_criteria
       $queue_size             = @queue_size
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
+      $driver                 = "phantomjs"
 
     end
 

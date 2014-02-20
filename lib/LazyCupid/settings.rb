@@ -169,7 +169,7 @@ module LazyCupid
 
     def reload_config
       settings                = YAML.load_file(@filename)
-      
+
       $max_distance           = settings[:geo][:distance].to_i
       $min_percent            = settings[:matching][:min_percent].to_i
       $verbose                = settings[:development][:verbose]              == true

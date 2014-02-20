@@ -297,9 +297,13 @@ module LazyCupid
 
       begin
         @app.scheduler.join
-      rescue SystemExit, Interrupt
+      rescue SystemExit, Interrupt, Exception => e
         @app.logout
         puts "","Goodbye!"
+        exit
+      rescue Exception => e
+        @app.logout
+        puts e.message
         exit
       end
     end

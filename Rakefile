@@ -11,7 +11,7 @@
   require 'progress_bar'
 namespace :db do
     @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
-    @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
+    # @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
 
   task :migrate do
     result = %x{sequel -m db/migrations/ -E #{$db_url}}

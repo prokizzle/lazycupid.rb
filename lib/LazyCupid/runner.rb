@@ -126,13 +126,13 @@ module LazyCupid
     end
 
     def login
+      @autorater.login rescue true
       @browser.login
-      @autorater.login
     end
 
     def logout
-      @browser.logout
-      @autorater.logout rescue nil
+      # @browser.agent.close
+      @autorater.browser.close
     end
 
     def range_roll

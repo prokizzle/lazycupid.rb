@@ -17,12 +17,7 @@ module LazyCupid
     end
 
     def last_visited(match_name)
-      result = @db.get_my_last_visit_date(match_name)
-      if result >1
-        return Time.at(result).ago.to_words
-      else
-        return "never"
-      end
+      return Match.where(:account => $login, :name => match_name).first[:last_visit]
     end
 
     def prev_visit(user)

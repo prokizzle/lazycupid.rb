@@ -206,8 +206,13 @@ module LazyCupid
 
     def pre_roll_actions
       # @autorater.delete_mutual_match_messages
-      @blocklist.import_hidden_users if @config.import_hidden_users
-      @smarty.pre_roll_actions
+      unless fast_launch
+        @blocklist.import_hidden_users if @config.import_hidden_users
+        puts "Getting new matches..." unless verbose
+        @tracker.default_match_search
+        puts "Checking for new messages..." unless verbose
+        @tracker.scrape_inbox
+      end
     end
 
     def set_stop_time
@@ -283,7 +288,7 @@ module LazyCupid
         @app.reload_settings
       end
 
-      @app.scheduler.every "#{$rate_frequency}", :allow_overlapping => false, :mutex => 'autorater' do
+      @app.scheduler.every "#{$rate_frequency}m", :allow_overlapping => false, :mutex => 'autorater' do
         @app.rate
       end
 

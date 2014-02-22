@@ -66,7 +66,6 @@ module LazyCupid
       @total_visitors = 0
       @total_visits = 0
       @start_time = Time.now.to_i
-      payload unless $fast_launch
       puts "","Running..." #unless $verbose
     end
 
@@ -147,17 +146,6 @@ module LazyCupid
       @total_visits += @tally
       @tally = 0
       puts ""
-    end
-
-    # Actions to be executed on app launch
-    #
-    def payload
-
-      puts "Getting new matches..." unless verbose
-      @tracker.default_match_search
-      puts "Checking for new messages..." unless verbose
-      @tracker.scrape_inbox
-      # check_visitors
     end
 
     # Determines which method added the user to the database

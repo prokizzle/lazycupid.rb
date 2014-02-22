@@ -27,6 +27,10 @@ module LazyCupid
       @already_idle = true
       @already_delayed = false
       @already_rolling = false
+      @tally = 0
+      @total_visitors = 0
+      @total_visits = 0
+      @start_time = Time.now.to_i
     end
 
     public
@@ -56,17 +60,6 @@ module LazyCupid
           # return {rolling: @already_rolling}
         end
       end
-    end
-
-    # Sets up pre-roll variables, runs actions before first roll
-    #
-    def pre_roll_actions
-      # @console.progress(@roll_list.size)
-      @tally = 0
-      @total_visitors = 0
-      @total_visits = 0
-      @start_time = Time.now.to_i
-      puts "","Running..." #unless $verbose
     end
 
     private

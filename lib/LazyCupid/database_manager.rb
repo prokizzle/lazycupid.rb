@@ -25,11 +25,11 @@ module LazyCupid
       @login        = args[:login_name]
       $login        = @login
       @settings     = args[:settings]
-      @db           = PGconn.connect( :dbname => @settings.db_name,
-                                      :password => @settings.db_pass,
-                                      :user => @settings.db_user,
-                                      :host => @settings.db_host
-                                      )
+      # @db           = PGconn.connect( :dbname => @settings.db_name,
+      # :password => @settings.db_pass,
+      # :user => @settings.db_user,
+      # :host => @settings.db_host
+      # )
       # tasks     = args[:tasks] unless @settings.debug
       #db_tasks #if args[:tasks]
       @verbose      = @settings.verbose
@@ -533,14 +533,15 @@ module LazyCupid
       row[0]["added_from"].to_s
     end
 
-    def existsCheck(username)
-      @db.exec( "select 1 where exists(
-          select 1
-          from matches
-          where name = $1
-          and account = $2
-      ) ", [username, @login]).any?
-    end
+    # TDB
+    # def existsCheck(username)
+    #   @db.exec( "select 1 where exists(
+    #       select 1
+    #       from matches
+    #       where name = $1
+    #       and account = $2
+    #   ) ", [username, @login]).any?
+    # end
 
     def import_user(args)
       name = args[:name]

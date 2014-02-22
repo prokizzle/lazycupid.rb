@@ -215,14 +215,6 @@ module LazyCupid
       end
     end
 
-    def set_stop_time
-      @stop_time = Chronic.parse('4h from now').to_i
-    end
-
-    def run_new_user_focus_crawl
-      # @smarty.alt_reload = true
-    end
-
     def recaptcha?
       @browser.recaptcha?
     end
@@ -264,7 +256,6 @@ module LazyCupid
 
 
     def run
-      # @app.set_stop_time
 
       @app.pre_roll_actions
 

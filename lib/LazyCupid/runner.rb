@@ -208,9 +208,9 @@ module LazyCupid
       unless $fast_launch
       # @autorater.delete_mutual_match_messages
         @blocklist.import_hidden_users if @config.import_hidden_users
-        puts "Getting new matches..." unless verbose
+        puts "Getting new matches..." unless $verbose
         @tracker.default_match_search
-        puts "Checking for new messages..." unless verbose
+        puts "Checking for new messages..." unless $verbose
         @tracker.scrape_inbox
       end
     end

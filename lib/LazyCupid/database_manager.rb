@@ -34,14 +34,6 @@ module LazyCupid
       #db_tasks #if args[:tasks]
       @verbose      = @settings.verbose
       @debug        = @settings.debug
-      # $sequel = Sequel.postgres(
-      # :host =>      @settings.db_host,
-      # :database =>  @settings.db_name,
-      # :user =>      @settings.db_user,
-      # :password =>  @settings.db_pass
-      # )
-      # @sequel = Sequel.connect("#{@settings.db_adapter}://#{@settings.db_user}:#{@settings.db_pass}@#{@settings.db_host}/#{@settings.db_name}")
-      # @users            = @sequel[:users]
     end
 
     def db
@@ -96,13 +88,8 @@ module LazyCupid
       timestamp = args[:timestamp]
 
       # @db.exec("insert into incoming_messages(account, username, message_id, timestamp) values($1, $2, $3, $4)", [@login, user, message_id, timestamp])
-      # begin
       IncomingMessage.find_or_create(message_id: message_id, account: @login).update(:timestamp => timestamp, :username => user )
 
-      # rescue Sequel::DatabaseError => e
-      # puts e.sql
-      # sleep 10000
-      # end
     end
 
     def set_location(args)
@@ -225,12 +212,6 @@ module LazyCupid
     end
 
     def get_visit_count(user)
-      # row = @db.exec( "select counts from matches where name=$1 and account=$2", [user, @login])
-      # begin
-      #   row[0]["counts"].to_i
-      # rescue
-      #   0
-      # end
       Match.where(:account => @login, :name => user).first.to_hash[:counts]
     end
 
@@ -377,11 +358,7 @@ module LazyCupid
 
     def get_my_last_visit_date(user)
       result = @db.exec("select last_visit from matches where name=$1 and account=$2", [user, @login])
-      # begin
       result[0]["last_visit"].to_i
-      # rescue
-      #   0
-      # end
     end
 
     def get_prev_visit(user)

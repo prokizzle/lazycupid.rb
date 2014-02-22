@@ -1,8 +1,8 @@
 
 module LazyCupid
   class BlockList
-    attr_accessor :is_ignored, :add, :remove
-    attr_reader :is_ignored, :add, :remove
+    attr_accessor :add, :remove
+    attr_reader :add, :remove
 
     def initialize(args)
       @db = args[ :database]
@@ -12,20 +12,12 @@ module LazyCupid
       # import_hidden_users
     end
 
-    def user_exists(match)
-      @db.existsCheck(match)
-    end
-
     def add(match)
-      @db.ignore_user(match) if user_exists(match)
+      @db.ignore_user(match)
     end
 
     def remove(match)
-      @db.unignore_user(match) if user_exists(match)
-    end
-
-    def is_ignored (user, gender)
-      (@db.is_ignored(user, gender))
+      @db.unignore_user(match)
     end
 
     def body

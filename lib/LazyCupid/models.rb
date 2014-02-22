@@ -1,6 +1,6 @@
 
     class User < Sequel::Model
-      # set_primary_key [:name]
+      set_primary_key :id
     end
 
     class IncomingMessage < Sequel::Model

@@ -205,8 +205,8 @@ module LazyCupid
     end
 
     def pre_roll_actions
+      unless $fast_launch
       # @autorater.delete_mutual_match_messages
-      unless fast_launch
         @blocklist.import_hidden_users if @config.import_hidden_users
         puts "Getting new matches..." unless verbose
         @tracker.default_match_search

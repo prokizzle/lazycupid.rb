@@ -231,7 +231,7 @@ module LazyCupid
     end
 
     def rename_alist_user(old_name, new_name)
-      @db.exec("update matches set name=$1 where name=$2", [new_name, old_name])
+      Match.where(name: old_name).update(name: new_name)
       UsernameChange.find_or_create(:old_name => old_name) do |u|
         u.new_name = new_name
       end

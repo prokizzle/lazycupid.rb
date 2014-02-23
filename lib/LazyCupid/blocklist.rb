@@ -7,9 +7,6 @@ module LazyCupid
     def initialize(args)
       @db = args[ :database]
       @browser = args[ :browser]
-      # @ignore_list = @database.ignore
-      # process_ignore_list
-      # import_hidden_users
     end
 
     def add(match)

@@ -239,8 +239,12 @@ module LazyCupid
         # puts result2
         # sleep 40
         # end
-        city          = RegEx.parsed_location(location)[:city]
-        state         = RegEx.parsed_location(location)[:state]
+        begin
+          city          = RegEx.parsed_location(location)[:city]
+          state         = RegEx.parsed_location(location)[:state]
+        rescue
+          puts location
+        end
         puts "city: #{city}, state: #{state}" if $debug
         # match_percent = /(\d+)%<.span> Match/.match(result2)[1] if b_test
         match_percent = /(\d+)% Match/.match(result2)[1]# unless b_test

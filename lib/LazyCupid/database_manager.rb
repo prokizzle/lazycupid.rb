@@ -333,23 +333,12 @@ module LazyCupid
 
     def get_last_received_message_date(user)
       result = @db.exec("select last_msg_time from matches where name=$1 and account=$2", [user, @login])
-      begin
-        result.first["last_msg_time"].to_i
-      rescue
-        # puts e.message
-        # puts e.backtrace
-        # sleep 10
-        0
-      end
+      result.first["last_msg_time"].to_i
     end
 
     def get_visitor_count(visitor)
       result = @db.exec( "select visit_count from matches where name=$1 and account=$2", [visitor, @login])
-      begin
-        result[0]["visit_count"].to_i
-      rescue
-        0
-      end
+      result[0]["visit_count"].to_i
     end
 
     def get_my_last_visit_date(user)
@@ -359,11 +348,7 @@ module LazyCupid
 
     def get_prev_visit(user)
       result = @db.exec("select prev_visit from matches where account=$1 and name=$2", [@login, user])
-      begin
-        result[0]["prev_visit"].to_i
-      rescue
-        0
-      end
+      result[0]["prev_visit"].to_i
     end
 
 

@@ -313,7 +313,7 @@ module LazyCupid
     end
 
     def increment_visitor_counter(visitor)
-      @db.exec( "update matches set visit_count=visit_count+1 where name=$1 and account=$2", [visitor, @login])
+      Match.find_or_create(name: visitor, account: @login).update(visit_count: Sequel.expr(1) + :visit_count)
     end
 
     def increment_received_messages_count(user)
@@ -378,18 +378,11 @@ module LazyCupid
 
     def set_visitor_timestamp(visitor, timestamp)
       puts "Updating last visit time: #{visitor}" if $verbose
-      @db.exec( "update matches set visitor_timestamp=$1 where name=$2 and account=$3", [timestamp, visitor, @login])
+      Match.where(name: visitor, account: @login).update(visitor_timestamp: timestamp)
     end
 
     def get_visitor_timestamp(visitor)
-      if existsCheck(visitor)
-        result = @db.exec("select visitor_timestamp from matches where name=$1 and account=$2", [visitor, @login])
-        result[0]["visitor_timestamp"].to_i
-      else
-        @db.exec("insert into matches(name, counts, visitor_timestamp, ignored, account, added_from) values ($1, $2, $3, $4, $5, $6)", [visitor, 0, Time.now.to_i, false, @login, "visitors"])
-        set_visitor_timestamp(visitor, Time.now.to_i)
-        Time.now.to_i
-      end
+      IncomingVisit.where(account: @login, name: visitor).first[:server_gmt] rescue 0
     end
 
     def get_total_received_message_count

@@ -125,12 +125,6 @@ module LazyCupid
       @harvester.scrape_from_user(user) if @settings.autodiscover_on
     end
 
-    # Wrapper method for Database class delete user
-    #
-    def remove_match(user)
-      @db.delete_user(user)
-    end
-
     # TBD: Wrapper method for EventTracker's visitor page scraper
     #
     def check_visitors

@@ -106,36 +106,32 @@ module LazyCupid
     end
 
     def stats_add_visitor
-      @db.exec("update stats set total_visitors=total_visitors+1 where account=$1", [@login])
+      Stat.where(account: @login).update(total_visitors: Sequel.expr(1) + :total_visitors)
     end
 
     def stats_add_new_user
-      # updated = stats_get_new_users_count + 1
-      @db.exec("update stats set new_users=new_users + 1 where account=$1", [@login])
+      Stat.where(account: @login).update(new_users: Sequel.expr(1) + :new_users)
     end
 
     def stats_add_new_message
-      @db.exec("update stats set total_messages=total_messages + 1 where account=$1", [@login])
+      Stat.where(account: @login).update(total_messages: Sequel.expr(1) + :total_messages)
     end
 
     def stats_get_visitor_count
-      result = @db.exec("select total_visitors from stats where account=$1", [@login])
-      result[0]["total_visitors"].to_i
+      return Stat.where(account: @login).first.to_hash[:total_visitors]
     end
 
     def stats_get_visits_count
-      result = @db.exec("select total_visits from stats where account=$1", [@login])
-      result[0]["total_visits"].to_i
+      return Stat.where(account: @login).first.to_hash[:total_visits]
+
     end
 
     def stats_get_new_users_count
-      result = @db.exec("select new_users from stats where account=$1", [@login])
-      result[0]["new_users"].to_i
+      return Stat.where(account: @login).first.to_hash[:new_users]
     end
 
     def stats_get_total_messages
-      result = @db.exec("select total_messages from stats where account=$1", [@login])
-      result[0]["total_messages"].to_i
+      return Stat.where(account: @login).first.to_hash[:total_messages]
     end
 
     def add_user(user)

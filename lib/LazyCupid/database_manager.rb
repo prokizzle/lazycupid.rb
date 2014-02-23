@@ -54,12 +54,6 @@ module LazyCupid
       # import
       puts "Executing db tasks..."
       delete_self_refs
-      # @db.exec("delete from matches where distance > $1 and ignore_list=0 and account=$2", [@settings.max_distance, @login])
-      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Gay", @login]) unless @settings.visit_gay
-      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Straight", @login]) unless @settings.visit_straight
-      # @db.exec("update matches set ignored=true where ignore_list=1")
-      # @db.exec("update matches set ignore_list=1 where sexuality=$1 and account=$2", ["Bisexual", @login]) unless @settings.visit_bisexual
-      # @db.exec("update matches set ignored=false where account=$1 and ignored=true", [@login])
       fix_blank_distance
     end
 
@@ -165,16 +159,9 @@ module LazyCupid
 
     def add(user)
 
-      # unless existsCheck(user[:username]) || user[:username] == "pictures"
       puts "Adding user:        #{user[:username]}" if $verbose
 
       distance = guess_distance(user[:city], user[:state]) unless user[:distance]
-
-      #   @db.exec("insert into matches(name, ignore_list, time_added, account, counts, gender, added_from, city, state, distance, match_percent, age) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)", [user[:username], 0, Time.now.to_i, @login.to_s, 0, user[:gender], user[:added_from], user[:city], user[:state], distance, user[:match_percent], user[:age]])
-      # else
-      #   @db.exec("update matches set inactive=false where name=$1", [user[:username]])
-      #   puts "User already in db: #{user[:username]}" if $verbose
-      # end
 
       Match.find_or_create(:name => user[:username], :account => @login) do |u|
         u.age = user[:age]
@@ -190,23 +177,6 @@ module LazyCupid
 
     end
 
-    def delete_user(username)
-      puts "Deleting #{username}"
-      # @db.exec("delete from matches where name=$1 and account=$2", [username, @login])
-    end
-
-    def get_user_info(username)
-      @db.exec("select * from matches where name=$1 and account=$2", [username, @login])
-    end
-
-    def get_match_names
-      @db.exec( "select name from matches where account=$1", [@login] )
-    end
-
-    def all_ignore_list
-      @db.exec("select name from matches where ignore_list=1")
-    end
-
     def get_visit_count(user)
       Match.where(:account => @login, :name => user).first.to_hash[:counts]
     end
@@ -214,11 +184,6 @@ module LazyCupid
     def set_visit_count(name, count)
       @db.exec("update matches set counts = $1 where name=$2 and account = $3", [count, name, @login])
     end
-
-    # def get_last_visit_date(user)
-    #   result = @db.exec( "select last_visit from matches where name=$1 and account=$2", [user, @login])
-    #   result[0]["last_visit"].to_i
-    # end
 
     def update_visit_count(match_name, number)
       puts "Updating visit count: #{match_name}" if $verbose

@@ -517,11 +517,8 @@ module LazyCupid
     end
 
     def set_inactive(username)
-      begin
-        @db.exec( "update matches set inactive = true where name=$1", [username])
-      rescue
-        @db.exec( "insert into matches (name, inactive) values ($1, true)", [username])
-      end
+      Match.find_or_create(name: username).update(inactive: true)
+      User.find_or_create(name: username).update(inactive:true)
     end
 
     def added_from(username, method)

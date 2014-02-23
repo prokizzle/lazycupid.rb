@@ -100,7 +100,8 @@ module LazyCupid
     # [todo] - create a new visitor row here instead of updating stats or matches tables
     def register_visit(person)
       visitor   = person['screenname']
-      timestamp = person['server_gmt']
+      server_gmt   = person['server_gmt']
+      server_seqid = person['server_seqid']
       gender    = person['gender']
       distance  = person['distance']
       match     = person['match']
@@ -109,16 +110,29 @@ module LazyCupid
       location  = person['location']
       city      = RegEx.parsed_location(location)[:city]
       state     = RegEx.parsed_location(location)[:state]
-      @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
 
-      unless @stored_timestamp == timestamp
+
+      # Determines if current visitor event is the same as the last one stored in db, aka, not a duplicate event
+      # @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
+
+      # If it's not a duplicate
+      unless IncomingVisit.where(name: visitor, server_seqid: server_seqid, server_gmt: server_gmt, account: $login).exists
         puts "* New visitor: #{visitor} *"
 
+        # Add the user to the matches table
         @db.add_user(username: visitor, gender: gender, added_from: "api_visitor", city: city, state: state, )
-        # @db.ignore_user(visitor) unless gender == $gender || gender == $alt_gender
+
+
+        IncomingVisit.find_or_create(name: person['screenname'], server_gmt: person[:server_gmt], server_seqid: person['server_seqid'], account: $login)
+
+        # Increment their visit count for current account
         @db.increment_visitor_counter(visitor)
       end
-      @db.set_visitor_timestamp(visitor, timestamp)
+
+      # Set time for visit
+      @db.set_visitor_timestamp(visitor, server_gmt)
+
+      # Increment total visits in stats table
       @db.stats_add_visitor
     end
 

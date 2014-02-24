@@ -225,7 +225,7 @@ module LazyCupid
   class Runner
 
     def login
-      login_message = "Please login."
+      login_message = "Please login"
       quit          = false
       logged_in     = false
 
@@ -234,13 +234,15 @@ module LazyCupid
         unless cli_login
           print "\e[2J\e[f"
           puts "LazyCupid Main Menu","--------------------",""
-          puts "#{login_message}",""
-          username = ask("username: ") { |q| q.echo = true}
-          password = ask("password: ") { |q| q.echo = "*" }
-        else
-          username = ARGV[0]
-          password = ARGV[1]
+          print "#{login_message} ",""
+          puts ARGV[0] rescue nil
         end
+        username = ARGV[0] rescue false
+        password = ARGV[1] rescue false
+        username = ask("username: ") { |q| q.echo = true} unless username
+        password = ask("password: ") { |q| q.echo = "*" } unless password
+        # else
+
         @app = Application.new(username: username, password: password)
         if @app.login
           logged_in = true

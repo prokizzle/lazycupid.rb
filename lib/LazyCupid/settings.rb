@@ -60,6 +60,7 @@ module LazyCupid
                     days_ago: 10,
                     max_followup: 2,
                     roll_frequency: 6, #in seconds
+                    rate_frequency: 1, #in minutes
                     sort_criteria: [
                       "counts ASC",
                       "distance ASC",
@@ -76,6 +77,7 @@ module LazyCupid
                     match_frequency: 2, #in minutes,
                     scrape_match_search: true,
                     driver: 'phantomjs',
+                    auto_rate_enabled: false
                   },
                   development: {
                     verbose: true,
@@ -119,7 +121,9 @@ module LazyCupid
       @sort_criteria          = @settings[:visit_freq][:sort_criteria]
       @queue_size             = @settings[:visit_freq][:queue_size].to_i
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
+      @auto_rate_enabled      = @settings[:scraping][:auto_rate_enabled]
       @match_frequency        = @settings[:scraping][:match_frequency]
+      @rate_frequency         = @settings[:visit_freq][:rate_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
       @scrape_match_search    = @settings[:scraping][:scrape_match_search]      == true
 
@@ -140,6 +144,9 @@ module LazyCupid
       $verbose                = @verbose
       $debug                  = @debug
       $roll_frequency         = @roll_frequency
+      # $rate_frequency         = "5m"
+      $rate_frequency         = @rate_frequency
+      $auto_rate_enabled      = @auto_rate_enabled
       $match_frequency        = @match_frequency
       $gender                 = @gender
       $alt_gender             = @alt_gender
@@ -153,7 +160,6 @@ module LazyCupid
       $sort_criteria          = "Sequel.#{@sort_criteria.shift}(#{@sort_criteria.shift.to_sym})"
       $queue_size             = @queue_size
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
-      $rate_frequency         = "5m"
       $scrape_inbox_frequency = "5m"
       $driver                 = "phantomjs"
       puts $sort_criteria

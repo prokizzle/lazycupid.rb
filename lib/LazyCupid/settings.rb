@@ -31,6 +31,7 @@ module LazyCupid
         # [todo] - add default options for readability score filtering
         # Create generic preference file
         config = {geo: {
+                    min_distance: 0,
                     distance: 50
                   },
                   personal: {
@@ -98,6 +99,7 @@ module LazyCupid
 
       # Load settings attributes into variables for external reference
       @max_distance           = @settings[:geo][:distance].to_i
+      @min_distance           = @settings[:geo][:min_distance].to_i
       @visit_bisexual         = @settings[:matching][:visit_bisexual]
       @visit_straight         = @settings[:matching][:visit_straight]
       @visit_gay              = @settings[:matching][:visit_gay]
@@ -133,6 +135,7 @@ module LazyCupid
       # Global variables for mid-session reloads
 
       $max_distance           = @max_distance
+      $min_distance           = @min_distance
       $min_percent            = @min_percent
       $verbose                = @verbose
       $debug                  = @debug
@@ -171,6 +174,7 @@ module LazyCupid
       settings                = YAML.load_file(@filename)
 
       $max_distance           = settings[:geo][:distance].to_i
+      $min_distance           = settings[:geo][:min_distance].to_i
       $min_percent            = settings[:matching][:min_percent].to_i
       $verbose                = settings[:development][:verbose]              == true
       $debug                  = settings[:development][:debug]                == true

@@ -19,7 +19,7 @@ module LazyCupid
       # @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @search       = Lookup.new(database: db)
-      @autorater    = AutoRater.new(username: @username, password: @password) unless $debug
+      @autorater    = AutoRater.new(username: @username, password: @password) if $auto_rate_enabled
       @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
@@ -105,7 +105,7 @@ module LazyCupid
     end
 
     def rate
-      @autorater.rate
+      @autorater.rate if $auto_rate_enabled
     end
 
     def delete_mutual_match_messages
@@ -132,7 +132,7 @@ module LazyCupid
 
     def logout
       # @browser.agent.close
-      @autorater.browser.close
+      @autorater.browser.close rescue nil
     end
 
     def range_roll
@@ -206,7 +206,7 @@ module LazyCupid
 
     def pre_roll_actions
       unless $fast_launch
-      # @autorater.delete_mutual_match_messages
+        # @autorater.delete_mutual_match_messages
         @blocklist.import_hidden_users if @config.import_hidden_users
         puts "Getting new matches..." unless $verbose
         @tracker.default_match_search
@@ -280,7 +280,7 @@ module LazyCupid
       end
 
       @app.scheduler.every "#{$rate_frequency}m", :allow_overlapping => false, :mutex => 'autorater' do
-        @app.rate
+        @app.rate if $auto_rate_enabled
       end
 
       @app.scheduler.every "#{$roll_frequency}s", :allow_overlapping => false, :mutex => 'headless' do #|job|

@@ -215,7 +215,6 @@ module LazyCupid
       age_sort            = @settings.age_sort
       max_counts          = @settings.max_followup
       query_size          = 30
-      min_distance        = 0
 
       sexualities = [nil]
       sexualities << "Gay"      if @settings.visit_gay
@@ -249,13 +248,13 @@ module LazyCupid
         :account => @login,
         :ignored => false,
         :inactive => false,
-        :distance => 0..$max_distance.to_i,
+        :distance => $min_distance..$max_distance.to_i,
         :age => min_age.to_i..max_age.to_i,
         :last_visit => 0..min_time.to_i,
         :counts => 0..max_counts.to_i,
         :match_percent => $min_percent.to_i..102,
         :gender => [desired_gender.to_s, alt_gender.to_s]
-      ).order(Sequel.desc(:match_percent)).take(query_size).to_a
+      ).order(Sequel.asc(:counts)).take(query_size).to_a
 
       # puts result.first.to_hash
       if result.empty?

@@ -181,20 +181,6 @@ module LazyCupid
       Match.where(:account => @login, :name => user).first.to_hash[:counts]
     end
 
-    def set_visit_count(name, count)
-      @db.exec("update matches set counts = $1 where name=$2 and account = $3", [count, name, @login])
-    end
-
-    def update_visit_count(match_name, number)
-      puts "Updating visit count: #{match_name}" if $verbose
-      @db.exec( "update matches set counts=$1 where name=$2 and account=$3", [number.to_i, match_name, @login] )
-    end
-
-    def increment_visit_count(match_name)
-      puts "Incrementing visit count: #{match_name}" if $verbose
-      @db.exec("update matches set counts=counts + 1 where name=$1 and account=$2", [match_name, @login])
-    end
-
     def rename_alist_user(old_name, new_name)
       Match.where(name: old_name).update(name: new_name)
       UsernameChange.find_or_create(:old_name => old_name) do |u|
@@ -278,21 +264,6 @@ module LazyCupid
 
     def increment_visitor_counter(visitor)
       Match.find_or_create(name: visitor, account: @login).update(visit_count: Sequel.expr(1) + :visit_count)
-    end
-
-    def increment_received_messages_count(user)
-      puts "Recieved msg count updated: #{user}" if $verbose
-      @db.exec("update matches set r_msg_count=r_msg_count+1 where name=$1 and account=$2", [user, @login])
-    end
-
-    def get_received_messages_count(user)
-      result = @db.exec("select r_msg_count from matches where name=$1 and account=$2", [user, @login])
-      result[0]["r_msg_count"].to_i
-    end
-
-    def set_last_received_message_date(user, date)
-      puts "Last Msg date updated: #{user}:#{date}" if $verbose
-      @db.exec("update matches set last_msg_time=$1 where name=$2 and account=$3", [date.to_i, user, @login])
     end
 
     def get_last_received_message_date(user)

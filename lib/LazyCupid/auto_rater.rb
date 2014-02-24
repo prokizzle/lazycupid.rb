@@ -24,6 +24,18 @@ module LazyCupid
       @fake_element = FakeElement.new
     end
 
+    # Ensure connection to webdriver re-opens on error
+    def visit(url)
+      begin
+        @browser.goto url
+      rescue Errno::ECONNREFUSED
+        puts "Webdriver reconnecting..."
+        @browser  = Watir::Browser.new $driver.to_sym
+        login
+        @browser.goto url
+      end
+    end
+
     def login
       print "AutoRater logging in with PhantomJS... " if $verbose
       @browser.goto("http://www.okcupid.com")
@@ -36,7 +48,7 @@ module LazyCupid
       sleep (1..3).to_a.sample.to_i
       @browser.button(:id => 'sign_in_button').click
       sleep (1..3).to_a.sample.to_i
-      # @browser.goto("http://www.okcupid.com/quickmatch"
+      @browser.visit("http://www.okcupid.com/quickmatch")
       if $verbose
         puts logged in? ? "OK" : "failed"
       end
@@ -58,7 +70,7 @@ module LazyCupid
         @browser.ul(:id => 'stars').li(:index => (stars-1)).a.click
       rescue  Exception => e
         if wrong_page(e)
-          @browser.goto("http://www.okcupid.com/quickmatch")
+          visit("http://www.okcupid.com/quickmatch")
         else
           puts "*********\n#{e.message}\n*********"
         end

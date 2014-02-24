@@ -18,9 +18,8 @@ module LazyCupid
       # @db2 = @db
       # @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
-      @search       = Lookup.new(database: db)
       @autorater    = AutoRater.new(username: @username, password: @password) if $auto_rate_enabled
-      @display      = Output.new(stats: @search, username: username, smart_roller: @smarty)
+      @display      = Output.new(username: username, smart_roller: @smarty, database: @db)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
       @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)

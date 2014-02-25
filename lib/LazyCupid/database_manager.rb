@@ -94,9 +94,8 @@ module LazyCupid
       @db.exec("update matches set distance=$1, city=$2, state=$3 where name=$4 and account=$5", [distance, city, state, user, @login])
     end
 
-    def stats_add_visit(name)
-      @db.exec("update stats set total_visits=total_visits + 1 where account=$1", [@login])
-      @db.exec("insert into outgoing_visits(name, account, timestamp) values($1,$2,$3)", [name, @login, Time.now.to_i])
+    def stats_add_visit
+      Stat.where(account: @login).update(total_visits: Sequel.expr(1) + :total_visits)
     end
 
     def stats_add_visitor
@@ -367,7 +366,7 @@ module LazyCupid
         # set_user_details(user)
         # p "Height: #{user[:height]}" if $debug
       end
-      # stats_add_visit(user[:handle])
+      stats_add_visit
     end
 
 

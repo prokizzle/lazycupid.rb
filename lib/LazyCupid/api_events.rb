@@ -1,7 +1,7 @@
 module LazyCupid
   class Log
     def debug(args)
-      #
+      puts args
     end
   end
 
@@ -21,6 +21,7 @@ module LazyCupid
       else
         @log        = Log.new
       end
+      @api_events = Array.new
       @spotlight  = Hash.new
       @messages   = Hash.new
       @stalks     = Hash.new
@@ -40,15 +41,17 @@ module LazyCupid
     #
     def process(event, people, key)
       @event = event
-      @people = people
       @key = key
-      @api_event = Hash.new(event: event, people: people, key:key)
-      # print formatted_time
-      unless invalid_event
-        begin
-          self.send(event["type"])
-        rescue Exception => e
-          puts "Error #{event}", e.message, e.backtrace
+      @api_event = Hash.new(event: @event, people: people, key:key)
+      puts "Received event..." if $debug
+      puts event if $debug
+      unless @api_events.include? @event["server_seqid"]
+        if @event["from"] == people["screenname"]
+          puts "Processing unique event..." if $debug
+          @api_events << @event["server_seqid"]
+          @event.merge!(people)
+          puts @event if $debug
+          send(@event["type"])
         end
       end
     end
@@ -76,16 +79,16 @@ module LazyCupid
     #
     def msg_notify
       # unless Time.now.to_i - @last_call <= 1
-      p @event
-      key = "#{@event['server_gmt']}#{@event['from']}"
+      # p @event
+      # key = "#{@event['server_gmt']}#{@event['from']}"
       # p key
-      unless @messages.has_key?(key)
-        # puts "New message from #{@event["from"]}"
-        # @tracker.register_message(@event["from"], @event["server_gmt"], @people["gender"])
-        @tracker.scrape_inbox
-      end
-      @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
-      @last_call = Time.now.to_i
+      # unless @messages.has_key?(key)
+      # puts "New message from #{@event["from"]}"
+      # @tracker.register_message(@event["from"], @event["server_gmt"], @people["gender"])
+      @tracker.scrape_inbox
+      # end
+      # @messages[key] = "#{@event['server_gmt']}#{@event['from']}"
+      # @last_call = Time.now.to_i
       # end
     end
 
@@ -129,12 +132,7 @@ module LazyCupid
     # OKCupid terminology for an incoming visit
     #
     def stalk
-      people = @people
-      event = @event
-      unless @stalks.has_key?(event["server_gmt"])
-        @tracker.register_visit(people)
-      end
-      @stalks[event["server_gmt"]] = people["screenname"]
+      @tracker.register_visit(@event)
     end
 
     # New featured user. These users jump to the top of your match searches

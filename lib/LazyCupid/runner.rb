@@ -187,10 +187,6 @@ module LazyCupid
       end
     end
 
-    def visitor_event
-      @tracker.visitor_event
-    end
-
     def check_events
       @events.check_events
     end

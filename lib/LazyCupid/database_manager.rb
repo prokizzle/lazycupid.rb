@@ -261,10 +261,6 @@ module LazyCupid
       @db.exec( "select exists(select * from matches where name=$1 and account=$2", [user, @login] )
     end
 
-    def increment_visitor_counter(visitor)
-      Match.find_or_create(name: visitor, account: @login).update(visit_count: Sequel.expr(1) + :visit_count)
-    end
-
     def get_last_received_message_date(user)
       result = @db.exec("select last_msg_time from matches where name=$1 and account=$2", [user, @login])
       result.first["last_msg_time"].to_i

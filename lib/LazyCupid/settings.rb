@@ -162,7 +162,7 @@ module LazyCupid
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
       $scrape_inbox_frequency = "5m"
       $driver                 = "phantomjs"
-      puts $sort_criteria
+      # puts $sort_criteria
 
     end
 

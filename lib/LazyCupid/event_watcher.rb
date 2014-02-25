@@ -108,7 +108,7 @@ module LazyCupid
       temp              = poll_response
       index             = 0
       puts temp if $debug
-      begin
+      # begin
         if temp.has_key?("people")
           temp["people"].each do |user|
             unless @people_hash.has_key?(user["screenname"])
@@ -117,7 +117,7 @@ module LazyCupid
           end
         end
         unless temp == {}
-          begin
+          # begin
             temp["events"].each do |event|
               key = "#{event['server_seqid']}#{event['type']}"
               unless @hash[key] == event["server_gmt"]
@@ -127,16 +127,16 @@ module LazyCupid
               end
 
             end
-          rescue
+          # rescue
             # puts "*****"
             #@log.debug temp["events"]
             # puts "*****"
-            puts temp
-          end
+            # puts temp
+          # end
         end
-      rescue Exception => e
+      # rescue Exception => e
         # puts e.message, e.backtrace
-      end
+      # end
 
     end
 

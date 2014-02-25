@@ -8,6 +8,7 @@ module LazyCupid
       @db = args[:database]
       @settings = args[ :settings]
       @prev_total_messages = -1
+      @visit_events = Array.new
     end
 
     def current_user
@@ -99,59 +100,43 @@ module LazyCupid
     # [todo] - add incoming_visits table, or update model if already exists
     # [todo] - create a new visitor row here instead of updating stats or matches tables
     def register_visit(person)
-      visitor   = person['screenname']
-      server_gmt   = person['server_gmt']
-      server_seqid = person['server_seqid']
-      gender    = person['gender']
-      distance  = person['distance']
-      match     = person['match']
-      age       = person['age']
-      sexuality = translate_sexuality(person['orientation'])
-      location  = person['location']
-      city      = RegEx.parsed_location(location)[:city]
-      state     = RegEx.parsed_location(location)[:state]
+      unless @visit_events.include? person['server_gmt']
+        visitor   = person['screenname']
+        server_gmt   = person['server_gmt'].to_i
+        server_seqid = person['server_seqid'].to_s
+        gender    = person['gender']
+        distance  = person['distance']
+        match     = person['match']
+        age       = person['age']
+        sexuality = translate_sexuality(person['orientation'])
+        location  = person['location']
+        city      = RegEx.parsed_location(location)[:city]
+        state     = RegEx.parsed_location(location)[:state]
+
+        # Determines if current visitor event is the same as the last one stored in db, aka, not a duplicate event
+        # @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
+
+        # If it's not a duplicate
+        # puts "*******","Visit unique!","*******"
+        unless IncomingVisit.where(server_seqid: server_seqid.to_s).exists
+          puts "* New visitor: #{visitor} *"
+
+          # Add the user to the matches table
+          # @db.add_user(username: visitor, gender: gender, added_from: "api_visitor", city: city, state: state, )
 
 
-      # Determines if current visitor event is the same as the last one stored in db, aka, not a duplicate event
-      # @stored_timestamp = @db.get_visitor_timestamp(visitor).to_i
+          IncomingVisit.find_or_create(name: person['screenname'], server_gmt: Time.at(person['server_gmt']), server_seqid: person['server_seqid'].to_s, account: $login)
 
-      # If it's not a duplicate
-      unless IncomingVisit.where(name: visitor, server_seqid: server_seqid, server_gmt: server_gmt, account: $login).exists
-        puts "* New visitor: #{visitor} *"
+          # Increment their visit count for current account
+          @db.stats_add_visitor
+          # end
 
-        # Add the user to the matches table
-        @db.add_user(username: visitor, gender: gender, added_from: "api_visitor", city: city, state: state, )
+          # Set time for visit
+          @db.set_visitor_timestamp(visitor, server_gmt)
 
-
-        IncomingVisit.find_or_create(name: person['screenname'], server_gmt: person[:server_gmt], server_seqid: person['server_seqid'], account: $login)
-
-        # Increment their visit count for current account
-        @db.increment_visitor_counter(visitor)
-      end
-
-      # Set time for visit
-      @db.set_visitor_timestamp(visitor, server_gmt)
-
-      # Increment total visits in stats table
-      @db.stats_add_visitor
-    end
-
-    def visitor_event
-      response = @events.check_events
-      unless response == nil
-        person = {
-          :visitor     => response[:handle],
-          :timestamp   => response[:time].to_i,
-          :gender      => response[:gender],
-          :distance    => response[:distance],
-          :match       => response[:match],
-          :sexuality   => response[:sexuality],
-          :location    => response[:location],
-          :city        => RegEx.parsed_location(location)[:city],
-          :state       => RegEx.parsed_location(location)[:state]
-        }
-
-        track_visitor(person)
+          # Increment total visits in stats table
+          @visit_events << person['server_seqid']
+        end
       end
     end
 

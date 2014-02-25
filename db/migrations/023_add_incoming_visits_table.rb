@@ -4,8 +4,8 @@ Sequel.migration do
     create_table :incoming_visits do
       String :name
       String :account
-      Integer :server_gmt
-      Integer :server_sequid
+      String :server_gmt
+      String :server_seqid
       primary_key(:server_sequid)
     end
   end

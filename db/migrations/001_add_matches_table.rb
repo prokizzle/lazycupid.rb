@@ -42,6 +42,7 @@ Sequel.migration do
     	Integer :new_users
     	Integer :total_messages
     	String :account
+      primary_key :id
     end
 
   end

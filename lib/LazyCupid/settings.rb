@@ -132,6 +132,8 @@ module LazyCupid
       @rate_frequency         = @settings[:visit_freq][:rate_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
       @scrape_match_search    = @settings[:scraping][:scrape_match_search]      == true
+      @uclassify_read_key     = @settings[:credentials][:uclassify][:read_key]
+      @uclassify_write_key    = @settings[:credentials][:uclassify][:write_key]
 
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
@@ -168,6 +170,10 @@ module LazyCupid
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
       $scrape_inbox_frequency = "5m"
       $driver                 = "phantomjs"
+      $uclassify_read_key     = @uclassify_read_key
+
+      $uclassify_write_key    = @uclassify_write_key
+
       # puts $sort_criteria
 
     end

@@ -14,15 +14,13 @@ module LazyCupid
       @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
       @config       = Settings.new(username: username, path: config_path, browser: @browser)
       @db           = DatabaseMgr.new(login_name: @username, settings: @config, tasks: true)
-      @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
-      # @db2 = @db
       # @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @autorater    = AutoRater.new(username: @username, password: @password) if $auto_rate_enabled
       @display      = Output.new(username: username, smart_roller: @smarty, database: @db)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
-      @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
+      @tracker      = EventTracker.new(browser: @browser, database: @db, settings: @config)
       @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)
       @harvester    = Harvester.new(
         browser:           @browser,
@@ -257,23 +255,29 @@ module LazyCupid
       @app.pre_roll_actions
 
       @app.scheduler.every "#{$scrape_inbox_frequency}", :allow_overlapping => false, :mutex => 'tracker' do
+        puts "Started scraping inbox" if $verbose
         @app.scrape_inbox
+        puts "Finished scraping inbox" if $verbose
       end
       #
       # app.scheduler.every '3h', :mutex => 'that_mutex' do
       # app.check_visitors
       # end
 
-      @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
+      @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'api' do
         @app.check_events
       end
 
       @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
+        puts "Started scraping match search " if $verbose
         @app.scrape_ajax_matches(3)
+        puts "Finished scraping match search " if $verbose
       end
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
+        puts "Reloading settings started." if $verbose
         @app.reload_settings
+        puts "Reloading settings completed." if $verbose
       end
 
       @app.scheduler.every "#{$rate_frequency}m", :allow_overlapping => false, :mutex => 'autorater' do
@@ -292,7 +296,7 @@ module LazyCupid
         @app.scheduler.join
       rescue SystemExit, Interrupt, Exception => e
         @app.logout
-        puts "","Goodbye!"
+        puts "\rGoodbye!"
         exit
       rescue Exception => e
         @app.logout

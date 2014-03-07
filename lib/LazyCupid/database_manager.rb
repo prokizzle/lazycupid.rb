@@ -243,6 +243,7 @@ module LazyCupid
 
       # puts result.first.to_hash
       if result.empty?
+        puts "Running SQL record corrections"
         Match.filter(:account => $login).where(:gender => nil).update(:gender => $gender)
         Match.where(:name => nil).delete
         Match.where(:distance => nil).update(:distance => 0)
@@ -252,6 +253,7 @@ module LazyCupid
         User.where(:age => nil).update(:age => 25)
         # User.where(:gender => nil).update(:gender => $gender)
         User.where(:inactive => nil).update(:inactive => false)
+        puts "Finished SQL record corrections"
       end
 
       return result
@@ -409,6 +411,8 @@ module LazyCupid
         m.ignored = true
         m.distance = 1
       end
+
+      Match.where(name: username, account: @login).update(:ignored => true)
       # m.save
     end
 

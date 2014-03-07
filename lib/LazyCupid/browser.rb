@@ -21,6 +21,8 @@ module LazyCupid
   # @param password [Symbol] [password to login with]
   # @param log      [Symbol] [the path to folder containing log files]
   class Browser
+    require 'mechanize'
+
     attr_accessor :agent, :body, :current_user, :url, :hash, :page, :page_source, :login_status
 
 
@@ -32,6 +34,7 @@ module LazyCupid
       @hash = Hash.new { |hash, key| hash[key] = 0 }
       delete_keys = lambda {|k| k.delete(key)}
       retrieved_responses = lambda {|h,k| k[:retrieved] == true}
+      @login_status = "Not logged in"
       # @response = Hash.new { url: nil, body: nil, html: nil, hash: nil }
     end
 

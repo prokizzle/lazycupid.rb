@@ -140,29 +140,34 @@ module LazyCupid
       end
     end
 
-    def track_msg_dates(msg_page)
+    def track_msg_dates(low)
       # delete_mutual_matches(msg_page)
-      result = async_response(msg_page)
+      result = async_response("http://www.okcupid.com/messages?low=#{low}&infiniscroll=1&folder=1")
+
       message_list = result[:body].scan(/"message_(\d+)"/)
       @total_msg_on_page = message_list.size
-      unless message_list.include?(@most_recent_message_id)
-        message_list.each do |message_id|
-          message_id      = message_id.first
-          if message_id == @most_recent_message_id
-            @inbox_up_to_date = true
-            break
-          end
-          msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
-          # unless !(msg_block =~ /"subject">OKCupid!</).nil?
-          sender          = /\/([\w\d_-]+)\?cf=messages/.match( msg_block)[1]
-          timestamp       = msg_block.match(/(\d{10}), 'BRIEF/)[1].to_i
-          sender          = sender.to_s
-          register_message(sender, timestamp, message_id)
-          # inbox_cleanup(msg_page)
+      unless @total_msg_on_page == 0
+        unless message_list.include?(@most_recent_message_id)
+          message_list.each do |message_id|
+            message_id      = message_id.first
+            if message_id == @most_recent_message_id
+              @inbox_up_to_date = true
+              break
+            end
+            msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
+            # unless !(msg_block =~ /"subject">OKCupid!</).nil?
+            sender          = /\/([\w\d_-]+)\?cf=messages/.match( msg_block)[1]
+            timestamp       = msg_block.match(/(\d{10}), 'BRIEF/)[1].to_i
+            sender          = sender.to_s
+            register_message(sender, timestamp, message_id)
+            # inbox_cleanup(msg_page)
 
+          end
+        else
+          puts "Inbox up to date!"
         end
       else
-        puts "Inbox up to date!"
+        puts "No more messages"
       end
     end
 
@@ -300,7 +305,8 @@ module LazyCupid
       puts "Total messages: #{@total_msg}" if $verbose
       sleep 2
       unless @total_msg == @prev_total_messages || @inbox_up_to_date
-        track_msg_dates("http://www.okcupid.com/messages")
+        low = 1
+        track_msg_dates(low)
         # break if @inbox_up_to_date
         if @total_msg > 0
           puts "#{@total_msg - @prev_total_messages} new messages..."
@@ -308,13 +314,12 @@ module LazyCupid
           puts @total_msg_on_page
           @total_msg = @total_msg_on_page
         end
-        low = 1
         unless @inbox_up_to_date
           until low >= @total_msg || @inbox_up_to_date
             # puts "Scraping inbox: #{((low.to_f/@total_msg.to_f)*100).to_i}%" if $debug
             # puts low if $debug
             low += 30
-            track_msg_dates("http://www.okcupid.com/messages?low=#{low}&folder=1")
+            track_msg_dates(low)
             sleep (1..6).to_a.sample.to_i
           end
         end

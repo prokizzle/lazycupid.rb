@@ -257,7 +257,9 @@ module LazyCupid
       @app.pre_roll_actions
 
       @app.scheduler.every "#{$scrape_inbox_frequency}", :allow_overlapping => false, :mutex => 'tracker' do
+        puts "Started scraping inbox" if $verbose
         @app.scrape_inbox
+        puts "Finished scraping inbox" if $verbose
       end
       #
       # app.scheduler.every '3h', :mutex => 'that_mutex' do
@@ -269,11 +271,15 @@ module LazyCupid
       end
 
       @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
+        puts "Started scraping match search " if $verbose
         @app.scrape_ajax_matches(3)
+        puts "Finished scraping match search " if $verbose
       end
 
       @app.scheduler.every '5m', :allow_overlapping => false, :mutex => 'settings' do
+        puts "Reloading settings started." if $verbose
         @app.reload_settings
+        puts "Reloading settings completed." if $verbose
       end
 
       @app.scheduler.every "#{$rate_frequency}m", :allow_overlapping => false, :mutex => 'autorater' do

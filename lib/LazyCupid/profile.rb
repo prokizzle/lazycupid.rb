@@ -145,10 +145,14 @@ module LazyCupid
       # rescue
       # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
       begin
-      result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
-      rescue
+      # result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
+      result = @html.parser.xpath("//span[@class='name']").text
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+
         puts @body
-        sleep 100
+        # sleep 100
       end
       # end
 

@@ -287,7 +287,7 @@ module LazyCupid
     end
 
     def scrape_inbox
-      @most_recent_message_id = IncomingMessage.where(:account => $login).exclude(:username => nil).order(Sequel.desc(:timestamp)).first.to_hash[:message_id]
+      @most_recent_message_id = IncomingMessage.where(:account => $login).exclude(:username => nil).order(Sequel.desc(:timestamp)).first.to_hash[:message_id] rescue 0
       @inbox_up_to_date = false
       puts "Scraping inbox" if $verbose
       result = async_response("http://www.okcupid.com/messages")

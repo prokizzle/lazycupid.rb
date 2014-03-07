@@ -42,11 +42,6 @@ or
 
 ##Todo:
 
-+ Alter database schema to mutli tables
-+ + Users table
-+ + Messages table
-+ +
-+ Switch to ActiveRecord database format (Sequel gem)
 + Share stored user details among all tenants
 + Parse individual message threads
 + Minimize API usage
@@ -59,44 +54,4 @@ or
   + advice on improving responses
   + overall statistics
   + weekly, daily reports
-
-Database columns to be divided into tables:
-        + name text,
-        + account text,
-        + counts integer,
-        + ignored text,
-        + visitor_timestamp integer,
-        + visit_count integer,
-        + last_visit integer,
-        + gender text,
-        + sexuality text,
-        + age integer,
-        + relationship_status text,
-        + match_percentage integer,
-        + state text,
-        + added_from text,
-        + city text,
-        + time_added text,
-        + smoking text,
-        + drinking text,
-        + kids text,
-        + drugs text,
-        + height text,
-        + body_type text,
-        + distance integer,
-        + match_percent integer,
-        + friend_percent integer,
-        + enemy_percent integer,
-        + last_msg_time integer,
-        + r_msg_count integer,
-        + last_online integer,
-        + ignore_list integer
-
-create table stats(
-          total_visits integer,
-          total_visitors integer,
-          new_users integer,
-          total_messages integer,
-          account text
-          )
 

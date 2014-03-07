@@ -63,6 +63,20 @@ namespace :db do
                   end
                 end
 
+                task :city_msg do
+                  require 'launchy'
+                  city = ask("city: ")
+                  myaccount = ask("account: ")
+                  result = IncomingMessage.join_table(:left, :matches, :name => :username).distinct(:username).filter(Sequel.like(:city, "%#{city}"))
+                  result.each do |m|
+                    puts m.to_hash[:username] #if m.to_hash[:account] == myaccount
+                    Launchy.open "http://okcupid.com/profile/#{m.to_hash[:username]}"
+                    sleep 5
+                  end
+
+                end
+
+
                 task :set_counts do
                   require 'set'
                   accounts = Set.new
@@ -126,8 +140,8 @@ namespace :db do
                   puts "#{Match.where(account: account, name: username).first[:counts]} visits"
                   OutgoingVisit.where(account: account, name: username).each do |i|
                     puts Time.at(i.to_hash[:timestamp].to_i)
-
                   end
+                    puts Match.where(name: username, account: account).first.to_hash
                 end
 
                 task :ddv do

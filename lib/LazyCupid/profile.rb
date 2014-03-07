@@ -120,6 +120,8 @@ module LazyCupid
      "http://uclassify.com/browse/uClassify/GenderAnalyzer_v5/ClassifyText?readkey=YOUR_READ_API_KEY_HERE&text=beer+hammer+build&output=json&version=1.01"
    end
 
+    # username detection
+
     def self.intended_handle
       @intended_handle
     end
@@ -167,6 +169,8 @@ module LazyCupid
 
     end
 
+    # match percentages
+
     def self.match_percentage
       result = @html.parser.xpath("//span[@class='match']").text
       result.match(/(\d+)/)[1].to_i
@@ -197,6 +201,8 @@ module LazyCupid
     def self.slut_test_results
       /(\d+). slut/.match(@body)[1].to_i
     end
+
+    # user details
 
     def self.age
       result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i

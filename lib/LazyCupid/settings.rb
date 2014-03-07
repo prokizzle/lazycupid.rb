@@ -79,6 +79,12 @@ module LazyCupid
                     driver: 'phantomjs',
                     auto_rate_enabled: false
                   },
+                  credentials: {
+                    uclassify: {
+                      read_key: 12345,
+                      write_key: 12345
+                    }
+                  },
                   development: {
                     verbose: true,
                     debug: false,

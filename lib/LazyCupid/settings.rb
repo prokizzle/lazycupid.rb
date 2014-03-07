@@ -37,7 +37,7 @@ module LazyCupid
                   personal: {
                     sexuality: "straight",
                     gender: "M"
-                    },
+                  },
 
                   matching: {
                     min_percent: 50,
@@ -77,7 +77,17 @@ module LazyCupid
                     match_frequency: 2, #in minutes,
                     scrape_match_search: true,
                     driver: 'phantomjs',
-                    auto_rate_enabled: false
+                  },
+                  autorater: {
+                    enabled: false,
+                    frequency: 5, #in minutes
+                    driver: "phantomjs" #phantomjs or chrome
+                  },
+                  credentials: {
+                    uclassify: {
+                      read_key: 12345,
+                      write_key: 12345
+                    }
                   },
                   development: {
                     verbose: true,
@@ -120,12 +130,16 @@ module LazyCupid
       @roll_frequency         = @settings[:visit_freq][:roll_frequency].to_s
       @sort_criteria          = @settings[:visit_freq][:sort_criteria]
       @queue_size             = @settings[:visit_freq][:queue_size].to_i
+
+      @auto_rate_enabled      = @settings[:autorater][:enabled]
+      @rate_frequency         = @settings[:autorater][:frequency]
+      @auto_rate_driver       = @settings[:autorater][:driver]
       @import_hidden_users    = @settings[:scraping][:import_hidden_users]
-      @auto_rate_enabled      = @settings[:scraping][:auto_rate_enabled]
       @match_frequency        = @settings[:scraping][:match_frequency]
-      @rate_frequency         = @settings[:visit_freq][:rate_frequency]
       @autodiscover_on        = @settings[:scraping][:autodiscover_on]  == true
       @scrape_match_search    = @settings[:scraping][:scrape_match_search]      == true
+      @uclassify_read_key     = @settings[:credentials][:uclassify][:read_key]
+      @uclassify_write_key    = @settings[:credentials][:uclassify][:write_key]
 
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
@@ -144,9 +158,9 @@ module LazyCupid
       $verbose                = @verbose
       $debug                  = @debug
       $roll_frequency         = @roll_frequency
-      # $rate_frequency         = "5m"
       $rate_frequency         = @rate_frequency
       $auto_rate_enabled      = @auto_rate_enabled
+      $auto_rate_driver       = @auto_rate_driver
       $match_frequency        = @match_frequency
       $gender                 = @gender
       $alt_gender             = @alt_gender
@@ -161,7 +175,11 @@ module LazyCupid
       $queue_size             = @queue_size
       $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
       $scrape_inbox_frequency = "5m"
-      $driver                 = "phantomjs"
+      $driver                 = $auto_rate_driver
+      $uclassify_read_key     = @uclassify_read_key
+
+      $uclassify_write_key    = @uclassify_write_key
+
       # puts $sort_criteria
 
     end
@@ -187,6 +205,7 @@ module LazyCupid
       $roll_frequency         = settings[:visit_freq][:roll_frequency].to_s
       $match_frequency        = settings[:scraping][:match_frequency].to_s
       $scrape_match_search    = settings[:scraping][:scrape_match_search]     == true
+
       # $sort_criteria          = settings[:visit_freq][:sort_criteria].to_a
       # debug_this("puts $sort_criteria")
       # $queue_size             = settings[:visit_freq][:queue_size].to_i

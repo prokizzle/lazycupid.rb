@@ -92,6 +92,8 @@ module LazyCupid
 
     private
 
+    # text classification
+
     def self.kincaid
       return @readability.kincaid.ceil rescue nil
     end
@@ -113,6 +115,12 @@ module LazyCupid
         return nil
       end
     end
+
+    def self.gender
+     "http://uclassify.com/browse/uClassify/GenderAnalyzer_v5/ClassifyText?readkey=YOUR_READ_API_KEY_HERE&text=beer+hammer+build&output=json&version=1.01"
+   end
+
+    # username detection
 
     def self.intended_handle
       @intended_handle
@@ -139,10 +147,14 @@ module LazyCupid
       # rescue
       # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
       begin
-      result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
-      rescue
+      # result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
+      result = @html.parser.xpath("//span[@class='name']").text
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace
+
         puts @body
-        sleep 100
+        # sleep 100
       end
       # end
 
@@ -156,6 +168,8 @@ module LazyCupid
       result.to_s
 
     end
+
+    # match percentages
 
     def self.match_percentage
       result = @html.parser.xpath("//span[@class='match']").text
@@ -187,6 +201,8 @@ module LazyCupid
     def self.slut_test_results
       /(\d+). slut/.match(@body)[1].to_i
     end
+
+    # user details
 
     def self.age
       result = @html.parser.xpath("//span[@id='ajax_age']").text.to_i

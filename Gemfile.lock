@@ -55,6 +55,8 @@ GEM
     time-lord (1.0.1)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)
+    uclassify (0.1.1)
+      nokogiri
     unf (0.1.2)
       unf_ext
     unf_ext (0.0.6)
@@ -80,6 +82,7 @@ DEPENDENCIES
   rufus-scheduler (= 2.0.24)
   sequel
   time-lord
+  uclassify
   uuidtools
   watir-scroll
   watir-webdriver

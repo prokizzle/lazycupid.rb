@@ -94,7 +94,7 @@ module LazyCupid
     #
     def cache
       if @roll_list.empty?
-        if Time.now.to_i - @last_query_time >= $roll_frequency.to_i*10
+        unless too_many_queries?
           @already_delayed = false
           @roll_list = build_user_list(@db.followup_query)
           @last_query_time = Time.now.to_i
@@ -102,13 +102,21 @@ module LazyCupid
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
           end
         else
-          # puts "Delaying query..." unless @already_delayed
+          puts "Delaying query..." unless @already_delayed
           @already_delayed = true
         end
         return @roll_list
       else
         return @roll_list
       end
+    end
+
+    # Rate limiter for hitting the db for roll queries
+    #
+    # returns true if not enough time has passed since last queue query
+    #
+    def too_many_queries?
+      Time.now.to_i - @last_query_time <= $roll_frequency.to_i*10
     end
 
     # Returns the next user from the queue, removes the user from the queue

@@ -48,7 +48,7 @@ module LazyCupid
       sleep (1..3).to_a.sample.to_i
       @browser.button(:id => 'sign_in_button').click
       sleep (1..3).to_a.sample.to_i
-      @browser.visit("http://www.okcupid.com/quickmatch")
+      visit("http://www.okcupid.com/quickmatch")
       if $verbose
         puts logged in? ? "OK" : "failed"
       end

@@ -409,6 +409,8 @@ module LazyCupid
         m.ignored = true
         m.distance = 1
       end
+
+      Match.where(name: username, account: @login).update(:ignored => true)
       # m.save
     end
 

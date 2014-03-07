@@ -12,3 +12,4 @@ gem "bloat_check"
 gem "lingua"
 gem "watir-webdriver"
 gem 'watir-scroll'
+gem 'uclassify'

@@ -14,15 +14,13 @@ module LazyCupid
       @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)
       @config       = Settings.new(username: username, path: config_path, browser: @browser)
       @db           = DatabaseMgr.new(login_name: @username, settings: @config, tasks: true)
-      @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
-      # @db2 = @db
       # @db2          = DatabaseMgr.new(login_name: @username, settings: @config, tasks: false)
       @blocklist    = BlockList.new(database: db, browser: @browser)
       @autorater    = AutoRater.new(username: @username, password: @password) if $auto_rate_enabled
       @display      = Output.new(username: username, smart_roller: @smarty, database: @db)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
       @scheduler    = Rufus::Scheduler.start_new
-      @tracker      = EventTracker.new(browser: @browser, database: @db2, settings: @config)
+      @tracker      = EventTracker.new(browser: @browser, database: @db, settings: @config)
       @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)
       @harvester    = Harvester.new(
         browser:           @browser,
@@ -266,7 +264,7 @@ module LazyCupid
       # app.check_visitors
       # end
 
-      @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'tracker' do
+      @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'api' do
         @app.check_events
       end
 

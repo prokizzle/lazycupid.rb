@@ -92,6 +92,8 @@ module LazyCupid
 
     private
 
+    # text classification
+
     def self.kincaid
       return @readability.kincaid.ceil rescue nil
     end
@@ -113,6 +115,10 @@ module LazyCupid
         return nil
       end
     end
+
+    def self.gender
+     "http://uclassify.com/browse/uClassify/GenderAnalyzer_v5/ClassifyText?readkey=YOUR_READ_API_KEY_HERE&text=beer+hammer+build&output=json&version=1.01"
+   end
 
     def self.intended_handle
       @intended_handle

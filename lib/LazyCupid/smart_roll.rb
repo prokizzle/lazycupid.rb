@@ -102,7 +102,7 @@ module LazyCupid
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
           end
         else
-          # puts "Delaying query..." unless @already_delayed
+          puts "Delaying query..." unless @already_delayed
           @already_delayed = true
         end
         return @roll_list

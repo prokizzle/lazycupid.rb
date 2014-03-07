@@ -296,7 +296,7 @@ module LazyCupid
         @app.scheduler.join
       rescue SystemExit, Interrupt, Exception => e
         @app.logout
-        puts "","Goodbye!"
+        puts "\rGoodbye!"
         exit
       rescue Exception => e
         @app.logout

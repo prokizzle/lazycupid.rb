@@ -144,11 +144,11 @@ module LazyCupid
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
       @fast_launch            = @settings[:development][:fast_launch]       == true
-      @db_name                = @db_settings["development"]["database"].to_s
-      @db_host                = @db_settings["development"]["host"].to_s
-      @db_user                = @db_settings["development"]["username"].to_s
-      @db_pass                = @db_settings["development"]["password"].to_s
-      @db_adapter             = @db_settings["development"]["adapter"].to_s
+      @db_name                = @db_settings[:development][:database].to_s
+      @db_host                = @db_settings[:development][:host].to_s
+      @db_user                = @db_settings[:development][:username].to_s
+      @db_pass                = @db_settings[:development][:password].to_s
+      @db_adapter             = @db_settings[:development][:adapter].to_s
 
       # Global variables for mid-session reloads
 

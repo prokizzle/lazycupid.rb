@@ -9,6 +9,7 @@ module LazyCupid
       @password     = args[ :password]
       config_path   = File.dirname($0) + '/../config/'
       log_path      = File.dirname($0) + '/../logs/'
+      %x{mkdir -p #{log_path}}
       @log          = nil #Logger.new("#{log_path}#{@username}_#{Time.now}.log")
       BloatCheck.logger = Logger.new("#{log_path}bloat_#{Time.now}.log")
       @browser      = Browser.new(username: username, password: password, path: log_path, log: @log)

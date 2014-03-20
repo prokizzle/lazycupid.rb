@@ -133,16 +133,6 @@ module LazyCupid
       @harvester.scrape_from_user(user) if @settings.autodiscover_on
     end
 
-    # TBD: Wrapper method for EventTracker's visitor page scraper
-    #
-    def check_visitors
-      viz = @tracker.parse_visitors_page
-      @total_visitors += viz
-      @total_visits += @tally
-      @tally = 0
-      puts ""
-    end
-
     # Determines which method added the user to the database
     # @param [username] [String] username for user to query
     # @return [String] method that added user to db

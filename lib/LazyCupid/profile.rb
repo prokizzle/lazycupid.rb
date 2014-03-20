@@ -60,7 +60,6 @@ module LazyCupid
         {handle: handle,
          match_percentage: match_percentage,
          age: age,
-         friend_percentage: friend_percentage,
          enemy_percentage: enemy_percentage,
          ethnicity: ethnicity,
          height: height,
@@ -174,7 +173,7 @@ module LazyCupid
     # match percentages
 
     def self.match_percentage
-      result = @html.parser.xpath("//span[@class='match']").text
+      result = @html.parser.xpath("//span[@class='match_percentage']").text
       result.match(/(\d+)/)[1].to_i
       # begin
       #   result = @html.parser.xpath("//span[@class='match']").text
@@ -190,14 +189,9 @@ module LazyCupid
       # end
     end
 
-    def self.friend_percentage
-      result = @html.parser.xpath("//span[@class='friend']").text
-      result.match(/(\d+)/)[1].to_i
-    end
-
     def self.enemy_percentage
-      result = @html.parser.xpath("//span[@class='enemy']").text
-      result.match(/(\d+)/)[1].to_i
+      # result = @html.parser.xpath("//span[@class='enemy']").text
+      @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Enemy<.span>/)[1].to_i
     end
 
     def self.slut_test_results

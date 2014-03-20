@@ -11,7 +11,7 @@ module LazyCupid
     def initialize(args)
       @account  = args[ :username]
       path      = args[ :path]
-      @filename = "#{@account}.yml"
+      @filename = "config/#{@account}.yml"
       @db_file  = "config/database.yml"
       unless File.exists?(@db_file)
         db_ = {

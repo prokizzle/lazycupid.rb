@@ -3,7 +3,7 @@ module LazyCupid
     require 'uri'
 
     def self.random_sort
-      ['JOIN', 'MATCH', 'SPECIAL_BLEND', 'LOGIN', 'MATCH_AND_NEW', 'MATCH_AND_LOGIN', 'MATCH_AND_DISTANCE'].sample
+      ['JOIN', 'MATCH', 'SPECIAL_BLEND', 'LOGIN', 'MATCH_AND_NEW', 'MATCH_AND_LOGIN', 'MATCH_AND_DISTANCE'].shuffle.sample
     end
 
     def focus_new_users_query

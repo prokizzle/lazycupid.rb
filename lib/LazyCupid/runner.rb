@@ -19,7 +19,7 @@ module LazyCupid
       @autorater    = AutoRater.new(username: @username, password: @password) if $auto_rate_enabled
       @display      = Output.new(username: username, smart_roller: @smarty, database: @db)
       # @user         = Users.new(database: db, browser: @browser, log: @log, path: log_path)
-      @scheduler    = Rufus::Scheduler.start_new
+      @scheduler    = Rufus::Scheduler.new
       @tracker      = EventTracker.new(browser: @browser, database: @db, settings: @config)
       @events       = EventWatcher.new(browser: @browser, tracker: @tracker, logger:  @log, settings: @config)
       @harvester    = Harvester.new(

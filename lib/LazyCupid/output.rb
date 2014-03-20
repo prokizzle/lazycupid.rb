@@ -34,6 +34,8 @@ module LazyCupid
         city: user[:city],
         state: user[:state],
         sexuality: user[:sexuality],
+        # mood: user[:mood],
+        # sentiment: user[:sentiment],
         count: @db.get_visit_count(user[:handle]),
         last_online: last_online,
         last_visit: last_visited(user[:handle]),

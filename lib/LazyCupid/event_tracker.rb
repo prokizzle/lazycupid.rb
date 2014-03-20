@@ -316,15 +316,63 @@ module LazyCupid
         end
         unless @inbox_up_to_date
           until low >= @total_msg || @inbox_up_to_date
-            # puts "Scraping inbox: #{((low.to_f/@total_msg.to_f)*100).to_i}%" if $debug
-            # puts low if $debug
             low += 30
-            track_msg_dates(low)
+            extract_messages_from_page(low)
             sleep (1..6).to_a.sample.to_i
           end
         end
         @prev_total_messages = @total_msg
       end
+    end
+
+    def extract_messages_from_page(low)
+      # delete_mutual_matches(msg_page)
+      result = async_response("http://www.okcupid.com/messages?low=#{low}&infiniscroll=1&folder=1")
+
+      message_list = result[:body].scan(/"message_(\d+)"/)
+      @total_msg_on_page = message_list.size
+      unless @total_msg_on_page == 0
+        unless message_list.include?(@most_recent_message_id)
+          message_list.each do |message_id|
+            message_id      = message_id.first
+            if message_id == @most_recent_message_id
+              @inbox_up_to_date = true
+              break
+            end
+            msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
+            # unless !(msg_block =~ /"subject">OKCupid!</).nil?
+            sender          = /\/([\w\d_-]+)\?cf=messages/.match( msg_block)[1]
+            timestamp       = msg_block.match(/(\d{10}), 'BRIEF/)[1].to_i
+            sender          = sender.to_s
+            register_message(sender, timestamp, message_id)
+            # inbox_cleanup(msg_page)
+
+          end
+        else
+          puts "Inbox up to date!"
+        end
+      else
+        puts "No more messages"
+      end
+    end
+
+    def register_message(sender, timestamp, message_id)
+
+      # [todo] - add messages table to db
+      # [todo] - register message with timestamp, account, sender, and message id
+      # [todo] - check to see if this message is unique/new
+
+      # @stored_time     = @db.get_last_received_message_date(sender).to_i
+      if timestamp.to_i >= Time.now.to_i - 1800
+        puts "New message from #{sender}"
+      end
+
+      puts "Registering message #{message_id}"
+      @db.ignore_user(sender)
+      # @db
+      # @db.add_user(username: sender, gender: gender, added_From: "inbox", ignored: true)
+
+      @db.add_message(username: sender, message_id: message_id, timestamp: timestamp)
     end
 
     def scrape_im_page

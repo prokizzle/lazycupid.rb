@@ -44,7 +44,7 @@ or
 
 + Share stored user details among all tenants
 + Parse individual message threads
-+ Minimize API usage
++ Minimize API usage @done
 + Improve visitors page parser
 + Store links or file records for user profile thumbnails
 + Create Rails app

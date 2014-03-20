@@ -311,7 +311,7 @@ module LazyCupid
         if @total_msg > 0
           puts "#{@total_msg - @prev_total_messages} new messages..."
         else
-          puts @total_msg_on_page
+          # puts @total_msg_on_page
           @total_msg = @total_msg_on_page
         end
         unless @inbox_up_to_date

@@ -51,6 +51,13 @@ namespace :db do
                   end
                 end
 
+                task :reset_state_distance do
+                  account = ask("account: ")
+                  state = ask("state: ")
+                  distance = ask("distance: ")
+                  Match.where(account: account, state: state).exclude(city: "Austin").update(distance: distance)
+                end
+
                 task :copy_ages do
 
 
@@ -82,7 +89,7 @@ namespace :db do
                   accounts = Set.new
                   puts "Gathering account names..."
                   # Match.all.each do |m|
-                    # accounts.add(m.to_hash[:account].to_s)
+                  # accounts.add(m.to_hash[:account].to_s)
                   # end
                   Match.distinct(:account).to_a.each do |m|
                     Stat.find_or_create(account: m[:account]).update(
@@ -90,7 +97,7 @@ namespace :db do
                       total_visitors: IncomingVisit.where(account: m[:account]).count,
                       new_users: Match.where(account: m[:account]).count,
                       total_messages: IncomingMessage.where(account: m[:account]).count
-                      )
+                    )
                   end
                   Stat.distinct(:account).each do |s|
                     puts s.to_hash
@@ -99,10 +106,10 @@ namespace :db do
                   # puts "Storing totals..."
                   # accounts = accounts.to_a
                   # accounts.each do |account|
-                    # visits = OutgoingVisit.where(account: account).count
-                    # Stat.where(account: account).update(total_visits: visits)
-                    # puts account
-                    # p account
+                  # visits = OutgoingVisit.where(account: account).count
+                  # Stat.where(account: account).update(total_visits: visits)
+                  # puts account
+                  # p account
                   # end
                 end
 
@@ -120,7 +127,7 @@ namespace :db do
                     total_visitors: IncomingVisit.where(account: account).count,
                     new_users: Match.where(account: account).count,
                     total_messages: IncomingMessage.where(account: account).count
-                    )
+                  )
                   stat = Stat.where(account: account)
                   puts "Success rate: #{stat.to_hash[:total_messages]/stat.to_hash[:total_visits]}%"
                 end
@@ -173,3 +180,61 @@ namespace :db do
                   %x{pg_restore --verbose --clean --no-acl --no-owner -h localhost -U ***REMOVED*** -d lazy_cupid latest.dump}
                 end
                 end
+
+                namespace :tools do
+                  task :analyzer do
+                      require_relative 'browser'
+                      require 'highline/import'
+
+                      username = ask("username: ")
+                      password = ask("password: "){ |q| q.echo = "*" }
+                      rk = "***REMOVED***"
+
+                      t = LazyCupid::TextClassification.new(read_key: rk)
+                      b = LazyCupid::Browser.new(username: username, password: password)
+                      b.login
+                      loop do
+                        puts ""
+                        user = ask("user: ")
+                        url = "http://www.okcupid.com/profile/#{user}"
+
+                        browser               = b
+                        request_id            = (1..266).to_a.sample
+
+                        browser.send_request(url, request_id)
+
+                        print "Requesting profile..."
+                        resp = {ready: false}
+                        until resp[:ready] == true
+                          resp = browser.get_request(request_id)
+                          # p resp
+                        end
+                        puts " done."
+
+
+                        mood = t.fetch("mood", resp)
+                        gender = t.fetch("gender", resp)
+                        sentiment = t.fetch("sentiment", resp)
+                        topics = t.fetch("topics", resp)
+                        age = t.fetch("age", resp)
+                        values = t.fetch("values", resp)
+                        classics = t.fetch("classics", resp)
+                        he = gender == "female" ? "she" : "he"
+                        his = gender == "female" ? "her" : "his"
+                        emo = t.fetch("emo", resp)
+
+                        print "#{user} is a #{values} #{gender}, "
+                        print "who values #{topics}, is generally #{sentiment}, "
+                        print "was #{mood} when #{he} wrote #{his} profile, "
+                        puts "acts like #{he} is #{age} and writes like #{classics}"
+                        puts "emo: #{emo}"
+                      end
+                    end
+                  end
+                  namespace :config do
+                    task :setup do
+                      username = ask("username: ")
+                      puts "OK, #{username}, you are all good to go!"
+                    end
+                  end
+

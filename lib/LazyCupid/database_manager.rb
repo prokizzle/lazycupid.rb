@@ -199,7 +199,7 @@ module LazyCupid
       max_age             = @settings.max_age
       age_sort            = @settings.age_sort
       max_counts          = @settings.max_followup
-      query_size          = 30
+      query_size          = $queue_size
 
       sexualities = [nil]
       sexualities << "Gay"      if @settings.visit_gay

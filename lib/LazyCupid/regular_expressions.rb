@@ -12,7 +12,7 @@ module LazyCupid
         city    = string.match(/(.+), (.+)/)[1]
         state   = string.match(/(.+), (.+)/)[2]
         country = "United States"
-      rescue 
+      rescue
         puts "* Location Parser Error! *"
         puts string
       end

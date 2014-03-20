@@ -7,6 +7,7 @@ module LazyCupid
   # into a hash of attributes for easy data manipulation and storage.
   #
   class Profile
+    require_relative 'text_classifier'
     require 'lingua'
 
     attr_reader :verbose, :debug, :body, :url, :html, :intended_handle, :new_handle
@@ -39,6 +40,7 @@ module LazyCupid
       # end
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
       @readability = Lingua::EN::Readability.new(essays)
+      # @analyze = TextClassification.new(read_key: $uclassify_read_key, text: essays)
 
       # num = @readability.flesch.ceil
       # case num
@@ -84,6 +86,10 @@ module LazyCupid
          kincaid: kincaid,
          fog: fog,
          flesch: flesch,
+         # sentiment: @analyze.sentiment,
+         # mood: @analyze.mood(essays),
+         # perceived_gender: @analyze.gender(essays),
+         # perceived_age: @analyze.age(essays),
          body: @body,
          html: @html }
       end
@@ -115,10 +121,6 @@ module LazyCupid
         return nil
       end
     end
-
-    def self.gender
-     "http://uclassify.com/browse/uClassify/GenderAnalyzer_v5/ClassifyText?readkey=YOUR_READ_API_KEY_HERE&text=beer+hammer+build&output=json&version=1.01"
-   end
 
     # username detection
 

@@ -10,7 +10,7 @@ module LazyCupid
 
       @agent                = Mechanize.new
       @uclassify_read_key   = args[:read_key]
-
+      @text                 = args[:text] if args[:text]
 
 
       # @text                 = LazyCupid::Profile.parse(resp)[:essays]
@@ -29,15 +29,16 @@ module LazyCupid
     private
 
     def result(owner, classifier, text)
+      begin
       content = URI.escape(text)
       f = @agent.get("http://uclassify.com/browse/#{owner}/#{classifier}/ClassifyText?readkey=#{@uclassify_read_key}&text=#{content}&output=json&version=1.01")
       reading = JSON.parse(f.content).to_hash["cls1"]
-      begin
         max = reading.values.max
         h = Hash[reading.select { |k, v| v == max}]
-        return h.keys
+        return h.keys.first
       rescue
-        return f.content
+        # return f.content
+        return "error"
       end
     end
 
@@ -48,87 +49,89 @@ module LazyCupid
       send(target)
     end
 
-      def gender(text = @text)
-        result("uClassify", "GenderAnalyzer_v5", text)
-      end
+    def gender(text = @text)
+      result("uClassify", "GenderAnalyzer_v5", text)
+    end
 
-      def mood(text = @text)
-        return result("prfekt", "Mood", text)
-      end
+    def mood(text = @text)
+      return result("prfekt", "Mood", text)
+    end
 
-      def values(text = @text)
-        return result("prfekt", "Values", text)
-      end
+    def values(text = @text)
+      return result("prfekt", "Values", text)
+    end
 
-      def sentiment(text = @text)
-        result("uClassify", "Sentiment", text)
-
-      end
-
-      def topics(text = @text)
-        result("uClassify", "Topics", text)
-
-      end
-
-      def society(text = @text)
-        result("uClassify", "Society_Topics", text)
-
-      end
-
-      def classics(text = @text)
-        result("uClassify", "classics", text)
-      end
-
-      def age(text = @text)
-        result("uClassify", "Ageanalyzer", text)
-
-      end
-
-      def mb_attitude(text = @text)
-        result("prfekt", "Myers_Briggs_Attitude", text)
-
-      end
-
-      def mb_perceiving(text = @text)
-        result("prfekt", "Myers_Briggs_Perceiving", text)
-      end
-
-      def mb_judging(text = @text)
-        result("prfekt", "Myers_Briggs_Judging", text)
-      end
-
-      def mb_lifestyle(text = @text)
-        result("prfekt", 'Myers_Briggs_Lifestyle', text)
-      end
-
-      def emo(text=@text)
-        result("saifer", "emo", text)
-      end
-
-
-
-      def myers_briggs(text = @text)
-        return "#{mb_attitude(text)}#{mb_perceiving(text)}#{mb_judging(text)}#{mb_lifestyle(text)}"
-      end
-
-
-
-
-
-      def run
-        puts mood(@text)
-        puts gender(@text)
-        puts sentiment(@text)
-        puts topics(@text)
-        puts age(@text)
-        puts values(@text)
-
-        puts classics(@text)
-        # puts society(@text)
-      end
+    def sentiment(text = @text)
+      result("uClassify", "Sentiment", text)
 
     end
+
+    def topics(text = @text)
+      result("uClassify", "Topics", text)
+
+    end
+
+    def society(text = @text)
+      result("uClassify", "Society_Topics", text)
+
+    end
+
+    def classics(text = @text)
+      result("uClassify", "classics", text)
+    end
+
+    def age(text = @text)
+      result("uClassify", "Ageanalyzer", text)
+
+    end
+
+    def mb_attitude(text = @text)
+      result("prfekt", "Myers_Briggs_Attitude", text)
+
+    end
+
+    def mb_perceiving(text = @text)
+      result("prfekt", "Myers_Briggs_Perceiving", text)
+    end
+
+    def mb_judging(text = @text)
+      result("prfekt", "Myers_Briggs_Judging", text)
+    end
+
+    def mb_lifestyle(text = @text)
+      result("prfekt", 'Myers_Briggs_Lifestyle', text)
+    end
+
+    def emo(text=@text)
+      result("saifer", "emo", text)
+    end
+
+
+
+    def myers_briggs(text = @text)
+      return "#{mb_attitude(text)}#{mb_perceiving(text)}#{mb_judging(text)}#{mb_lifestyle(text)}"
+    end
+
+
+
+
+
+    def run
+      puts mood(@text)
+      puts gender(@text)
+      puts sentiment(@text)
+      puts topics(@text)
+      puts age(@text)
+      puts values(@text)
+
+      puts classics(@text)
+      # puts society(@text)
+    end
+
   end
+end
+
+if __FILE__==$0
 
   require_relative 'browser'
   require 'highline/import'
@@ -142,37 +145,38 @@ module LazyCupid
   b.login
   loop do
     puts ""
-  user = ask("user: ")
-  url = "http://www.okcupid.com/profile/#{user}"
+    user = ask("user: ")
+    url = "http://www.okcupid.com/profile/#{user}"
 
-  browser               = b
-  request_id            = (1..266).to_a.sample
+    browser               = b
+    request_id            = (1..266).to_a.sample
 
-  browser.send_request(url, request_id)
+    browser.send_request(url, request_id)
 
-  print "Requesting profile..."
-  resp = {ready: false}
-  until resp[:ready] == true
-    resp = browser.get_request(request_id)
-    # p resp
+    print "Requesting profile..."
+    resp = {ready: false}
+    until resp[:ready] == true
+      resp = browser.get_request(request_id)
+      # p resp
+    end
+    puts " done."
+
+
+    mood = t.fetch("mood", resp)
+    gender = t.fetch("gender", resp)
+    sentiment = t.fetch("sentiment", resp)
+    topics = t.fetch("topics", resp)
+    age = t.fetch("age", resp)
+    values = t.fetch("values", resp)
+    classics = t.fetch("classics", resp)
+    he = gender == "female" ? "she" : "he"
+    his = gender == "female" ? "her" : "his"
+    emo = t.fetch("emo", resp)
+
+    print "#{user} is a #{values} #{gender}, "
+    print "who values #{topics}, is generally #{sentiment}, "
+    print "was #{mood} when #{he} wrote #{his} profile, "
+    puts "acts like #{he} is #{age} and writes like #{classics}"
+    puts "emo: #{emo}"
   end
-  puts " done."
-
-
-  mood = t.fetch("mood", resp).first
-  gender = t.fetch("gender", resp).first
-  sentiment = t.fetch("sentiment", resp).first
-  topics = t.fetch("topics", resp).first
-  age = t.fetch("age", resp).first
-  values = t.fetch("values", resp).first
-  classics = t.fetch("classics", resp).first
-  he = gender == "female" ? "she" : "he".first
-  his = gender == "female" ? "her" : "his"
-  emo = t.fetch("emo", resp)
-
-  print "#{user} is a #{values} #{gender}, "
-  print "who values #{topics}, is generally #{sentiment}, "
-  print "was #{mood} when #{he} wrote #{his} profile, "
-  puts "acts like #{he} is #{age} and writes like #{classics}"
-  puts "emo: #{emo}"
 end

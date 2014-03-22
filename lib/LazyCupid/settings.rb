@@ -41,7 +41,6 @@ module LazyCupid
 
                   matching: {
                     min_percent: 50,
-                    friend_percent: 0,
                     enemy_percent: 0,
                     min_age: 18, #match_preferences[:min_age],
                     max_age: 50, #match_preferences[:max_age],

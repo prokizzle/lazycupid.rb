@@ -327,7 +327,6 @@ module LazyCupid
           :height         => user[:height],
           :last_online    => user[:last_online],
           :last_visit     => Time.now.to_i,
-          :friend_percent => user[:friend_percentage],
           :enemy_percent  => user[:enemy_percentage],
           :distance       => user[:distance],
           :age            => user[:age]

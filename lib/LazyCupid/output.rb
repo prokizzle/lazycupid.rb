@@ -30,7 +30,6 @@ module LazyCupid
         distance: user[:distance],
         match_percent: user[:match_percentage],
         enemy: user[:enemy_percentage],
-        friend: user[:friend_percentage],
         city: user[:city],
         state: user[:state],
         sexuality: user[:sexuality],

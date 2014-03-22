@@ -20,9 +20,6 @@ module LazyCupid
       {city: city, state: state, country: country }
     end
 
-    def friend_percentage_regex
-      "/>(\d+). Friend.*/"
-    end
 
   end
 end

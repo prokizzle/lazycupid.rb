@@ -310,7 +310,7 @@ module LazyCupid
     end
 
     def self.sexuality
-      @html.parser.xpath("//span[@id='ajax_orientation']").text
+      @html.parser.xpath("//dd[@id='ajax_orientation']").text.split.first
     end
 
     def self.gender

@@ -33,10 +33,10 @@ module LazyCupid
       @source = user_page[:source]
       url = user_page[:url]
       # begin
-        inactive = !(@body =~ $inactive_profile).nil?
-        straight = !(@body =~ $straight_person).nil?
+      inactive = !(@body =~ $inactive_profile).nil?
+      straight = !(@body =~ $straight_person).nil?
       # rescue
-        # puts @body
+      # puts @body
       # end
       @intended_handle = URI.decode(/\/profile\/(.+)/.match(url)[1])
       @readability = Lingua::EN::Readability.new(essays)
@@ -55,7 +55,7 @@ module LazyCupid
         {inactive: true}
       elsif straight
         return {handle: intended_handle,
-          sexuality: "Straight"}
+                sexuality: "Straight"}
       else
         {handle: handle,
          match_percentage: match_percentage,
@@ -148,8 +148,8 @@ module LazyCupid
       # rescue
       # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
       begin
-      # result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
-      result = @html.parser.xpath("//span[@class='name']").text
+        # result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
+        result = @html.parser.xpath("//span[@class='name']").text
       rescue Exception => e
         puts e.message
         puts e.backtrace
@@ -173,8 +173,12 @@ module LazyCupid
     # match percentages
 
     def self.match_percentage
-      result = @html.parser.xpath("//span[@class='match_percentage']").text
-      result.match(/(\d+)/)[1].to_i
+      begin
+      result = @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Match<.span>/)[1].to_i
+      rescue Exception => e
+        result.scan(/percent">([-—\d]+)\%</)[0][0]
+      end
+
       # begin
       #   result = @html.parser.xpath("//span[@class='match']").text
       #   new_result = /(\d*\d*). Match/.match(result)[1]
@@ -191,7 +195,11 @@ module LazyCupid
 
     def self.enemy_percentage
       # result = @html.parser.xpath("//span[@class='enemy']").text
-      @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Enemy<.span>/)[1].to_i
+      begin
+        @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Enemy<.span>/)[1].to_i
+      rescue
+        result.scan(/percent">([-—\d]+)\%</)[1][0]
+      end
     end
 
     def self.slut_test_results

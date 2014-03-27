@@ -183,7 +183,12 @@ module LazyCupid
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose
         # @db.ignore_user(user)
-        @db.set_inactive(user)
+        begin
+          @db.set_inactive(user)
+        rescue
+          puts user
+          puts Match.where(:name => user, :account => $login).first[:gender]
+        end
 
       elsif profile[:gender] != "M" && profile[:gender] != "F"
         puts "* Straight person found * #{user}"

@@ -423,9 +423,14 @@ module LazyCupid
       @db.exec( "update matches set ignore_list=0 where name=$1", [username])
     end
 
-    def set_inactive(username)
-      Match.find_or_create(name: username).update(inactive: true)
-      User.find_or_create(name: username).update(inactive:true)
+    def set_inactive(username, gender=nil)
+      begin
+        Match.find_or_create(name: username).update(inactive: true)
+        User.find_or_create(name: username).update(inactive:true)
+      rescue
+        Match.find_or_create(name: username, gender: gender).update(inactive: true)
+        User.find_or_create(name: username, gender: Match.where(name: username).first[:gender]).update(inactive:true)
+      end
     end
 
     def added_from(username, method)

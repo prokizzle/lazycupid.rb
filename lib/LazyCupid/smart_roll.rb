@@ -187,7 +187,7 @@ module LazyCupid
           @db.set_inactive(user)
         rescue
           puts user
-          puts Match.where(:name => user, :account => $login).first[:gender]
+          Match.where(name: user).update(gender: Match.where(:name => user, :account => $login).first[:gender])
         end
 
       elsif profile[:gender] != "M" && profile[:gender] != "F"

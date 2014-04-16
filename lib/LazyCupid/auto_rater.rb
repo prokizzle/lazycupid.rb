@@ -48,15 +48,16 @@ module LazyCupid
       sleep (1..3).to_a.sample.to_i
       @browser.button(:id => 'sign_in_button').click
       sleep (1..3).to_a.sample.to_i
+      visit("http://www.okcupid.com/who-likes-you")
       visit("http://www.okcupid.com/quickmatch")
       if $verbose
-        puts logged in? ? "OK" : "failed"
+        puts logged_in? ? "OK" : "failed"
       end
       return logged_in?
     end
 
     def logged_in?
-      return @browser.h1(:id => 'home_heading').exists?
+      return @browser.h4(:text => 'You might like').exists?
     end
 
     def rate(stars=5)
@@ -72,7 +73,8 @@ module LazyCupid
         if wrong_page(e)
           visit("http://www.okcupid.com/quickmatch")
         else
-          puts "*********\n#{e.message}\n*********"
+          # puts "*********\n#{e.message}\n*********"
+          @browser.button(:text => 'Not now').click
         end
       end
       # @count += 1

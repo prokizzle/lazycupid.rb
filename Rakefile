@@ -43,6 +43,11 @@ namespace :db do
                   backup = %x{pg_dump lazy_cupid > db/backup/dump.sql}
                 end
 
+                task :delete_user do
+                  user = ask("User: ")
+                  Match.where(name: user).delete
+                end
+
                 task :update_counts do
                   t = OutgoingVisit.all
                   t.each do |visit|
@@ -229,6 +234,23 @@ namespace :db do
                         puts "acts like #{he} is #{age} and writes like #{classics}"
                         puts "emo: #{emo}"
                       end
+                    end
+
+                    task :name_changes do
+                      changes = UsernameChange.all
+                      random = changes.shuffle.sample.to_hash
+                      puts "#{random[:old_name]} became #{random[:new_name]}"
+                    end
+
+                    task :change_state do
+                      # state_a = ask("state: ")
+                      # state_b = ask("abbrev: ")
+
+                      # d = Match.where(account: "***REMOVED***", state: state_b).first[:distance]
+                      # puts "Distance: #{d}"
+                      puts Match.where(account: "***REMOVED***", state: "TX").to_a.size
+                      # puts Match.where(account: "***REMOVED***", state: state_a).update(distance: d)
+                      # puts Match.where(account: "***REMOVED***", state: state_b).update(distance: d)
                     end
                   end
                   namespace :config do

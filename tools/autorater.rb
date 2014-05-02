@@ -2,7 +2,7 @@ require_relative '../lib/LazyCupid/auto_rater'
 require 'highline/import'
 
 $verbose = true
-$driver = "chrome"
+$driver = "phantomjs"
 if ARGV.size > 0
   @username = ARGV[0]
   @password = ARGV[1]

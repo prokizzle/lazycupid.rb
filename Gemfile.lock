@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.3.6)
     atomic (1.1.14)
     bloat_check (0.0.5)
       its-it
@@ -8,15 +9,22 @@ GEM
     childprocess (0.4.0)
       ffi (~> 1.0, >= 1.0.11)
     chronic (0.10.2)
+    cliutils (2.2.0)
+      launchy (= 2.4.2)
+    colorize (0.7.2)
     domain_name (0.5.13)
       unf (>= 0.0.5, < 1.0.0)
     fattr (2.2.1)
     ffi (1.9.3)
     highline (1.6.19)
+    hr (0.0.1)
+      colorize (~> 0.6)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     its-it (1.1.1)
     key_struct (0.4.2)
+    launchy (2.4.2)
+      addressable (~> 2.3)
     lingua (0.6.2)
     mechanize (2.7.2)
       domain_name (~> 0.5, >= 0.5.1)
@@ -74,7 +82,9 @@ PLATFORMS
 DEPENDENCIES
   bloat_check
   chronic
+  cliutils
   highline
+  hr
   lingua
   mechanize
   pg

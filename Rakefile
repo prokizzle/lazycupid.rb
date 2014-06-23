@@ -45,7 +45,7 @@ namespace :db do
 
                 task :delete_user do
                   user = ask("User: ")
-                  Match.where(name: user).delete
+                  Match.where(account: user).delete
                 end
 
                 task :update_counts do
@@ -61,6 +61,13 @@ namespace :db do
                   state = ask("state: ")
                   distance = ask("distance: ")
                   Match.where(account: account, state: state).exclude(city: "Austin").update(distance: distance)
+                end
+
+                task :reset_account do
+                  account = ask("account: ")
+                  Match.where(account: account).each do |m|
+                    m.delete
+                  end
                 end
 
                 task :copy_ages do

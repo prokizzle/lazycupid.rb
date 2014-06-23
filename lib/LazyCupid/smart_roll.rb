@@ -4,6 +4,8 @@ module LazyCupid
   # The brains of LazyCupid
   #
   class SmartRoll
+    require 'cliutils'
+    include CLIUtils::Messaging
     attr_reader :debug, :verbose, :alt_reload
     attr_accessor :alt_reload
 
@@ -45,7 +47,7 @@ module LazyCupid
         unless current_user.nil? || current_user == ""
           puts "Visting #{current_user}." if $debug
           if $verbose
-            puts "Rolling..." unless @already_rolling
+            messenger.warn "Rolling..." unless @already_rolling
           end
           visit_user(current_user)
           @already_idle = false
@@ -53,7 +55,7 @@ module LazyCupid
           # return {user: obj, rolling: @already_rolling}
         else
           if $verbose
-            puts "Idle..." unless @already_idle
+            messenger.warn "Idle..." unless @already_idle
           end
           @already_idle = true
           @already_rolling = false
@@ -102,7 +104,7 @@ module LazyCupid
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
           end
         else
-          puts "Delaying query..." unless @already_delayed
+          messenger.warn "Delaying query..." unless @already_delayed
           @already_delayed = true
         end
         return @roll_list
@@ -191,7 +193,7 @@ module LazyCupid
         end
 
       elsif profile[:gender] != "M" && profile[:gender] != "F"
-        puts "* Straight person found * #{user}"
+        messenger.warn "* Straight person found * #{user}"
         Match.find(:name => profile[:handle]).set(:sexuality => profile[:sexuality])
       else
 
@@ -202,7 +204,7 @@ module LazyCupid
         puts "Name change: #{profile[:a_list_name_change]}" if $debug
         if profile[:a_list_name_change]
           @db.rename_alist_user(user, profile[:handle])
-          puts "A-list name change: #{user} is now #{profile[:handle]}"
+          messenger.info "A-list name change: #{user} is now #{profile[:handle]}"
         end
         # sexuality_filter(profile)
         @tally += 1

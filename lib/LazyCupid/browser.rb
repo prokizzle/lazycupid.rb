@@ -21,6 +21,9 @@ module LazyCupid
   # @param password [Symbol] [password to login with]
   # @param log      [Symbol] [the path to folder containing log files]
   class Browser
+    require 'cliutils'
+    include CLIUtils::Messaging
+    include CLIUtils::PrettyIO
     require 'mechanize'
 
     attr_accessor :agent, :body, :current_user, :url, :hash, :page, :page_source, :login_status

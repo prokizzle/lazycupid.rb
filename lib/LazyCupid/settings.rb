@@ -32,18 +32,19 @@ module LazyCupid
         # Create generic preference file
         config = {geo: {
                     min_distance: 0,
-                    distance: 50
+                    distance: 150
                   },
                   personal: {
                     sexuality: "straight",
-                    gender: "M"
+                    gender: "M",
+                    age: 28
                   },
 
                   matching: {
-                    min_percent: 50,
+                    min_percent: 60,
                     enemy_percent: 0,
                     min_age: 18, #match_preferences[:min_age],
-                    max_age: 50, #match_preferences[:max_age],
+                    max_age: 35, #match_preferences[:max_age],
                     age_sort: "ASC", #prefer younger
                     gender: "F",
                     alt_gender: "R",
@@ -56,8 +57,8 @@ module LazyCupid
                     visit_bisexual: true
                   },
                   visit_freq: {
-                    days_ago: 10,
-                    max_followup: 2,
+                    days_ago: 3,
+                    max_followup: 12,
                     roll_frequency: 6, #in seconds
                     rate_frequency: 1, #in minutes
                     sort_criteria: [
@@ -73,7 +74,7 @@ module LazyCupid
                   scraping: {
                     autodiscover_on: true,
                     import_hidden_users: false,
-                    match_frequency: 2, #in minutes,
+                    match_frequency: 10, #in minutes,
                     scrape_match_search: true,
                     driver: 'phantomjs',
                   },
@@ -109,6 +110,7 @@ module LazyCupid
       # [todo] - add support for readability score filtering
 
       # Load settings attributes into variables for external reference
+      @my_age                 = @settings[:personal][:age].to_i
       @max_distance           = @settings[:geo][:distance].to_i
       @min_distance           = @settings[:geo][:min_distance].to_i
       @visit_bisexual         = @settings[:matching][:visit_bisexual]
@@ -150,7 +152,7 @@ module LazyCupid
       @db_adapter             = @db_settings[:development][:adapter].to_s
 
       # Global variables for mid-session reloads
-
+      $my_age                 = @my_age
       $max_distance           = @max_distance
       $min_distance           = @min_distance
       $min_percent            = @min_percent
@@ -196,6 +198,7 @@ module LazyCupid
     def reload_config
       settings                = YAML.load_file(@filename)
 
+      $my_age                 = settings[:personal][:age].to_i
       $max_distance           = settings[:geo][:distance].to_i
       $min_distance           = settings[:geo][:min_distance].to_i
       $min_percent            = settings[:matching][:min_percent].to_i

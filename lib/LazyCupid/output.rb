@@ -1,5 +1,8 @@
 module LazyCupid
   class Output
+    require 'cliutils'
+    include CLIUtils::Messaging
+    include CLIUtils::PrettyIO
     attr_accessor :username, :match_name, :match_percent, :visit_count
     attr_reader :username, :match_name, :match_percent, :visit_count
 
@@ -21,26 +24,26 @@ module LazyCupid
     end
 
     def log(user)
-      print @username
+      messenger.section('Profile visit')
       last_online = Time.at(user[:last_online]||0).ago.to_words
       last_online = "Online now" if last_online == "47 years ago"
       result = {user: user[:handle],
-        gender: user[:gender],
-        age: user[:age],
-        distance: user[:distance],
-        match_percent: user[:match_percentage],
-        enemy: user[:enemy_percentage],
-        city: user[:city],
-        state: user[:state],
-        sexuality: user[:sexuality],
-        # mood: user[:mood],
-        # sentiment: user[:sentiment],
-        count: @db.get_visit_count(user[:handle]),
-        last_online: last_online,
-        last_visit: last_visited(user[:handle]),
-        fog: user[:fog],
-        kincaid: user[:kincaid]}
-      puts result
+                gender: user[:gender],
+                age: user[:age],
+                distance: user[:distance],
+                match_percent: user[:match_percentage],
+                enemy: user[:enemy_percentage],
+                city: user[:city],
+                state: user[:state],
+                sexuality: user[:sexuality],
+                # mood: user[:mood],
+                # sentiment: user[:sentiment],
+                count: @db.get_visit_count(user[:handle]),
+                last_online: last_online,
+                last_visit: last_visited(user[:handle]),
+                fog: user[:fog],
+                kincaid: user[:kincaid]}
+      messenger.success "#{@username}#{result}"
     end
 
   end

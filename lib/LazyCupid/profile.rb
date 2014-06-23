@@ -1,12 +1,14 @@
 # encoding: utf-8
 
 module LazyCupid
-
   # OKCupid profile page parser
   # Class methods for turning a scraped Mechanize page for an OKCupid user profile
   # into a hash of attributes for easy data manipulation and storage.
   #
   class Profile
+    require 'cliutils'
+    include CLIUtils::Messaging
+
     require_relative 'text_classifier'
     require 'lingua'
 
@@ -34,7 +36,7 @@ module LazyCupid
       url = user_page[:url]
       # begin
       inactive = !(@body =~ $inactive_profile).nil?
-      straight = !(@body =~ $straight_person).nil?
+      enhanced_privacy = !(@body =~ $enhanced_privacy).nil?
       # rescue
       # puts @body
       # end
@@ -53,7 +55,7 @@ module LazyCupid
       # puts grade
       if inactive
         {inactive: true}
-      elsif straight
+      elsif enhanced_privacy
         return {handle: intended_handle,
                 sexuality: "Straight"}
       else
@@ -61,6 +63,7 @@ module LazyCupid
          match_percentage: match_percentage,
          age: age,
          enemy_percentage: enemy_percentage,
+         age_range: user_age_range,
          ethnicity: ethnicity,
          height: height,
          bodytype: body_type,
@@ -98,6 +101,13 @@ module LazyCupid
     private
 
     # text classification
+    def self.log_error(error)
+      logger = Logger.new("profile_error_#{Time.now.to_i}.txt")
+      logger.fatal(error.message)
+      logger.error(error.backtrace)
+      logger.info(@source)
+      logger.close
+    end
 
     def self.kincaid
       return @readability.kincaid.ceil rescue nil
@@ -170,13 +180,41 @@ module LazyCupid
 
     end
 
+    def self.user_age_range
+      begin
+        # @source = IO.read(@source).force_encoding("ISO-8859-1").encode("utf-8", replace: nil)
+        result = @source.match(/Ages\s(?<floor>\d+).(?<ceiling>\d+)/)
+        return {min_age: result["floor"].to_i, max_age: result["ceiling"].to_i}
+      rescue Exception => e
+        #   log_error e
+        puts e.message
+        return {min_age: 18, max_age: 55}
+      end
+
+    end
+
     # match percentages
 
-    def self.match_percentage
+    def self.match_percentage(try=0)
       begin
-      result = @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Match<.span>/)[1].to_i
+        result = @source.match(/<span class="percent">([-—\d]+)\%<.span>.<span class="percentlabel">Match<.span>/)[1]
+        if result == "-"
+          result = 0
+        else
+          result = result.to_i
+        end
       rescue Exception => e
-        result.scan(/percent">([-—\d]+)\%</)[0][0]
+        # self.match_percentage(try+1) unless try > 1
+        # if try == 1
+        #   begin
+        #     result.scan(/percent">([-—\d]+)\%</)[0][0]
+        #   rescue Exception => f
+        #     self.log_error(f)
+        #   end
+        # else
+        #   self.log_error(e)
+        # end
+        result = 0
       end
 
       # begin
@@ -191,15 +229,11 @@ module LazyCupid
       #     0
       #   end
       # end
+      return result
     end
 
     def self.enemy_percentage
-      # result = @html.parser.xpath("//span[@class='enemy']").text
-      begin
-        @source.match(/<span class="percent">(\d+)\%<.span>.<span class="percentlabel">Enemy<.span>/)[1].to_i
-      rescue
-        result.scan(/percent">([-—\d]+)\%</)[1][0]
-      end
+      return @html.parser.xpath("//div[@class='percentbox enemy']/span").text.to_i
     end
 
     def self.slut_test_results

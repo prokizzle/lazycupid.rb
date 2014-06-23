@@ -239,7 +239,7 @@ module LazyCupid
         :counts => 0..max_counts.to_i,
         :match_percent => $min_percent.to_i..102,
         :gender => [desired_gender.to_s, alt_gender.to_s]
-      ).order(Sequel.asc(:counts)).take(query_size).to_a
+      ).order(Sequel.asc(:distance)).take(query_size).to_a
 
       # puts result.first.to_hash
       if result.empty?

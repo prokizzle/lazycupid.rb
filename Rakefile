@@ -1,5 +1,7 @@
 require_relative 'lib/LazyCupid/database_manager'
 require_relative 'lib/LazyCupid/settings'
+Dir.glob('tasks/*.rake').each {|r| import r }
+
 require 'chronic'
 config_path = File.expand_path("../config/", __FILE__)
 

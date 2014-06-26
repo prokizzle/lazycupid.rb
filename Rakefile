@@ -1,5 +1,6 @@
 require_relative 'lib/LazyCupid/database_manager'
 require_relative 'lib/LazyCupid/settings'
+require 'chronic'
 config_path = File.expand_path("../config/", __FILE__)
 
 @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
@@ -12,6 +13,35 @@ require 'progress_bar'
 namespace :db do
   @config       = LazyCupid::Settings.new(username: "***REMOVED***", path: config_path)
   # @db           = LazyCupid::DatabaseMgr.new(login_name: "***REMOVED***", settings: @config)
+  task :visit_times do
+    times = Hash.new(0)
+    IncomingVisit.each do |v|
+      times[v[:server_gmt].hour] += 1 rescue nil
+    end
+    puts times
+  end
+
+  task :driving_distance do
+    require 'rest-client'
+    matches = Match.where(:driving_duration => 0, :account => "***REMOVED***")
+    puts matches.to_a.size
+    matches.each do |match|
+      begin
+        city = URI.encode(match[:city])
+        state = match[:state]
+
+        result = JSON.parse(RestClient.get "http://maps.googleapis.com/maps/api/distancematrix/json?origins=78704&destinations=#{city}+#{state}&mode=driving&sensor=false").to_hash
+        distance = result["rows"].first["elements"].first["distance"]["value"].to_i
+        duration = result["rows"].first["elements"].first["duration"]["value"].to_i
+        Match.where(account: $login, name: match[:name]).update(driving_distance: distance, driving_duration: duration)
+        # puts "#{match[:name]}: #{(distance.to_f*0.000621371).to_i} miles"
+      rescue Exception => e
+        puts e.message
+        puts result
+      end
+    end
+  end
+
 
   task :migrate do
     result = %x{sequel -m db/migrations/ -E #{$db_url}}
@@ -124,6 +154,20 @@ namespace :db do
                   # p account
                   # end
                 end
+
+                task :message_in_date_range do
+                  # account = ask("account: ")
+                  # start_date = Chronic.parse(ask("start date: ")).to_i
+                  # end_date = Chronic.parse(ask("end date: ")).to_i
+                  # IncomingMessage.where(account: "***REMOVED***").to_a.each do |message|
+                  #   if message[:timestamp].to_i.between?(start_date, end_date)
+                  #     %x{open "http://okcupid.com/profile/#{message[:username]}"}
+                  #     puts message.to_hash
+                  #   end
+                  # end
+                  IncomingMessage.where(timestamp: "null").each {|m| puts m.to_hash}
+                end
+
 
                 task :all_visits do
                   puts IncomingVisit.all.count
@@ -243,10 +287,42 @@ namespace :db do
                       end
                     end
 
+                    def additional_name_change(name, second="")
+                      if second.length > 0
+                        UsernameChange.where(old_name: name).second[:new_name] rescue false
+                      else
+                      unless name.empty?
+                        UsernameChange.where(old_name: name).first[:new_name] rescue false
+                      else
+                        false
+                      end
+                    end
+                    end
+
                     task :name_changes do
                       changes = UsernameChange.all
-                      random = changes.shuffle.sample.to_hash
-                      puts "#{random[:old_name]} became #{random[:new_name]}"
+                      changes.each do |change|
+                        results = []
+                        c = 1
+                        old_name = change.to_hash[:old_name]
+                        results << old_name
+                        until c == 0
+                          c = 0
+                          second = ""
+                          if additional_name_change(old_name) && !(results.include? additional_name_change(old_name))
+
+                            results << additional_name_change(old_name)
+
+                            old_name = results.last
+                            c = 1
+                          end
+                        end
+                        if results.size > 2
+                          output = ""
+                          results.each { |n| output += " -> #{n}" }
+                          puts output
+                        end
+                      end
                     end
 
                     task :change_state do
@@ -259,6 +335,12 @@ namespace :db do
                       # puts Match.where(account: "***REMOVED***", state: state_a).update(distance: d)
                       # puts Match.where(account: "***REMOVED***", state: state_b).update(distance: d)
                     end
+
+                    task :convert_dates do
+                      OutgoingVisit.all.each do |visit|
+                        OutgoingVisit.where(account: visit[:account], timestamp: visit[:timestamp]).update(time: Time.at(vist[:timestamp]))
+                      end
+                    end
                   end
                   namespace :config do
                     task :setup do
@@ -266,4 +348,3 @@ namespace :db do
                       puts "OK, #{username}, you are all good to go!"
                     end
                   end
-

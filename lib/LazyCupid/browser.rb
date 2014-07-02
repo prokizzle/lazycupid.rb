@@ -185,6 +185,7 @@ module LazyCupid
     # @return [Boolean]
     #
     def send_request(link, request_id)
+      begin
       # request_id          = Time.now.to_i
       @hash[request_id]     = {ready: false}
       url                   = URI.escape(link)
@@ -193,8 +194,10 @@ module LazyCupid
       page_object.encoding  = 'utf-8'
       page_body             = page_object.parser.xpath("//body").to_html
       page_source           = page_object.parser.xpath("//html").to_html
-      @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false}
+      @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false, inactive: false}
       true
+    rescue
+      @hash[request_id]     = {ready: false, inactive: true, retrieved: false}
     end
 
     # Retrieves a hash of attributes parsed from a page

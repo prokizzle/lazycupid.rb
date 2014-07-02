@@ -14,11 +14,14 @@ module LazyCupid
   # on initialization
   #
   class DatabaseMgr
+    require 'cliutils'
+    include CLIUtils::Messaging
+    include CLIUtils::PrettyIO
     attr_reader :login, :debug, :verbose
 
 
     def initialize(args)
-      puts "Connecting to database..." if $verbose
+      messenger.info "Connecting to database..." if $verbose
       $db           = Sequel.connect($db_url)
       require_relative 'models'
       @did_migrate  = false
@@ -52,19 +55,9 @@ module LazyCupid
 
     def db_tasks
       # import
-      puts "Executing db tasks..."
+      messenger.info "Executing db tasks..."
       delete_self_refs
       fix_blank_distance
-    end
-
-    def action(stmt)
-      db.transaction
-      stmt.execute
-      db.commit
-    end
-
-    def open
-      open_db
     end
 
     def guess_distance(city, state)
@@ -80,9 +73,10 @@ module LazyCupid
       user = args[:username]
       message_id = args[:message_id]
       timestamp = args[:timestamp]
+      time = Time.at(timestamp)
 
       # @db.exec("insert into incoming_messages(account, username, message_id, timestamp) values($1, $2, $3, $4)", [@login, user, message_id, timestamp])
-      IncomingMessage.find_or_create(message_id: message_id, account: @login).update(:timestamp => timestamp, :username => user )
+      IncomingMessage.find_or_create(message_id: message_id, account: @login).update(:timestamp => timestamp, :username => user, :time => time )
 
     end
 
@@ -138,7 +132,7 @@ module LazyCupid
       #   @db.exec("update matches set inactive=false where name=$1", [username])
       #   puts "User already in db: #{username}" if $verbose
       # end'
-      puts "Adding:\t\t#{user[:username]}" if $verbose
+      puts "Adding:\t\t#{user[:username]}".yellow if $verbose
       if user[:city]
         distance = guess_distance(user[:city], user[:state])
       else
@@ -158,7 +152,7 @@ module LazyCupid
 
     def add(user)
 
-      puts "Adding user:        #{user[:username]}" if $verbose
+      messenger.info "Adding user:        #{user[:username]}" if $verbose
 
       distance = guess_distance(user[:city], user[:state]) unless user[:distance]
 
@@ -189,8 +183,6 @@ module LazyCupid
 
     def followup_query
       # [todo] - add support for readability score filtering
-
-      puts "**********", "Current distance: #{$max_distance}", "**********" if $debug
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
       desired_gender      = $gender
@@ -243,7 +235,7 @@ module LazyCupid
 
       # puts result.first.to_hash
       if result.empty?
-        puts "Running SQL record corrections"
+        puts "Running SQL record corrections".purple
         Match.filter(:account => $login).where(:gender => nil).update(:gender => $gender)
         Match.where(:name => nil).delete
         Match.where(:distance => nil).update(:distance => 0)
@@ -253,48 +245,14 @@ module LazyCupid
         User.where(:age => nil).update(:age => 25)
         # User.where(:gender => nil).update(:gender => $gender)
         User.where(:inactive => nil).update(:inactive => false)
-        puts "Finished SQL record corrections"
+        puts "Finished SQL record corrections".purple
       end
 
       return result
     end
 
-    def user_record_exists(user)
-      @db.exec( "select exists(select * from matches where name=$1 and account=$2", [user, @login] )
-    end
-
-    def get_last_received_message_date(user)
-      result = @db.exec("select last_msg_time from matches where name=$1 and account=$2", [user, @login])
-      result.first["last_msg_time"].to_i
-    end
-
-    def get_visitor_count(visitor)
-      result = @db.exec( "select visit_count from matches where name=$1 and account=$2", [visitor, @login])
-      result[0]["visit_count"].to_i
-    end
-
-    def get_my_last_visit_date(user)
-      result = @db.exec("select last_visit from matches where name=$1 and account=$2", [user, @login])
-      result[0]["last_visit"].to_i
-    end
-
-    def get_prev_visit(user)
-      result = @db.exec("select prev_visit from matches where account=$1 and name=$2", [@login, user])
-      result[0]["prev_visit"].to_i
-    end
-
-
-    def set_my_last_visit_date(user, date=Time.now.to_i)
-      prev = get_my_last_visit_date(user)
-      now = Time.now.to_i
-      puts "Last visit: #{prev}" if $debug
-      puts "Now: #{now}" if $debug
-      @db.exec("update matches set prev_visit=$1 where name=$2 and account=$3", [get_my_last_visit_date(user), user, @login])
-      @db.exec( "update matches set last_visit=$1 where name=$2 and account=$3", [Time.now.to_i, user, @login])
-    end
-
     def set_visitor_timestamp(visitor, timestamp)
-      puts "Updating last visit time: #{visitor}" if $verbose
+      puts "Updating last visit time: #{visitor}".red if $verbose
       Match.where(name: visitor, account: @login).update(visitor_timestamp: timestamp)
     end
 
@@ -302,18 +260,7 @@ module LazyCupid
       IncomingVisit.where(account: @login, name: visitor).first[:server_gmt] rescue 0
     end
 
-    def get_total_received_message_count
-      result = @db.exec("select count(name) from matches where r_msg_count is not null and account=$1", [@login])
-      result[0][0].to_i
-    end
-
-    def get_all_message_senders
-      @db.exec("select name, city, state from matches where r_msg_count is not null and account=$1", [@login])
-    end
-
     def log2(user)
-      # p user[:handle]
-      # p user
       if user[:handle]
 
         Match.where(:name => user[:handle], :account => @login).update(
@@ -327,6 +274,7 @@ module LazyCupid
           :height         => user[:height],
           :last_online    => user[:last_online],
           :last_visit     => Time.now.to_i,
+          :time           => Time.now,
           :enemy_percent  => user[:enemy_percentage],
           :distance       => user[:distance],
           :age            => user[:age]
@@ -351,60 +299,13 @@ module LazyCupid
           u.flesch      = user[:flesch]
         end
 
-        OutgoingVisit.create(:name => user[:handle], :account => @login, :timestamp => Time.now.to_i)
-
-        # Stat.find_or_create(:account => @login) do |u|
-        #   u.total_visits += 1 rescue u.total_visits = 1
-        # end
-
-
-        # increment_visit_count(user[:handle])
-        # set_my_last_visit_date(user[:handle])
-        # set_user_details(user)
-        # p "Height: #{user[:height]}" if $debug
+        OutgoingVisit.create(:name => user[:handle], :account => @login, :timestamp => Time.now.to_i, time: Time.now)
       end
       stats_add_visit
     end
 
-
-    # TBD
-    # def set_user_details(user)
-
-    #   Match.where(:name => user[:handle]).update(
-    #     :gender         => user[:gender],
-    #     :sexuality      => user[:sexuality],
-    #     :match_percent  => user[:match_percent],
-    #     :state          => user[:state],
-    #     :city           => user[:city],
-    #     :height         => user[:height],
-    #     :last_online    => user[:last_online],
-    #     :last_visit     => Time.now.to_i,
-    #     :friend_percent => user[:friend_percentage],
-    #     :enemy_percent  => user[:enemy_percentage],
-    #     :distance       => user[:distance],
-    #     :age            => user[:age]
-    #     )
-
-    #   User.find_or_create(:name => user[:handle]) do |u|
-    #                     u.age         =  user[:age]
-    #                     u.gender      =  user[:gender]
-    #                     u.sexuality   =  user[:sexuality]
-    #                     # u.relationship_status =  user[:relationship_status]
-    #                     u.city        =  user[:city]
-    #                     u.state       =  user[:state]
-    #                     u.height      =  user[:height]
-    #                     u.last_online =  user[:last_online]
-    #                     u.smokes      =  (user[:smoking] != "No")
-    #                     u.drinks      =  (user[:drinking] != "Not at all")
-    #                     u.bodytype    = user[:bodytype]
-    #                     u.ethnicity   = user[:ethnicity]
-    #                     u.drugs       =  (user[:drugs] != "Never")
-    #                     u.bodytype    =  user[:body_type]
-    #   end
-    # end
-
     def ignore_user(username)
-      puts "Added to ignore list: #{username}" if $verbose
+      puts "Added to ignore list: #{username}".blue if $verbose
       Match.find_or_create(:name => username, account: @login) do |m|
         m.gender ||= "Q"
         m.ignored = true
@@ -413,14 +314,6 @@ module LazyCupid
 
       Match.where(name: username, account: @login).update(:ignored => true)
       # m.save
-    end
-
-    def unignore_user(username)
-      @db.exec( "update matches set ignore_list=0 where name=$1 and account=$2", [username, @login])
-    end
-
-    def unignore_user2(username)
-      @db.exec( "update matches set ignore_list=0 where name=$1", [username])
     end
 
     def set_inactive(username, gender=nil)
@@ -432,25 +325,6 @@ module LazyCupid
         User.find_or_create(name: username, gender: Match.where(name: username).first[:gender]).update(inactive:true)
       end
     end
-
-    def added_from(username, method)
-      @db.exec("update matches set added_from=$1 where name=$2 and account=$3", [method, username, @login])
-    end
-
-    def get_added_from(username)
-      row = @db.exec("select added_from from matches where account=$1 and name=$2", [@login, username])
-      row[0]["added_from"].to_s
-    end
-
-    # TDB
-    # def existsCheck(username)
-    #   @db.exec( "select 1 where exists(
-    #       select 1
-    #       from matches
-    #       where name = $1
-    #       and account = $2
-    #   ) ", [username, @login]).any?
-    # end
 
     def import_user(args)
       name = args[:name]
@@ -464,21 +338,6 @@ module LazyCupid
 
     def remove_unknown_gender
       @db.exec("delete from matches where gender=$1 and account=$2", ["Q", @login])
-    end
-
-    def close
-      # @db.commit
-      # @db.close
-      puts "you missed one."
-    end
-
-    def exit_db
-      @db.close
-    end
-
-
-    def commit
-      @db.commit
     end
 
   end

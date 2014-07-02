@@ -13,3 +13,5 @@ gem "lingua"
 gem "watir-webdriver"
 gem 'watir-scroll'
 gem 'uclassify'
+gem 'cliutils'
+gem 'hr'

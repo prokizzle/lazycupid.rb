@@ -94,7 +94,9 @@ module LazyCupid
     #
     def poll_response
       begin
-        return JSON.parse(content.gsub('\"', '\'')).to_hash
+        r = JSON.parse(content.gsub('\"', '\'')).to_hash
+        puts r
+        return r
       rescue JSON::ParserError
         return content
       end

@@ -1,6 +1,9 @@
 module LazyCupid
   class EventTracker
     require_relative 'global_regex'
+    require 'cliutils'
+    include CLIUtils::Messaging
+    include CLIUtils::PrettyIO
     attr_reader :body
 
     def initialize(args)
@@ -61,7 +64,7 @@ module LazyCupid
         # If it's not a duplicate
         # puts "*******","Visit unique!","*******"
         unless IncomingVisit.where(server_seqid: server_seqid.to_s).exists
-          puts "* New visitor: #{visitor} *"
+          puts "* New visitor: #{visitor} *".cyan
 
           # Add the user to the matches table
           # @db.add_user(username: visitor, gender: gender, added_from: "api_visitor", city: city, state: state, )
@@ -84,47 +87,25 @@ module LazyCupid
 
 
 
-    def default_match_search(number=3)
+    def default_match_search(number=1)
       number.times { scrape_match_search_page(MatchQueries.default_query) } if $scrape_match_search
     end
 
     def scrape_match_search_page(query="http://www.okcupid.com/match?timekey=#{Time.now.to_i}&matchOrderBy=SPECIAL_BLEND&use_prefs=1&discard_prefs=1&count=18&ajax_load=1")
-      result        = async_response(query)
-      # puts result[:body]
-      parsed        = JSON.parse(result[:html].content).to_hash
-      # puts parsed
-      html          = parsed["html"]
-      # puts html
-      # sleep 100
-      @details      = html.scan(/<div id="usr-([\w\d_-]+)-wrapper" class="match_card_wrapper user-not-hidden ">/)
-      b_test        = true if @details.empty?
-      @details      ||= html.scan(/<div class="[\w_\d\s]+ match_row_alt\d clearfix[_\w\s]* *" id="usr-([\w\d_-]+)">/)
-      @c_test       = true if @details.empty?
-      @details      ||= html.scan(/<div id="usr-([\w\d_-]+)-wrapper" class="match_card_wrapper user-not-hidden ">/)
+      html        = JSON.parse(async_response(query)[:html].content).to_hash["html"]
+      @details    = html.scan(/<div id="usr-([\w\d_-]+)" class="match_card \w+">/)
       html_doc = Nokogiri::HTML(html)
-      @gender, @age, @state, @city     = {}
 
       @details.each do |user|
-        result2 = html_doc.xpath("//div[@id='usr-#{user[0]}-wrapper']").to_s
-        age = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
-
-        result2     ||= html_doc.xpath("//div[@id='usr-#{user[0]}']").to_s
-        age         ||= result2.match(/span.class=.age.>(\d{2})/)[1].to_i
+        result2       = html_doc.xpath("//div[@id='usr-#{user.first}']").to_s
+        age           = result2.match(/span.class=.age.>(\d{2})/)[1].to_i
         gender        = $gender
         username      = user[0].to_s
-        puts "username: #{username}, age: #{age}, gender: #{gender}"  if $debug
         city, state   = String.new
         location      = /location.>(.+)<.span>/.match(result2)[1].to_s
-        begin
-          city        = RegEx.parsed_location(location)[:city]
-          state       = RegEx.parsed_location(location)[:state]
-        rescue
-          puts location
-        end
-        puts "city: #{city}, state: #{state}" if $debug
-        # match_percent = /(\d+)%<.span> Match/.match(result2)[1] if b_test
-        match_percent = /(\d+)% Match/.match(result2)[1]# unless b_test
-        puts "#{username} #{match_percent}% match" if $debug
+        city        = RegEx.parsed_location(location)[:city]
+        state       = RegEx.parsed_location(location)[:state]
+        match_percent = /span class="percentage">(.+)%<.span>\n\s+<span class="percentage_label">Match<.span>/.match(result2)[1]# unless b_test
         @db.add(username: username, gender: gender, added_From: "ajax_match_search", age: age, city: city, state: state, match_percent: match_percent, age: age)
       end
     end
@@ -167,28 +148,14 @@ module LazyCupid
       @inbox_up_to_date = false
       puts "Scraping inbox" if $verbose
       result = async_response("http://www.okcupid.com/messages")
-      # begin
       begin
-        # @total_msg = result[:body].match(/Page 1 of <a href="\/messages\?low\=(\d+)\&amp\;folder\=1">\d+/)[1].to_i
         @total_msg = result[:body].match($total_messages)[1].to_i
       rescue
         @total_msg = 0
       end
-      # @total_msg    = total_pages * 30
-      # rescue
-      # @total_msg    = 0
-      # end
-      puts "Total messages: #{@total_msg}" if $verbose
-      sleep 2
       unless @total_msg == @prev_total_messages || @inbox_up_to_date
         low = 1
         extract_messages_from_page(low)
-        # break if @inbox_up_to_date
-        if @total_msg > 0
-          puts "#{@total_msg - @prev_total_messages} new messages..."
-        else
-          # puts @total_msg_on_page
-        end
         unless @inbox_up_to_date
           until low >= @total_msg || @inbox_up_to_date
             low += 30
@@ -215,19 +182,16 @@ module LazyCupid
               break
             end
             msg_block       = result[:html].parser.xpath("//li[@id='message_#{message_id}']").to_html
-            # unless !(msg_block =~ /"subject">OKCupid!</).nil?
             sender          = /\/([\w\d_-]+)\?cf=messages/.match( msg_block)[1]
             timestamp       = msg_block.match(/(\d{10}), 'BRIEF/)[1].to_i
             sender          = sender.to_s
             register_message(sender, timestamp, message_id)
-            # inbox_cleanup(msg_page)
-
           end
         else
-          puts "Inbox up to date!"
+          puts "Inbox up to date!".green
         end
       else
-        puts "No more messages"
+        puts "No more messages".red
       end
     end
 
@@ -239,7 +203,7 @@ module LazyCupid
 
       # @stored_time     = @db.get_last_received_message_date(sender).to_i
       if timestamp.to_i >= Time.now.to_i - 1800
-        puts "New message from #{sender}"
+        puts "New message from #{sender}".blue
       end
 
       puts "Registering message #{message_id}"

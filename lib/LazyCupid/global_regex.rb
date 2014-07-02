@@ -9,7 +9,7 @@
 # Profile
 #
 $inactive_profile               = Regexp.new(/\bwe don’t have anyone by that name\b/u)
-$straight_person                = Regexp.new(/\bEnhanced privacy is in effect\b/)
+$enhanced_privacy                = Regexp.new(/\bEnhanced privacy is in effect\b/)
 $handle                         = Regexp.new(/<div class="userinfo"> <div class="details"> <p class="username">(.+)<.p> <p class="info">/)
 $relative_distance              = Regexp.new(/\((\d+) miles*\)/)
 

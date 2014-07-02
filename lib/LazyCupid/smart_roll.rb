@@ -178,7 +178,11 @@ module LazyCupid
         # p result
       end
       @browser.delete_response(request_id)
-      profile = Profile.parse(result)
+      unless result[:inactive]
+        profile = Profile.parse(result)
+      else
+        profile[:inactive] = true
+      end
       # puts profile[:handle], profile[:a_list_name_change], profile[:inactive]
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose

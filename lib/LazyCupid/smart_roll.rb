@@ -181,10 +181,8 @@ module LazyCupid
       end
       @browser.delete_response(request_id)
       profile = Profile.parse(result)
-      # puts profile[:handle], profile[:a_list_name_change], profile[:inactive]
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose
-        # @db.ignore_user(user)
         begin
           @db.set_inactive(user)
         rescue
@@ -194,7 +192,9 @@ module LazyCupid
 
       elsif profile[:gender] != "M" && profile[:gender] != "F"
         messenger.warn "* Straight person found * #{user}"
-        Match.find(:name => profile[:handle]).set(:sexuality => profile[:sexuality])
+        # puts profile[:gender], profile[:intended_handle]
+        # %x{echo #{profile} >> profile.txt}
+        Match.where(:name => user).update(:sexuality => "Straight")
       else
 
         begin

@@ -110,6 +110,17 @@ module LazyCupid
       end
     end
 
+    def scrape_spotlight
+      response = JSON.parse(async_response("http://www.okcupid.com/json/spotlight/sync")[:html].content)
+      response["queue"].each do |person|
+        messenger.info "Adding user:        #{person["username"]}" if $verbose
+        Match.find_or_create(name: person["username"], account: $login) do |u|
+          u.gender ="F"
+          u.distance = 0
+        end
+      end
+    end
+
     def async_response(url)
       result = Hash.new
       request_id = Time.now.to_i

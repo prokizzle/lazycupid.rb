@@ -102,6 +102,7 @@ module LazyCupid
           @last_query_time = Time.now.to_i
           if $verbose
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+            p @roll_list.first rescue nil
           end
         else
           messenger.warn "Delaying query..." unless @already_delayed
@@ -183,12 +184,15 @@ module LazyCupid
       unless result[:inactive]
         profile = Profile.parse(result)
       else
+        profile = Hash.new
+        puts "Inactive profile found: #{user}" if $verbose
         profile[:inactive] = true
       end
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose
         begin
-          @db.set_inactive(user)
+          Match.where(account: $login, name: user).delete
+          # @db.set_inactive(user)
         rescue
           puts user
           Match.where(name: user).update(gender: Match.where(:name => user, :account => $login).first[:gender])

@@ -118,6 +118,10 @@ module LazyCupid
            @events.check_events
          end
 
+         def scrape_spotlight
+            @tracker.scrape_spotlight
+         end
+
          def unread_messages
            @events.new_mail.to_i
          end
@@ -131,6 +135,7 @@ module LazyCupid
              @blocklist.import_hidden_users if @config.import_hidden_users
              puts "Getting new matches..." unless $verbose
              @tracker.default_match_search
+             @tracker.scrape_spotlight
              puts "Checking for new messages..." unless $verbose
              @tracker.scrape_inbox
            end
@@ -216,13 +221,14 @@ module LazyCupid
              # app.check_visitors
              # end
 
-             @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'api' do
-               @app.check_events
-             end
+             # @app.scheduler.every '5s', :allow_overlapping => false, :mutex => 'api' do
+             #   @app.check_events
+             # end
 
              @app.scheduler.every "#{$match_frequency}m", :allow_overlapping => false, :mutex => 'tracker' do
                puts "Started scraping match search " if $verbose
                @app.scrape_ajax_matches
+               @app.scrape_spotlight
                puts "Finished scraping match search " if $verbose
              end
 

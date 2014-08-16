@@ -76,7 +76,7 @@ module LazyCupid
     # @return [Boolean]
     #
     def match_percent_criteria_met?
-      (@user[:match_percentage] >= min_match_percentage || (@user[:match_percentage] == 0))
+      (@user[:match_percentage] >= min_match_percentage || (@user[:match_percentage] == 0 && @user[:enemy_percentage] == 0))
     end
 
     # Determines if user meets preferred age requirements

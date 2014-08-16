@@ -183,6 +183,7 @@ module LazyCupid
 
     def followup_query
       # [todo] - add support for readability score filtering
+      Match.where(:name => "").delete
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
       desired_gender      = $gender
@@ -214,9 +215,10 @@ module LazyCupid
 
       # puts result.first.to_hash
       if result.empty?
-        puts "Running SQL record corrections".purple
+        puts "Cleaning database...".purple
         Match.filter(:account => $login).where(:gender => nil).update(:gender => $gender)
         Match.where(:name => nil).delete
+        Match.where(:name => "").delete
         Match.where(:distance => nil).update(:distance => 1)
         Match.where(:match_percent => nil).update(:match_percent => 100)
         Match.where(:inactive => nil).update(:inactive => false)
@@ -226,7 +228,7 @@ module LazyCupid
         User.where(:age => nil).update(:age => 25)
         # User.where(:gender => nil).update(:gender => $gender)
         User.where(:inactive => nil).update(:inactive => false)
-        puts "Finished SQL record corrections".purple
+        puts "Finished cleaning database".purple
       end
 
       return result

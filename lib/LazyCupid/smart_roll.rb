@@ -82,7 +82,7 @@ module LazyCupid
       unless results == {}
         results.each do |user|
           user = user.to_hash
-          array.push(user[:name]) if user.has_key?(:name)
+          array.push(user[:name]) if user.has_key?(:name) && !user[:name].empty?
           # puts user["name"] if $debug
         end
       end
@@ -102,6 +102,7 @@ module LazyCupid
           @last_query_time = Time.now.to_i
           if $verbose
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+            p @roll_list.first rescue nil
           end
         else
           messenger.warn "Delaying query..." unless @already_delayed
@@ -183,14 +184,15 @@ module LazyCupid
       unless result[:inactive]
         profile = Profile.parse(result)
       else
+        profile = Hash.new
+        puts "Inactive profile found: #{user}" if $verbose
         profile[:inactive] = true
       end
-      # puts profile[:handle], profile[:a_list_name_change], profile[:inactive]
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose
-        # @db.ignore_user(user)
         begin
-          @db.set_inactive(user)
+          Match.where(account: $login, name: user).delete
+          # @db.set_inactive(user)
         rescue
           puts user
           Match.where(name: user).update(gender: Match.where(:name => user, :account => $login).first[:gender])
@@ -198,7 +200,9 @@ module LazyCupid
 
       elsif profile[:gender] != "M" && profile[:gender] != "F"
         messenger.warn "* Straight person found * #{user}"
-        Match.find(:name => profile[:handle]).set(:sexuality => profile[:sexuality])
+        # puts profile[:gender], profile[:intended_handle]
+        # %x{echo #{profile} >> profile.txt}
+        Match.where(:name => user).update(:sexuality => "Straight")
       else
 
         begin

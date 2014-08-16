@@ -82,7 +82,7 @@ module LazyCupid
       unless results == {}
         results.each do |user|
           user = user.to_hash
-          array.push(user[:name]) if user.has_key?(:name)
+          array.push(user[:name]) if user.has_key?(:name) && !user[:name].empty?
           # puts user["name"] if $debug
         end
       end

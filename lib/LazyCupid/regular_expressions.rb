@@ -9,13 +9,13 @@ module LazyCupid
         country = string.match(/(.+), (.+), (.+)/)[3]
       elsif result.size == 1
         begin
-        city    = string.match(/(.+), (.+)/)[1]
-        state   = string.match(/(.+), (.+)/)[2]
-        country = "United States"
-      rescue
-        puts "* Location Parser Error! *"
-        puts string
-      end
+          city    = string.match(/(.+), (.+)/)[1]
+          state   = string.match(/(.+), (.+)/)[2]
+          country = "United States"
+        rescue
+          puts "* Location Parser Error! *"
+          puts string
+        end
       end
       {city: city, state: state, country: country }
     end

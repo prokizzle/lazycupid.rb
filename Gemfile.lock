@@ -12,8 +12,12 @@ GEM
     cliutils (2.2.0)
       launchy (= 2.4.2)
     colorize (0.7.2)
+    docopt (0.5.0)
     domain_name (0.5.13)
       unf (>= 0.0.5, < 1.0.0)
+    dotenv (0.11.1)
+      dotenv-deployment (~> 0.0.2)
+    dotenv-deployment (0.0.2)
     fattr (2.2.1)
     ffi (1.9.3)
     highline (1.6.19)
@@ -83,6 +87,8 @@ DEPENDENCIES
   bloat_check
   chronic
   cliutils
+  docopt
+  dotenv
   highline
   hr
   lingua

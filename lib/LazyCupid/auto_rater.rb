@@ -16,9 +16,9 @@ module LazyCupid
   class AutoRater
     attr_accessor :browser
 
-    def initialize(args)
-      @username = args[:username]
-      @password = args[:password]
+    def initialize(options)
+      @username = options["<username>"][0]
+      @password = options["<password>"]
       @browser  = Watir::Browser.new $driver.to_sym
       @count    = 0
       @fake_element = FakeElement.new
@@ -143,6 +143,25 @@ module LazyCupid
     def logout
       @browser.close
     end
+
+    def run
+      loop do
+        begin
+          login
+          rate
+          sleep 2
+        rescue SystemExit, Interrupt
+          print "\nGoodbye"
+          logout
+        rescue Exception => e
+          puts e.message
+          puts e.backtrace
+          logout
+          exit
+        end
+      end
+    end
+
 
   end
 end

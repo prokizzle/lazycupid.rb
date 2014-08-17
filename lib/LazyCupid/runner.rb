@@ -7,13 +7,19 @@ module LazyCupid
     include CLIUtils::Messaging
     include CLIUtils::PrettyIO
 
-    attr_reader :config, :username, :password, :db, :scheduler, :blocklist
+    attr_accessor :config, :username, :password, :db, :scheduler, :blocklist, :log_path, :config_path
 
-    def initialize(args)
-      @username     = args[ :username]
-      @password     = args[ :password]
-      config_path   = File.dirname($0) + '/../config/'
-      log_path      = File.dirname($0) + '/../logs/'
+    def initialize(args={})
+      Dotenv.load
+      if args.has_key?(:username)
+        @username     = args[ :username]
+        @password     = args[ :password]
+      else
+        @username = ENV['OKCUPID_USERNAME']
+        @password = ENV['OKCUPID_PASSWORD']
+      end
+      @config_path   = File.dirname($0) + '/../config/'
+      @log_path      = File.dirname($0) + '/../logs/'
       %x{mkdir -p #{log_path}}
          @log          = nil #Logger.new("#{log_path}#{@username}_#{Time.now}.log")
          BloatCheck.logger = Logger.new("#{log_path}bloat_#{Time.now}.log")
@@ -119,7 +125,7 @@ module LazyCupid
          end
 
          def scrape_spotlight
-            @tracker.scrape_spotlight
+           @tracker.scrape_spotlight
          end
 
          def unread_messages
@@ -154,6 +160,12 @@ module LazyCupid
            include CLIUtils::Messaging
            include CLIUtils::PrettyIO
 
+           attr_accessor :options
+
+           def initialize(options)
+            @options = options
+           end
+
            def login_message
              return @app.login_message rescue "Please login"
            end
@@ -178,14 +190,13 @@ module LazyCupid
            end
 
            def prompt_for_credentials
-             @username = ARGV[0] rescue false
-             @password = ARGV[1] rescue false
+             @username = options["<username>"][0] if options["-u"]
              @username = ask("username: ".blue) { |q| q.echo = true} unless @username
              @password = ask("password: ".blue) { |q| q.echo = "*".cyan } unless @password
            end
 
            def exit_on_fail_if_cli
-             if cli_login? && logged_in == false
+             if cli_login? && logged_in? == false
                puts login_message
                exit
              end

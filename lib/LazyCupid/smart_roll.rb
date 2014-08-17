@@ -49,7 +49,7 @@ module LazyCupid
           if $verbose
             messenger.warn "Rolling..." unless @already_rolling
           end
-          visit_user(current_user)
+          response = visit_user(current_user)
           @already_idle = false
           @already_rolling = true
           # return {user: obj, rolling: @already_rolling}
@@ -62,6 +62,7 @@ module LazyCupid
           # return {rolling: @already_rolling}
         end
       end
+      return response
     end
 
     private
@@ -221,6 +222,7 @@ module LazyCupid
         @console.log(profile) if $verbose
         # @harvester.body = @user.body
         autodiscover_new_users(profile) if profile[:gender] == $gender || profile[:gender] == $alt_gender
+        return profile
       end
     end
 

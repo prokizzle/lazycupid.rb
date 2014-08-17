@@ -1,7 +1,60 @@
 #!/usr/bin/ruby
 
 require_relative '../lib/lazycupid/runner'
+require "docopt"
+doc = <<DOCOPT
+LazyCupid
 
-app = LazyCupid::Runner.new
-app.login
-app.run
+Usage:
+  #{__FILE__} autoroller -u <username>...
+  #{__FILE__} autorater [-u <username>] [-p <password>] [-v]
+  #{__FILE__} -h | --help
+  #{__FILE__} --version
+  #{__FILE__} -v | --verbose
+
+  Options:
+  -h --help     Show this screen.
+  --version     Show version.
+  --username=<username>  OKCupid username
+--password=<password>  OKCupid password
+--v           Show console output
+
+DOCOPT
+
+# begin
+#   require "pp"
+#   pp Docopt::docopt(doc)
+# rescue Docopt::Exit => e
+#   puts e.message
+# end
+
+options = Docopt::docopt(doc)
+if options["autoroller"]
+  require_relative '../lib/LazyCupid/auto_rater'
+  require 'highline/import'
+  app = LazyCupid::Runner.new(options)
+  app.login
+  app.run
+elsif options["autorater"]
+  $verbose = options["-v"]
+  $driver = options["-v"] ? "chrome" : "phantomjs"
+
+unless options["-u"]
+  options["<username>"] = [ask("username: ")]
+  options["<password>"] = ask("password: "){ |q| q.echo = "*" }
+end
+  @autorater    = LazyCupid::AutoRater.new(options)
+
+  @autorater.login
+
+  loop do
+    begin
+      @autorater.rate
+      sleep 2
+    rescue SystemExit, Interrupt
+      print "\nGoodbye!"
+      @autorater.logout rescue nil
+      exit
+    end
+  end
+end

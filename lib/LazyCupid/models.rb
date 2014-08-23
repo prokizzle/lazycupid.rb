@@ -1,4 +1,4 @@
-
+  $db           = Sequel.connect("postgres://***REMOVED***:***REMOVED***ec2-54-197-240-180.compute-1.amazonaws.com:5432/dbdqbruel10dk6")
 class User < Sequel::Model
   set_primary_key :id
 end

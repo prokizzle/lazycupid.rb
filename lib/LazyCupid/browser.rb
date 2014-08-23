@@ -189,80 +189,81 @@ module LazyCupid
     #
     def send_request(link, request_id)
       begin
-      # request_id          = Time.now.to_i
-      @hash[request_id]     = {ready: false}
-      url                   = URI.escape(link)
-      agent.read_timeout    = 30
-      page_object           = agent.get(link)
-      page_object.encoding  = 'utf-8'
-      page_body             = page_object.parser.xpath("//body").to_html
-      page_source           = page_object.parser.xpath("//html").to_html
-      @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false, inactive: false}
-      true
-    rescue
-      @hash[request_id]     = {ready: false, inactive: true, retrieved: false}
-    end
+        # request_id          = Time.now.to_i
+        @hash[request_id]     = {ready: false}
+        url                   = URI.escape(link)
+        agent.read_timeout    = 30
+        page_object           = agent.get(link)
+        page_object.encoding  = 'utf-8'
+        page_body             = page_object.parser.xpath("//body").to_html
+        page_source           = page_object.parser.xpath("//html").to_html
+        @hash[request_id]     = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true, source: page_source, retrieved: false, inactive: false}
+        true
+      rescue
+        @hash[request_id]     = {ready: true, inactive: true, retrieved: false}
+      end
 
-    # Retrieves a hash of attributes parsed from a page
-    #
-    # @param request_id [Integer] timestamp value originally passed to send_request method
-    # @return [Hash] A hash containing strings and objects with the requested page data
-    #   url: a String representing the original URL passed to the getter
-    #   body: A string HTML source of the content between the page's body tags
-    #   html: An unaltered Mechanize page object
-    #   ready: Boolean value indicating whether or not Mechanize has finished loading
-    #           the page into memory
-    #
-    def get_request(request_id)
-      return @hash[request_id]
-    end
+      # Retrieves a hash of attributes parsed from a page
+      #
+      # @param request_id [Integer] timestamp value originally passed to send_request method
+      # @return [Hash] A hash containing strings and objects with the requested page data
+      #   url: a String representing the original URL passed to the getter
+      #   body: A string HTML source of the content between the page's body tags
+      #   html: An unaltered Mechanize page object
+      #   ready: Boolean value indicating whether or not Mechanize has finished loading
+      #           the page into memory
+      #
+      def get_request(request_id)
+        return @hash[request_id]
+      end
 
-    # Initiates a http request via Mechanize agent
-    #
-    # @param link       [String] [URL of page to get]
-    # @param request_id [Integer] [timestamp to identify and retrieve returned data]
-    # @return [Boolean]
-    #
-    def request(link, request_id)
-      @hash[request_id] = {ready: false}
-      url = URI.escape(link)
-      agent.read_timeout=30
-      page_object = agent.get(link)
-      page_object.encoding = 'utf-8'
-      # @log.debug "#{@url}"
-      page_body = page_object.parser.xpath("//body").to_html
-      @hash[request_id] = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true}
-      {url: url.to_s, body: page_body.to_s, html: page_object, hash: request_id.to_i}
-    end
+      # Initiates a http request via Mechanize agent
+      #
+      # @param link       [String] [URL of page to get]
+      # @param request_id [Integer] [timestamp to identify and retrieve returned data]
+      # @return [Boolean]
+      #
+      def request(link, request_id)
+        @hash[request_id] = {ready: false}
+        url = URI.escape(link)
+        agent.read_timeout=30
+        page_object = agent.get(link)
+        page_object.encoding = 'utf-8'
+        # @log.debug "#{@url}"
+        page_body = page_object.parser.xpath("//body").to_html
+        @hash[request_id] = {url: url.to_s, body: page_body.to_s, html: page_object, ready: true}
+        {url: url.to_s, body: page_body.to_s, html: page_object, hash: request_id.to_i}
+      end
 
-    def html_of(link, request_id)
-      url = URI.escape(link)
-      page_object = agent.get(url)
-      # @log.debug "#{@url}"
-      {url: url, html: page_object, hash: request_id}
-    end
+      def html_of(link, request_id)
+        url = URI.escape(link)
+        page_object = agent.get(url)
+        # @log.debug "#{@url}"
+        {url: url, html: page_object, hash: request_id}
+      end
 
 
-    # Determines logged in username
-    # @return [String] [logged in username]
-    def handle
-      /\/profile\/(.+)/.match(@url)[1]
-    end
+      # Determines logged in username
+      # @return [String] [logged in username]
+      def handle
+        /\/profile\/(.+)/.match(@url)[1]
+      end
 
-    # Logs out of OKcupid
-    # @return [Boolean]
-    def logout
-      go_to("http://www.okcupid.com/logout")
-    end
+      # Logs out of OKcupid
+      # @return [Boolean]
+      def logout
+        go_to("http://www.okcupid.com/logout")
+      end
 
-    def page_source
-      @page.parser.xpath("//html").to_html.to_s
-    end
+      def page_source
+        @page.parser.xpath("//html").to_html.to_s
+      end
 
-    # Detects an invalid account or profile
-    # @return [Boolean] [True if account is deleted]
-    def account_deleted
-      @body.match(/\bUh\-oh\b/)
+      # Detects an invalid account or profile
+      # @return [Boolean] [True if account is deleted]
+      def account_deleted
+        @body.match(/\bUh\-oh\b/)
+      end
     end
   end
 end

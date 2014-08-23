@@ -15,3 +15,5 @@ gem 'watir-scroll'
 gem 'uclassify'
 gem 'cliutils'
 gem 'hr'
+gem 'dotenv'
+gem "docopt"

@@ -183,6 +183,7 @@ module LazyCupid
 
     def followup_query
       # [todo] - add support for readability score filtering
+      Match.where(:name => "").delete
 
       min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
       desired_gender      = $gender
@@ -198,54 +199,36 @@ module LazyCupid
       sexualities << "Bisexual" if @settings.visit_bisexual
       sexualities << "Straight" if @settings.visit_straight
 
-      # if bisexual-m
-      #   (sexuality="Bisexual" && gender="F")
-      #   or (sexuality="Bisexual" && gender="M")
-      #   or (sexuality="Gay" && gender="M")
-      #   or (sexuality="Straight" && gender="F")
-      # end
-      # if bisexual-f
-      #   (sexuality="Bisexual" && gender="M")
-      #   or (sexuality="Bisexual" && gender="F")
-      #   or (sexuality="Gay" && gender="F")
-      #   or (sexuality="Straight" && gender="M")
-      # end
-      # order by #{sort_1}, #{sort_2}, #{sort_3}, #{sort_4}, #{sort_5}, #{sort_6}, #{sort_7}
-      # result = Match.filter(
-      #   :account => @login,
-      #   :ignored => [false, nil],
-      #   :inactive => [false, nil]).where{
-      #   last_visit < min_time.to_i
-      # }
-
-
+      query = {:account => @login,
+               :ignored => false,
+               :inactive => false,
+               # :distance => 0..$max_distance.to_i,
+               # :city => 'Los Angeles',
+               :age => min_age.to_i..max_age.to_i,
+               :last_visit => 0..min_time.to_i,
+               :counts => 0..max_counts.to_i,
+               :match_percent => $min_percent.to_i..102,
+               :gender => desired_gender.to_s}.merge!($location)#[desired_gender.to_s, alt_gender.to_s]
 
       # result = Match.join_table(:left, :users, :name => :name).filter(
-      result = Match.filter(
-        :account => @login,
-        :ignored => false,
-        :inactive => false,
-        :distance => $min_distance..$max_distance.to_i,
-        :age => min_age.to_i..max_age.to_i,
-        :last_visit => 0..min_time.to_i,
-        :counts => 0..max_counts.to_i,
-        :match_percent => $min_percent.to_i..102,
-        :gender => [desired_gender.to_s, alt_gender.to_s]
-      ).order(Sequel.asc(:distance)).take(query_size).to_a
+      result = Match.filter(query).to_a.take(20)#order(Sequel.asc(:distance)).take(query_size).to_a
 
       # puts result.first.to_hash
       if result.empty?
-        puts "Running SQL record corrections".purple
+        puts "Cleaning database...".purple
         Match.filter(:account => $login).where(:gender => nil).update(:gender => $gender)
         Match.where(:name => nil).delete
-        Match.where(:distance => nil).update(:distance => 0)
+        Match.where(:name => "").delete
+        Match.where(:distance => nil).update(:distance => 1)
         Match.where(:match_percent => nil).update(:match_percent => 100)
+        Match.where(:inactive => nil).update(:inactive => false)
+        Match.where(:age => nil).update(:age => 25)
 
         User.where(:name => nil).delete
         User.where(:age => nil).update(:age => 25)
         # User.where(:gender => nil).update(:gender => $gender)
         User.where(:inactive => nil).update(:inactive => false)
-        puts "Finished SQL record corrections".purple
+        puts "Finished cleaning database".purple
       end
 
       return result

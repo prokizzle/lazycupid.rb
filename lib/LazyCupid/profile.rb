@@ -157,19 +157,9 @@ module LazyCupid
 
       # rescue
       # result = /username.>(.+)<.p>.<p.class..info.>/.match(@body)[1]
-      begin
-        # result = @body.match(/<span class="name">([\w\d_-]+)<.span>/)[1]
-        result = @html.parser.xpath("//span[@class='name']").text
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace
+        result = @html.parser.xpath("//span[@id='basic_info_sn']").text
 
-        puts @body
-        # sleep 100
-      end
-      # end
-
-      unless result == @intended_handle.to_s
+      unless result == @intended_handle.to_s || result.empty?
         # @db.rename_alist_user(@intended_handle, result)
         @new_handle = result
         puts "(UC) A-list name change: #{intended_handle} is now #{result}" if $verbose

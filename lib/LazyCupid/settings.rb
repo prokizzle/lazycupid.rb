@@ -13,20 +13,20 @@ module LazyCupid
       path      = args[ :path]
       @filename = "config/#{@account}.yml"
       @db_file  = "config/database.yml"
-      unless File.exists?(@db_file)
-        db_ = {
-          development: {
-            adapter: "postgresql",
-            host: "localhost",
-            username: "postgres",
-            password: "123456",
-            database: "lazy_cupid"
-          }
-        }
-        File.open(@db_file, "w") do |f|
-          f.write(db_.to_yaml)
-        end
-      end
+      # unless File.exists?(@db_file)
+      #   db_ = {
+      #     development: {
+      #       adapter: "postgresql",
+      #       host: "localhost",
+      #       username: "postgres",
+      #       password: "123456",
+      #       database: "lazy_cupid"
+      #     }
+      #   }
+      #   File.open(@db_file, "w") do |f|
+      #     f.write(db_.to_yaml)
+      #   end
+      # end
       unless File.exists?(@filename)
         # [todo] - add default options for readability score filtering
         # Create generic preference file
@@ -105,7 +105,7 @@ module LazyCupid
       @settings = YAML.load_file(@filename)
 
       # Load database config
-      @db_settings = YAML.load_file(@db_file)
+      # @db_settings = YAML.load_file(@db_file)
 
       # [todo] - add support for readability score filtering
 
@@ -145,11 +145,11 @@ module LazyCupid
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
       @fast_launch            = @settings[:development][:fast_launch]       == true
-      @db_name                = @db_settings[:development][:database].to_s
-      @db_host                = @db_settings[:development][:host].to_s
-      @db_user                = @db_settings[:development][:username].to_s
-      @db_pass                = @db_settings[:development][:password].to_s
-      @db_adapter             = @db_settings[:development][:adapter].to_s
+      # @db_name                = @db_settings[:development][:database].to_s
+      # @db_host                = @db_settings[:development][:host].to_s
+      # @db_user                = @db_settings[:development][:username].to_s
+      # @db_pass                = @db_settings[:development][:password].to_s
+      # @db_adapter             = @db_settings[:development][:adapter].to_s
 
       # Global variables for mid-session reloads
       $my_age                 = @my_age

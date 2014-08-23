@@ -6,3 +6,4 @@ config/*
 logs/*
 db/tasks/db_terminate_backend.rake
 lib/LazyCupid/growl_notifications.rb
+.env

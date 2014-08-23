@@ -178,11 +178,11 @@ module LazyCupid
       $scrape_inbox_frequency = "5m"
       $driver                 = $auto_rate_driver
       $uclassify_read_key     = @uclassify_read_key
-      if @settings[:geo][:mode] == "distance"
-        $location             = {distance: 1..@settings[:geo][:value].to_i}
-      else
-        $location             = {@settings[:geo][:mode].to_sym => @settings[:geo][:value]}
-      end
+      # if @settings[:geo][:mode] == "distance"
+      #   $location             = {distance: 1..@settings[:geo][:value].to_i}
+      # else
+        $location             = {distance: 500}
+      # end
 
       $uclassify_write_key    = @uclassify_write_key
 

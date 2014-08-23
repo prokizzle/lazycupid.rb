@@ -13,20 +13,20 @@ module LazyCupid
       path      = args[ :path]
       @filename = "config/#{@account}.yml"
       @db_file  = "config/database.yml"
-      unless File.exists?(@db_file)
-        db_ = {
-          development: {
-            adapter: "postgresql",
-            host: "localhost",
-            username: "postgres",
-            password: "123456",
-            database: "lazy_cupid"
-          }
-        }
-        File.open(@db_file, "w") do |f|
-          f.write(db_.to_yaml)
-        end
-      end
+      # unless File.exists?(@db_file)
+      #   db_ = {
+      #     development: {
+      #       adapter: "postgresql",
+      #       host: "localhost",
+      #       username: "postgres",
+      #       password: "123456",
+      #       database: "lazy_cupid"
+      #     }
+      #   }
+      #   File.open(@db_file, "w") do |f|
+      #     f.write(db_.to_yaml)
+      #   end
+      # end
       unless File.exists?(@filename)
         # [todo] - add default options for readability score filtering
         # Create generic preference file
@@ -105,7 +105,7 @@ module LazyCupid
       @settings = YAML.load_file(@filename)
 
       # Load database config
-      @db_settings = YAML.load_file(@db_file)
+      # @db_settings = YAML.load_file(@db_file)
 
       # [todo] - add support for readability score filtering
 
@@ -145,11 +145,11 @@ module LazyCupid
       @debug                  = @settings[:development][:debug]         == true
       @verbose                = @settings[:development][:verbose]       == true
       @fast_launch            = @settings[:development][:fast_launch]       == true
-      @db_name                = @db_settings[:development][:database].to_s
-      @db_host                = @db_settings[:development][:host].to_s
-      @db_user                = @db_settings[:development][:username].to_s
-      @db_pass                = @db_settings[:development][:password].to_s
-      @db_adapter             = @db_settings[:development][:adapter].to_s
+      # @db_name                = @db_settings[:development][:database].to_s
+      # @db_host                = @db_settings[:development][:host].to_s
+      # @db_user                = @db_settings[:development][:username].to_s
+      # @db_pass                = @db_settings[:development][:password].to_s
+      # @db_adapter             = @db_settings[:development][:adapter].to_s
 
       # Global variables for mid-session reloads
       $my_age                 = @my_age
@@ -166,15 +166,15 @@ module LazyCupid
       $gender                 = @gender
       $alt_gender             = @alt_gender
       $scrape_match_search    = @scrape_match_search
-      $db_adapter             = @db_adapter
-      $db_host                = @db_host
-      $db_user                = @db_user
-      $db_pass                = @db_pass
-      $db_name                = @db_name
+      # $db_adapter             = @db_adapter
+      # $db_host                = @db_host
+      # $db_user                = @db_user
+      # $db_pass                = @db_pass
+      # $db_name                = @db_name
       $fast_launch            = @fast_launch
       $sort_criteria          = "Sequel.#{@sort_criteria.shift}(#{@sort_criteria.shift.to_sym})"
       $queue_size             = @queue_size
-      $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
+      # $db_url                 = "postgres://#{$db_user}:#{$db_pass}@#{$db_host}:5432/#{$db_name}"
       $scrape_inbox_frequency = "5m"
       $driver                 = $auto_rate_driver
       $uclassify_read_key     = @uclassify_read_key

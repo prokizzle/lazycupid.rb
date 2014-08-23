@@ -22,7 +22,7 @@ module LazyCupid
 
     def initialize(args)
       messenger.info "Connecting to database..." if $verbose
-      $db           = Sequel.connect($db_url)
+      # $db           = Sequel.connect($db_url)
       require_relative 'models'
       @did_migrate  = false
       @login        = args[:login_name]

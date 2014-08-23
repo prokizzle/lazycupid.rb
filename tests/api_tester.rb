@@ -31,5 +31,5 @@ end
 
 
 loop do
-  api.check_events
+  tracker.scrape_spotlight
 end

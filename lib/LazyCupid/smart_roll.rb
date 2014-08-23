@@ -49,7 +49,7 @@ module LazyCupid
           if $verbose
             messenger.warn "Rolling..." unless @already_rolling
           end
-          visit_user(current_user)
+          response = visit_user(current_user)
           @already_idle = false
           @already_rolling = true
           # return {user: obj, rolling: @already_rolling}
@@ -62,6 +62,7 @@ module LazyCupid
           # return {rolling: @already_rolling}
         end
       end
+      return response
     end
 
     private
@@ -82,7 +83,7 @@ module LazyCupid
       unless results == {}
         results.each do |user|
           user = user.to_hash
-          array.push(user[:name]) if user.has_key?(:name)
+          array.push(user[:name]) if user.has_key?(:name) && !user[:name].empty?
           # puts user["name"] if $debug
         end
       end
@@ -102,6 +103,7 @@ module LazyCupid
           @last_query_time = Time.now.to_i
           if $verbose
             puts "#{@roll_list.size} users queued" unless @roll_list.empty?
+            p @roll_list.first rescue nil
           end
         else
           messenger.warn "Delaying query..." unless @already_delayed
@@ -183,12 +185,15 @@ module LazyCupid
       unless result[:inactive]
         profile = Profile.parse(result)
       else
+        profile = Hash.new
+        puts "Inactive profile found: #{user}" if $verbose
         profile[:inactive] = true
       end
       if profile[:inactive]
         puts "Inactive profile found: #{user}" if $verbose
         begin
-          @db.set_inactive(user)
+          Match.where(account: $login, name: user).delete
+          # @db.set_inactive(user)
         rescue
           puts user
           Match.where(name: user).update(gender: Match.where(:name => user, :account => $login).first[:gender])
@@ -217,6 +222,7 @@ module LazyCupid
         @console.log(profile) if $verbose
         # @harvester.body = @user.body
         autodiscover_new_users(profile) if profile[:gender] == $gender || profile[:gender] == $alt_gender
+        return profile
       end
     end
 

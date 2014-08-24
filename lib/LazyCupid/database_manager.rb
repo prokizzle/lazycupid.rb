@@ -185,19 +185,19 @@ module LazyCupid
       # [todo] - add support for readability score filtering
       Match.where(:name => "").delete
 
-      min_time            = Chronic.parse("#{@settings.days_ago.to_i} days ago").to_i
+      min_time            = Chronic.parse("#{$days_ago.to_i} days ago").to_i
       desired_gender      = $gender
       alt_gender          = $alt_gender
-      min_age             = @settings.min_age
-      max_age             = @settings.max_age
-      age_sort            = @settings.age_sort
-      max_counts          = @settings.max_followup
+      min_age             = $min_age
+      max_age             = $max_age
+      age_sort            = $age_sort
+      max_counts          = $max_followup
       query_size          = $queue_size
 
       sexualities = [nil]
-      sexualities << "Gay"      if @settings.visit_gay
-      sexualities << "Bisexual" if @settings.visit_bisexual
-      sexualities << "Straight" if @settings.visit_straight
+      sexualities << "Gay"      if $visit_gay
+      sexualities << "Bisexual" if $visit_bisexual
+      sexualities << "Straight" if $visit_straight
 
       query = {:account => @login,
                :ignored => false,

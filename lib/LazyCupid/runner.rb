@@ -7,7 +7,7 @@ module LazyCupid
     include CLIUtils::Messaging
     include CLIUtils::PrettyIO
 
-    attr_accessor :config, :username, :password, :db, :scheduler, :blocklist, :log_path, :config_path
+    attr_accessor :config, :username, :password, :db, :scheduler, :blocklist, :log_path, :config_path, :smarty
 
     def initialize(args={})
       Dotenv.load
@@ -66,6 +66,7 @@ module LazyCupid
          def scrape_ajax_new_matches
            @tracker.focus_new_users
          end
+
 
          def get_new_user_counts
            result = db.count_new_user_smart_query

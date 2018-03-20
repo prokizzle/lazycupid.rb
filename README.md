@@ -1,5 +1,5 @@
-#Ruby LazyCupid
-_An intelligent auto-visitor bot for OKCupid._
+# Ruby LazyCupid
+### An intelligent auto-visitor bot for OKCupid.
 
 + Finds new matches from the match search
 + Checks your inbox and tracks message senders
@@ -10,19 +10,19 @@ _An intelligent auto-visitor bot for OKCupid._
 + Uses private OKCupid API
 + Multi-threaded (via rufus-scheduler)
 
-##Requirements
+## Requirements
 
 + Postgres: db name lazy_cupid
 + Ruby
 
-##Installation:
+## Installation:
 
 	createdb lazy_cupid
     bundle install
 
 On first run, after successful login, LzC automatically creates config files in `config/` with default values. Make changes to database.yml to reflect your postgres configuration, and also `_your_user_name_.yml `for your match preferences. You will need to restart LazyCupid for changes in config to take effect.
 
-##Migrations
+## Migrations
 
 Apply database changes before running on every git pull with *Sequel Migrations* tool:
 `sequel -m db/migrations/ -E postgres://localhost/lazy_cupid`
@@ -31,7 +31,7 @@ or
 
 `rake db:migrate`
 
-##Usage:
+## Usage:
 
 `ruby bin/lazycupid`
 
@@ -40,7 +40,7 @@ or
 `ruby bin/lazycupid [username] [password]`
 
 
-##Todo:
+## Todo:
 
 + Share stored user details among all tenants
 + Parse individual message threads
